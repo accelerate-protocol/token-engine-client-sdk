@@ -1,4 +1,4 @@
-module github.com/accelerate-protocal/token-engine/token-engine-client-sdk
+module github.com/accelerate-protocol/token-engine-client-sdk
 
 go 1.24.2
 
