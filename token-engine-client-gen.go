@@ -20,10 +20,30 @@ import (
 	"github.com/oapi-codegen/runtime"
 )
 
+// Defines values for CommonChainID.
+const (
+	SOLANA CommonChainID = "1001"
+)
+
 // Defines values for EntityDEXPlatform.
 const (
 	DexRaydium     EntityDEXPlatform = "Raydium"
 	DexRaydiumCLMM EntityDEXPlatform = "Raydium CLMM"
+)
+
+// Defines values for GetCommonBalanceParamsChainId.
+const (
+	GetCommonBalanceParamsChainIdN1001 GetCommonBalanceParamsChainId = "1001"
+)
+
+// Defines values for GetCommonTxResultParamsChainId.
+const (
+	GetCommonTxResultParamsChainIdN1001 GetCommonTxResultParamsChainId = "1001"
+)
+
+// Defines values for GetSwapPriceParamsChainId.
+const (
+	N1001 GetSwapPriceParamsChainId = "1001"
 )
 
 // Defines values for GetSwapPriceParamsPlatform.
@@ -32,13 +52,89 @@ const (
 	RaydiumCLMM GetSwapPriceParamsPlatform = "Raydium CLMM"
 )
 
+// CommonChainID defines model for common.ChainID.
+type CommonChainID string
+
 // EntityDEXPlatform defines model for entity.DEX_Platform.
 type EntityDEXPlatform string
+
+// RequestDepositReq defines model for request.DepositReq.
+type RequestDepositReq struct {
+	// Amount 投资额(以vault融资货币计价)
+	Amount  int           `json:"amount"`
+	ChainId CommonChainID `json:"chain_id"`
+
+	// Investor 投资人地址
+	Investor string `json:"investor"`
+
+	// VaultAddress vault地址
+	VaultAddress string `json:"vault_address"`
+}
+
+// RequestFinancingRule defines model for request.FinancingRule.
+type RequestFinancingRule struct {
+	// ExcessFundraisingRatioBps 超募比例bps
+	ExcessFundraisingRatioBps *int `json:"excess_fundraising_ratio_bps,omitempty"`
+
+	// FinancingCurrencyAddr 融资货币地址
+	FinancingCurrencyAddr string `json:"financing_currency_addr"`
+	FinancingDeadline     *int   `json:"financing_deadline,omitempty"`
+	FinancingStartTime    *int   `json:"financing_start_time,omitempty"`
+
+	// MinInvestmentBaseFinancingCurrency 最小投资额
+	MinInvestmentBaseFinancingCurrency int `json:"min_investment_base_financing_currency"`
+
+	// PriceBaseFinancingCurrency 融资货币计价
+	PriceBaseFinancingCurrency int `json:"price_base_financing_currency"`
+
+	// TargetAmountBaseFinancingCurrency 目标融资额
+	TargetAmountBaseFinancingCurrency int `json:"target_amount_base_financing_currency"`
+}
+
+// RequestReclaimReq defines model for request.ReclaimReq.
+type RequestReclaimReq struct {
+	// Amount 提取数额
+	Amount  int           `json:"amount"`
+	ChainId CommonChainID `json:"chain_id"`
+
+	// Investor 投资人地址
+	Investor string `json:"investor"`
+
+	// VaultAddress vault地址
+	VaultAddress string `json:"vault_address"`
+}
+
+// RequestRedeemReq defines model for request.RedeemReq.
+type RequestRedeemReq struct {
+	// Amount 提取数额
+	Amount  int           `json:"amount"`
+	ChainId CommonChainID `json:"chain_id"`
+
+	// Investor 投资人地址
+	Investor string `json:"investor"`
+
+	// VaultAddress vault地址
+	VaultAddress string `json:"vault_address"`
+}
+
+// RequestSubmitReq defines model for request.SubmitReq.
+type RequestSubmitReq struct {
+	ChainId CommonChainID `json:"chain_id"`
+
+	// Sender 提交人地址
+	Sender string `json:"sender"`
+
+	// Signature 签名字符串 base58编码
+	Signature string `json:"signature"`
+
+	// TxMsgBase64 待签名数据
+	TxMsgBase64 string `json:"tx_msg_base64"`
+}
 
 // RequestSwapPrepareReq defines model for request.SwapPrepareReq.
 type RequestSwapPrepareReq struct {
 	Amount      string            `json:"amount"`
-	ChainId     string            `json:"chain_id"`
+	ChainId     CommonChainID     `json:"chain_id"`
 	InputMint   string            `json:"input_mint"`
 	OutputMint  string            `json:"output_mint"`
 	Platform    EntityDEXPlatform `json:"platform"`
@@ -46,12 +142,32 @@ type RequestSwapPrepareReq struct {
 	SlippageBps *int              `json:"slippage_bps,omitempty"`
 }
 
-// RequestSwapSubmitReq defines model for request.SwapSubmitReq.
-type RequestSwapSubmitReq struct {
-	ChainId     string `json:"chain_id"`
-	Sender      string `json:"sender"`
-	Signature   string `json:"signature"`
-	TxMsgBase64 string `json:"tx_msg_base64"`
+// RequestTokenLaunchReq defines model for request.TokenLaunchReq.
+type RequestTokenLaunchReq struct {
+	ChainId CommonChainID `json:"chain_id"`
+
+	// FinancingRuleData 融资信息
+	FinancingRuleData RequestFinancingRule `json:"financing_rule_data"`
+
+	// ManagementData 管理信息
+	ManagementData RequestTokenManage `json:"management_data"`
+
+	// TokenMetaData token元数据信息
+	TokenMetaData RequestTokenMeta `json:"token_meta_data"`
+}
+
+// RequestTokenManage defines model for request.TokenManage.
+type RequestTokenManage struct {
+	Deployer string `json:"deployer"`
+	Manager  string `json:"manager"`
+}
+
+// RequestTokenMeta defines model for request.TokenMeta.
+type RequestTokenMeta struct {
+	TokenDecimals int    `json:"token_decimals"`
+	TokenName     string `json:"token_name"`
+	TokenSymbol   string `json:"token_symbol"`
+	TokenUri      string `json:"token_uri"`
 }
 
 // ResponseBalanceResp defines model for response.BalanceResp.
@@ -60,6 +176,55 @@ type ResponseBalanceResp struct {
 	ChainId      *string `json:"chain_id,omitempty"`
 	Owner        *string `json:"owner,omitempty"`
 	TokenAddress *string `json:"token_address,omitempty"`
+}
+
+// ResponseDepositPrepareResp defines model for response.DepositPrepareResp.
+type ResponseDepositPrepareResp struct {
+	TxMsgBase64 string `json:"tx_msg_base64"`
+}
+
+// ResponseLaunchPrepareResp defines model for response.LaunchPrepareResp.
+type ResponseLaunchPrepareResp struct {
+	// AssetMintAddr asset mint
+	AssetMintAddr *string `json:"asset_mint_addr,omitempty"`
+
+	// AssetTreasuryAddr asset treasury
+	AssetTreasuryAddr *string `json:"asset_treasury_addr,omitempty"`
+
+	// GlobalConfigAddr 全局配置信息
+	GlobalConfigAddr *string `json:"global_config_addr,omitempty"`
+
+	// TxMsgBase64 待签名信息
+	TxMsgBase64 string `json:"tx_msg_base64"`
+
+	// VaultAddr vault地址
+	VaultAddr *string `json:"vault_addr,omitempty"`
+
+	// VaultAuthAddr vault auth
+	VaultAuthAddr *string `json:"vault_auth_addr,omitempty"`
+
+	// VaultMintAddr vault mint
+	VaultMintAddr *string `json:"vault_mint_addr,omitempty"`
+
+	// VaultTreasuryAddr vault treasury
+	VaultTreasuryAddr *string `json:"vault_treasury_addr,omitempty"`
+}
+
+// ResponseReclaimPrepareResp defines model for response.ReclaimPrepareResp.
+type ResponseReclaimPrepareResp struct {
+	TxMsgBase64 string `json:"tx_msg_base64"`
+}
+
+// ResponseRedeemPrepareResp defines model for response.RedeemPrepareResp.
+type ResponseRedeemPrepareResp struct {
+	TxMsgBase64 string `json:"tx_msg_base64"`
+}
+
+// ResponseSubmitResp defines model for response.SubmitResp.
+type ResponseSubmitResp struct {
+	FailedMsg *string `json:"failed_msg,omitempty"`
+	Success   *bool   `json:"success,omitempty"`
+	TxHash    *string `json:"tx_hash,omitempty"`
 }
 
 // ResponseSwapPrepareResp defines model for response.SwapPrepareResp.
@@ -76,29 +241,35 @@ type ResponseSwapPriceResp struct {
 	Price            *float32 `json:"price,omitempty"`
 }
 
-// ResponseSwapSubmitResp defines model for response.SwapSubmitResp.
-type ResponseSwapSubmitResp struct {
-	TxHash *string `json:"tx_hash,omitempty"`
-}
-
 // ResponseTxResultResp defines model for response.TxResultResp.
 type ResponseTxResultResp struct {
-	Success *bool   `json:"success,omitempty"`
-	TxHash  *string `json:"tx_hash,omitempty"`
+	FailedMsg *string `json:"failed_msg,omitempty"`
+	Success   *bool   `json:"success,omitempty"`
+	TxHash    *string `json:"tx_hash,omitempty"`
 }
 
 // GetCommonBalanceParams defines parameters for GetCommonBalance.
 type GetCommonBalanceParams struct {
-	ChainId      string `form:"chain_id" json:"chain_id"`
-	Owner        string `form:"owner" json:"owner"`
+	ChainId GetCommonBalanceParamsChainId `form:"chain_id" json:"chain_id"`
+
+	// Owner 账户地址
+	Owner string `form:"owner" json:"owner"`
+
+	// TokenAddress token地址
 	TokenAddress string `form:"token_address" json:"token_address"`
 }
 
+// GetCommonBalanceParamsChainId defines parameters for GetCommonBalance.
+type GetCommonBalanceParamsChainId string
+
 // GetCommonTxResultParams defines parameters for GetCommonTxResult.
 type GetCommonTxResultParams struct {
-	ChainId string `form:"chain_id" json:"chain_id"`
-	TxHash  string `form:"tx_hash" json:"tx_hash"`
+	ChainId GetCommonTxResultParamsChainId `form:"chain_id" json:"chain_id"`
+	TxHash  string                         `form:"tx_hash" json:"tx_hash"`
 }
+
+// GetCommonTxResultParamsChainId defines parameters for GetCommonTxResult.
+type GetCommonTxResultParamsChainId string
 
 // GetKeyGetParams defines parameters for GetKeyGet.
 type GetKeyGetParams struct {
@@ -110,7 +281,7 @@ type GetKeyGetParams struct {
 // GetSwapPriceParams defines parameters for GetSwapPrice.
 type GetSwapPriceParams struct {
 	Amount             string                     `form:"amount" json:"amount"`
-	ChainId            string                     `form:"chain_id" json:"chain_id"`
+	ChainId            GetSwapPriceParamsChainId  `form:"chain_id" json:"chain_id"`
 	InputMint          string                     `form:"input_mint" json:"input_mint"`
 	InputMintDecimals  int                        `form:"input_mint_decimals" json:"input_mint_decimals"`
 	OutputMint         string                     `form:"output_mint" json:"output_mint"`
@@ -118,11 +289,26 @@ type GetSwapPriceParams struct {
 	Platform           GetSwapPriceParamsPlatform `form:"platform" json:"platform"`
 }
 
+// GetSwapPriceParamsChainId defines parameters for GetSwapPrice.
+type GetSwapPriceParamsChainId string
+
 // GetSwapPriceParamsPlatform defines parameters for GetSwapPrice.
 type GetSwapPriceParamsPlatform string
 
 // PostCommonSubmitTxJSONRequestBody defines body for PostCommonSubmitTx for application/json ContentType.
-type PostCommonSubmitTxJSONRequestBody = RequestSwapSubmitReq
+type PostCommonSubmitTxJSONRequestBody = RequestSubmitReq
+
+// PostPrimaryPrepareDepositJSONRequestBody defines body for PostPrimaryPrepareDeposit for application/json ContentType.
+type PostPrimaryPrepareDepositJSONRequestBody = RequestDepositReq
+
+// PostPrimaryPrepareLaunchJSONRequestBody defines body for PostPrimaryPrepareLaunch for application/json ContentType.
+type PostPrimaryPrepareLaunchJSONRequestBody = RequestTokenLaunchReq
+
+// PostPrimaryPrepareReclaimJSONRequestBody defines body for PostPrimaryPrepareReclaim for application/json ContentType.
+type PostPrimaryPrepareReclaimJSONRequestBody = RequestReclaimReq
+
+// PostPrimaryPrepareRedeemJSONRequestBody defines body for PostPrimaryPrepareRedeem for application/json ContentType.
+type PostPrimaryPrepareRedeemJSONRequestBody = RequestRedeemReq
 
 // PostSwapPrepareTxJSONRequestBody defines body for PostSwapPrepareTx for application/json ContentType.
 type PostSwapPrepareTxJSONRequestBody = RequestSwapPrepareReq
@@ -214,6 +400,26 @@ type ClientInterface interface {
 	// GetKeyGet request
 	GetKeyGet(ctx context.Context, params *GetKeyGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PostPrimaryPrepareDepositWithBody request with any body
+	PostPrimaryPrepareDepositWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostPrimaryPrepareDeposit(ctx context.Context, body PostPrimaryPrepareDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrimaryPrepareLaunchWithBody request with any body
+	PostPrimaryPrepareLaunchWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostPrimaryPrepareLaunch(ctx context.Context, body PostPrimaryPrepareLaunchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrimaryPrepareReclaimWithBody request with any body
+	PostPrimaryPrepareReclaimWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostPrimaryPrepareReclaim(ctx context.Context, body PostPrimaryPrepareReclaimJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostPrimaryPrepareRedeemWithBody request with any body
+	PostPrimaryPrepareRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostPrimaryPrepareRedeem(ctx context.Context, body PostPrimaryPrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PostSwapPrepareTxWithBody request with any body
 	PostSwapPrepareTxWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -273,6 +479,102 @@ func (c *Client) GetCommonTxResult(ctx context.Context, params *GetCommonTxResul
 
 func (c *Client) GetKeyGet(ctx context.Context, params *GetKeyGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetKeyGetRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostPrimaryPrepareDepositWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrimaryPrepareDepositRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostPrimaryPrepareDeposit(ctx context.Context, body PostPrimaryPrepareDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrimaryPrepareDepositRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostPrimaryPrepareLaunchWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrimaryPrepareLaunchRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostPrimaryPrepareLaunch(ctx context.Context, body PostPrimaryPrepareLaunchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrimaryPrepareLaunchRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostPrimaryPrepareReclaimWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrimaryPrepareReclaimRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostPrimaryPrepareReclaim(ctx context.Context, body PostPrimaryPrepareReclaimJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrimaryPrepareReclaimRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostPrimaryPrepareRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrimaryPrepareRedeemRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostPrimaryPrepareRedeem(ctx context.Context, body PostPrimaryPrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostPrimaryPrepareRedeemRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -554,6 +856,166 @@ func NewGetKeyGetRequest(server string, params *GetKeyGetParams) (*http.Request,
 	return req, nil
 }
 
+// NewPostPrimaryPrepareDepositRequest calls the generic PostPrimaryPrepareDeposit builder with application/json body
+func NewPostPrimaryPrepareDepositRequest(server string, body PostPrimaryPrepareDepositJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostPrimaryPrepareDepositRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostPrimaryPrepareDepositRequestWithBody generates requests for PostPrimaryPrepareDeposit with any type of body
+func NewPostPrimaryPrepareDepositRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/primary/prepare_deposit")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostPrimaryPrepareLaunchRequest calls the generic PostPrimaryPrepareLaunch builder with application/json body
+func NewPostPrimaryPrepareLaunchRequest(server string, body PostPrimaryPrepareLaunchJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostPrimaryPrepareLaunchRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostPrimaryPrepareLaunchRequestWithBody generates requests for PostPrimaryPrepareLaunch with any type of body
+func NewPostPrimaryPrepareLaunchRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/primary/prepare_launch")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostPrimaryPrepareReclaimRequest calls the generic PostPrimaryPrepareReclaim builder with application/json body
+func NewPostPrimaryPrepareReclaimRequest(server string, body PostPrimaryPrepareReclaimJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostPrimaryPrepareReclaimRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostPrimaryPrepareReclaimRequestWithBody generates requests for PostPrimaryPrepareReclaim with any type of body
+func NewPostPrimaryPrepareReclaimRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/primary/prepare_reclaim")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostPrimaryPrepareRedeemRequest calls the generic PostPrimaryPrepareRedeem builder with application/json body
+func NewPostPrimaryPrepareRedeemRequest(server string, body PostPrimaryPrepareRedeemJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostPrimaryPrepareRedeemRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostPrimaryPrepareRedeemRequestWithBody generates requests for PostPrimaryPrepareRedeem with any type of body
+func NewPostPrimaryPrepareRedeemRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/primary/prepare_redeem")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewPostSwapPrepareTxRequest calls the generic PostSwapPrepareTx builder with application/json body
 func NewPostSwapPrepareTxRequest(server string, body PostSwapPrepareTxJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -768,6 +1230,26 @@ type ClientWithResponsesInterface interface {
 	// GetKeyGetWithResponse request
 	GetKeyGetWithResponse(ctx context.Context, params *GetKeyGetParams, reqEditors ...RequestEditorFn) (*GetKeyGetResponse, error)
 
+	// PostPrimaryPrepareDepositWithBodyWithResponse request with any body
+	PostPrimaryPrepareDepositWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareDepositResponse, error)
+
+	PostPrimaryPrepareDepositWithResponse(ctx context.Context, body PostPrimaryPrepareDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareDepositResponse, error)
+
+	// PostPrimaryPrepareLaunchWithBodyWithResponse request with any body
+	PostPrimaryPrepareLaunchWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareLaunchResponse, error)
+
+	PostPrimaryPrepareLaunchWithResponse(ctx context.Context, body PostPrimaryPrepareLaunchJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareLaunchResponse, error)
+
+	// PostPrimaryPrepareReclaimWithBodyWithResponse request with any body
+	PostPrimaryPrepareReclaimWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareReclaimResponse, error)
+
+	PostPrimaryPrepareReclaimWithResponse(ctx context.Context, body PostPrimaryPrepareReclaimJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareReclaimResponse, error)
+
+	// PostPrimaryPrepareRedeemWithBodyWithResponse request with any body
+	PostPrimaryPrepareRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareRedeemResponse, error)
+
+	PostPrimaryPrepareRedeemWithResponse(ctx context.Context, body PostPrimaryPrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareRedeemResponse, error)
+
 	// PostSwapPrepareTxWithBodyWithResponse request with any body
 	PostSwapPrepareTxWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostSwapPrepareTxResponse, error)
 
@@ -802,7 +1284,7 @@ func (r GetCommonBalanceResponse) StatusCode() int {
 type PostCommonSubmitTxResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ResponseSwapSubmitResp
+	JSON200      *ResponseSubmitResp
 }
 
 // Status returns HTTPResponse.Status
@@ -859,6 +1341,94 @@ func (r GetKeyGetResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetKeyGetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostPrimaryPrepareDepositResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ResponseDepositPrepareResp
+}
+
+// Status returns HTTPResponse.Status
+func (r PostPrimaryPrepareDepositResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostPrimaryPrepareDepositResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostPrimaryPrepareLaunchResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ResponseLaunchPrepareResp
+}
+
+// Status returns HTTPResponse.Status
+func (r PostPrimaryPrepareLaunchResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostPrimaryPrepareLaunchResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostPrimaryPrepareReclaimResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ResponseReclaimPrepareResp
+}
+
+// Status returns HTTPResponse.Status
+func (r PostPrimaryPrepareReclaimResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostPrimaryPrepareReclaimResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostPrimaryPrepareRedeemResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *ResponseRedeemPrepareResp
+}
+
+// Status returns HTTPResponse.Status
+func (r PostPrimaryPrepareRedeemResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostPrimaryPrepareRedeemResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -953,6 +1523,74 @@ func (c *ClientWithResponses) GetKeyGetWithResponse(ctx context.Context, params 
 	return ParseGetKeyGetResponse(rsp)
 }
 
+// PostPrimaryPrepareDepositWithBodyWithResponse request with arbitrary body returning *PostPrimaryPrepareDepositResponse
+func (c *ClientWithResponses) PostPrimaryPrepareDepositWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareDepositResponse, error) {
+	rsp, err := c.PostPrimaryPrepareDepositWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrimaryPrepareDepositResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostPrimaryPrepareDepositWithResponse(ctx context.Context, body PostPrimaryPrepareDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareDepositResponse, error) {
+	rsp, err := c.PostPrimaryPrepareDeposit(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrimaryPrepareDepositResponse(rsp)
+}
+
+// PostPrimaryPrepareLaunchWithBodyWithResponse request with arbitrary body returning *PostPrimaryPrepareLaunchResponse
+func (c *ClientWithResponses) PostPrimaryPrepareLaunchWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareLaunchResponse, error) {
+	rsp, err := c.PostPrimaryPrepareLaunchWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrimaryPrepareLaunchResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostPrimaryPrepareLaunchWithResponse(ctx context.Context, body PostPrimaryPrepareLaunchJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareLaunchResponse, error) {
+	rsp, err := c.PostPrimaryPrepareLaunch(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrimaryPrepareLaunchResponse(rsp)
+}
+
+// PostPrimaryPrepareReclaimWithBodyWithResponse request with arbitrary body returning *PostPrimaryPrepareReclaimResponse
+func (c *ClientWithResponses) PostPrimaryPrepareReclaimWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareReclaimResponse, error) {
+	rsp, err := c.PostPrimaryPrepareReclaimWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrimaryPrepareReclaimResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostPrimaryPrepareReclaimWithResponse(ctx context.Context, body PostPrimaryPrepareReclaimJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareReclaimResponse, error) {
+	rsp, err := c.PostPrimaryPrepareReclaim(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrimaryPrepareReclaimResponse(rsp)
+}
+
+// PostPrimaryPrepareRedeemWithBodyWithResponse request with arbitrary body returning *PostPrimaryPrepareRedeemResponse
+func (c *ClientWithResponses) PostPrimaryPrepareRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareRedeemResponse, error) {
+	rsp, err := c.PostPrimaryPrepareRedeemWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrimaryPrepareRedeemResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostPrimaryPrepareRedeemWithResponse(ctx context.Context, body PostPrimaryPrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareRedeemResponse, error) {
+	rsp, err := c.PostPrimaryPrepareRedeem(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostPrimaryPrepareRedeemResponse(rsp)
+}
+
 // PostSwapPrepareTxWithBodyWithResponse request with arbitrary body returning *PostSwapPrepareTxResponse
 func (c *ClientWithResponses) PostSwapPrepareTxWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostSwapPrepareTxResponse, error) {
 	rsp, err := c.PostSwapPrepareTxWithBody(ctx, contentType, body, reqEditors...)
@@ -1020,7 +1658,7 @@ func ParsePostCommonSubmitTxResponse(rsp *http.Response) (*PostCommonSubmitTxRes
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ResponseSwapSubmitResp
+		var dest ResponseSubmitResp
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1073,6 +1711,110 @@ func ParseGetKeyGetResponse(rsp *http.Response) (*GetKeyGetResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest string
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostPrimaryPrepareDepositResponse parses an HTTP response from a PostPrimaryPrepareDepositWithResponse call
+func ParsePostPrimaryPrepareDepositResponse(rsp *http.Response) (*PostPrimaryPrepareDepositResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostPrimaryPrepareDepositResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ResponseDepositPrepareResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostPrimaryPrepareLaunchResponse parses an HTTP response from a PostPrimaryPrepareLaunchWithResponse call
+func ParsePostPrimaryPrepareLaunchResponse(rsp *http.Response) (*PostPrimaryPrepareLaunchResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostPrimaryPrepareLaunchResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ResponseLaunchPrepareResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostPrimaryPrepareReclaimResponse parses an HTTP response from a PostPrimaryPrepareReclaimWithResponse call
+func ParsePostPrimaryPrepareReclaimResponse(rsp *http.Response) (*PostPrimaryPrepareReclaimResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostPrimaryPrepareReclaimResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ResponseReclaimPrepareResp
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostPrimaryPrepareRedeemResponse parses an HTTP response from a PostPrimaryPrepareRedeemWithResponse call
+func ParsePostPrimaryPrepareRedeemResponse(rsp *http.Response) (*PostPrimaryPrepareRedeemResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostPrimaryPrepareRedeemResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ResponseRedeemPrepareResp
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1138,28 +1880,43 @@ func ParseGetSwapPriceResponse(rsp *http.Response) (*GetSwapPriceResponse, error
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/8xYXW/bNhf+Kwbf99KRnGzYCl8t/UBRtN2CuBcDhkCg5ROZrUQyJBXbC3yxoRe72NYA",
-	"DYat6D5RYMOAodhVgHQff8axu38xkJJiSaHkeDGy3dmieMjzPOd5eKgD5LOIMwpUSdQ+QNLvQ4TNT6CK",
-	"qJFz89b73laI1S4TUfI4jlD7A7SNRz0SR6iZ/WrcuHf/PtppIjXigNpIKkFogJpouKbnrO1jQXEEUk++",
-	"CcP5/PkfLwkxbiIBezFI5XQGmG8J4FjANuzp9blgHIQiYDaJIxZTpX8VVx03kd/HhHqkZx0klMfKi0jF",
-	"XBar2nGeA+T/AnZRG/3PnSPppjC6NgzHTSSB9kBYI8uQcI4D8Lpc5l4gVEEAAo1TbIiAngYyzT+XbSG3",
-	"Yia5fZ/tYc4X6z4EX6ES+J24GxFlxb4W4LoUSUCxigVYR9XQi2TgdbGEt960vFECIJd3umR+gXI4e7aS",
-	"MyrBuY5DTH3YBsnPJ9tNBpevNDagFTgo9gioh3s9AVLaM63ebEEYtg0vieMSOCVLkyqkFkhrPuzViHeR",
-	"AHPjdWG43mZuhMZRN1VRfX5Z2Vcg28eyvyxjD4bbIOOwIqiMfb9YBl3GQsA01cSFVzTa82NB1KijXSgJ",
-	"v8nJXRhtxsoE6YH0BeGKMIraSD9lgnyI9f+GqUrjIqiN+oATSWnnRm2UDaZrYhMVjceG111mXIFRhX1D",
-	"B0SYhNmsNaABofBOoB86PotKUdPxxubWnUYn5pwJbVix0AH6SvG2665vvO20nJaz3r7WutZyZfrWuFlK",
-	"6EGfyAaRDdyQOOIhNCSIfRCNwjrJMwc1UUh8oNKUSbqhTY79PjQ2nFZ5C4PBwMFm1GEicNOp0r1358at",
-	"dzu31jacltNXUWhYAxHJ93Y7IPZNFWYx5AAHAQiHMNe84mpAiQptUKAm2gchk7zWnZapfQ4Uc4La6A0N",
-	"h7Z1rPqGZn0GRYy6ObcKQJ2n/PXnx6dPvjCLTX7/6q8fvkYmrDAlcKeH2ug2qBsmVuqKZhWBI1Ag9BF+",
-	"kBTIXgxiNGcy58Zzc1EihmbaWVhL2B4rMc4VBCr67DIBd+byNfButFpZiUPiOJjzkPgGNveh1Nge5OLV",
-	"tQbWY8coqUhVws/s1dPpN88nf34//ehlovE4irAYVXCpcGD6rKQc0I6ekdWGNNbmqaExISYt5TF9cjg5",
-	"eTE5eTH98um5ythiMi2NxCQfDNFZy3Cd9UYrRMjWhlggym/39cvj6a8fn2N5fBVMlg6OBTtNKC2RWUK+",
-	"jkc19IQ5UBaovLBapcyz0+nqdZ4dbv85YRYObJsyc8DWKLOEv5XSRzByUwprmDw9OZod/TR79hhz0ngE",
-	"Ixubd2F0Gy7IIuZ8RRzqjnsltXAhf55fhi5bB+VtneM4Q9pGrIWOjFysG62EWjnA3OVJp15rurOjb6ef",
-	"HE6f/zz75Y/Tw89mzx5PTj6dnfxYY8O5S8CVuHDuJl6ph3/bgPOXIpsDV+BrFfBCSjK+NclFvsnC7mvy",
-	"6nj63W/puhYln12zLijm7EvApUW4SnMvfItYYTSvBz6JcLikX1S1moWPJJfvXHOX05XuM/f5pjrYsh/o",
-	"xv/kC93O1cmZ1PTGeQlZz96ixspyNXdlfQ1MZJXc9Fw3ZD4O+0wqfc/ccDEn7v46Gu+M/w4AAP//IGcw",
-	"cC4VAAA=",
+	"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",
+	"uv8PAAD//wloJnSRLQAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
