@@ -31,26 +31,41 @@ const (
 	DexRaydiumCLMM EntityDEXPlatform = "Raydium CLMM"
 )
 
-// Defines values for GetCommonBalanceParamsChainId.
+// Defines values for GetApiV1CommonBalanceParamsChainId.
 const (
-	GetCommonBalanceParamsChainIdN1001 GetCommonBalanceParamsChainId = "1001"
+	GetApiV1CommonBalanceParamsChainIdN1001 GetApiV1CommonBalanceParamsChainId = "1001"
 )
 
-// Defines values for GetCommonTxResultParamsChainId.
+// Defines values for GetApiV1CommonTxResultParamsChainId.
 const (
-	GetCommonTxResultParamsChainIdN1001 GetCommonTxResultParamsChainId = "1001"
+	GetApiV1CommonTxResultParamsChainIdN1001 GetApiV1CommonTxResultParamsChainId = "1001"
 )
 
-// Defines values for GetSwapPriceParamsChainId.
+// Defines values for GetApiV1SwapPriceParamsChainId.
 const (
-	N1001 GetSwapPriceParamsChainId = "1001"
+	N1001 GetApiV1SwapPriceParamsChainId = "1001"
 )
 
-// Defines values for GetSwapPriceParamsPlatform.
+// Defines values for GetApiV1SwapPriceParamsPlatform.
 const (
-	Raydium     GetSwapPriceParamsPlatform = "Raydium"
-	RaydiumCLMM GetSwapPriceParamsPlatform = "Raydium CLMM"
+	Raydium     GetApiV1SwapPriceParamsPlatform = "Raydium"
+	RaydiumCLMM GetApiV1SwapPriceParamsPlatform = "Raydium CLMM"
 )
+
+// CommonApiResp API标准响应格式
+type CommonApiResp struct {
+	// Code Code is the response code
+	// @Description 响应状态码
+	Code *int `json:"code,omitempty"`
+
+	// Data Data is the response data
+	// @Description 响应数据
+	Data *interface{} `json:"data,omitempty"`
+
+	// Message Message is the response message
+	// @Description 响应消息
+	Message *string `json:"message,omitempty"`
+}
 
 // CommonChainID defines model for common.ChainID.
 type CommonChainID string
@@ -248,9 +263,9 @@ type ResponseTxResultResp struct {
 	TxHash    *string `json:"tx_hash,omitempty"`
 }
 
-// GetCommonBalanceParams defines parameters for GetCommonBalance.
-type GetCommonBalanceParams struct {
-	ChainId GetCommonBalanceParamsChainId `form:"chain_id" json:"chain_id"`
+// GetApiV1CommonBalanceParams defines parameters for GetApiV1CommonBalance.
+type GetApiV1CommonBalanceParams struct {
+	ChainId GetApiV1CommonBalanceParamsChainId `form:"chain_id" json:"chain_id"`
 
 	// Owner 账户地址
 	Owner string `form:"owner" json:"owner"`
@@ -259,59 +274,59 @@ type GetCommonBalanceParams struct {
 	TokenAddress string `form:"token_address" json:"token_address"`
 }
 
-// GetCommonBalanceParamsChainId defines parameters for GetCommonBalance.
-type GetCommonBalanceParamsChainId string
+// GetApiV1CommonBalanceParamsChainId defines parameters for GetApiV1CommonBalance.
+type GetApiV1CommonBalanceParamsChainId string
 
-// GetCommonTxResultParams defines parameters for GetCommonTxResult.
-type GetCommonTxResultParams struct {
-	ChainId GetCommonTxResultParamsChainId `form:"chain_id" json:"chain_id"`
-	TxHash  string                         `form:"tx_hash" json:"tx_hash"`
+// GetApiV1CommonTxResultParams defines parameters for GetApiV1CommonTxResult.
+type GetApiV1CommonTxResultParams struct {
+	ChainId GetApiV1CommonTxResultParamsChainId `form:"chain_id" json:"chain_id"`
+	TxHash  string                              `form:"tx_hash" json:"tx_hash"`
 }
 
-// GetCommonTxResultParamsChainId defines parameters for GetCommonTxResult.
-type GetCommonTxResultParamsChainId string
+// GetApiV1CommonTxResultParamsChainId defines parameters for GetApiV1CommonTxResult.
+type GetApiV1CommonTxResultParamsChainId string
 
-// GetKeyGetParams defines parameters for GetKeyGet.
-type GetKeyGetParams struct {
+// GetApiV1KeyGetParams defines parameters for GetApiV1KeyGet.
+type GetApiV1KeyGetParams struct {
 	AppId string `form:"app_id" json:"app_id"`
 	Sign  string `form:"sign" json:"sign"`
 	Ts    int    `form:"ts" json:"ts"`
 }
 
-// GetSwapPriceParams defines parameters for GetSwapPrice.
-type GetSwapPriceParams struct {
-	Amount             string                     `form:"amount" json:"amount"`
-	ChainId            GetSwapPriceParamsChainId  `form:"chain_id" json:"chain_id"`
-	InputMint          string                     `form:"input_mint" json:"input_mint"`
-	InputMintDecimals  int                        `form:"input_mint_decimals" json:"input_mint_decimals"`
-	OutputMint         string                     `form:"output_mint" json:"output_mint"`
-	OutputMintDecimals int                        `form:"output_mint_decimals" json:"output_mint_decimals"`
-	Platform           GetSwapPriceParamsPlatform `form:"platform" json:"platform"`
+// GetApiV1SwapPriceParams defines parameters for GetApiV1SwapPrice.
+type GetApiV1SwapPriceParams struct {
+	Amount             string                          `form:"amount" json:"amount"`
+	ChainId            GetApiV1SwapPriceParamsChainId  `form:"chain_id" json:"chain_id"`
+	InputMint          string                          `form:"input_mint" json:"input_mint"`
+	InputMintDecimals  int                             `form:"input_mint_decimals" json:"input_mint_decimals"`
+	OutputMint         string                          `form:"output_mint" json:"output_mint"`
+	OutputMintDecimals int                             `form:"output_mint_decimals" json:"output_mint_decimals"`
+	Platform           GetApiV1SwapPriceParamsPlatform `form:"platform" json:"platform"`
 }
 
-// GetSwapPriceParamsChainId defines parameters for GetSwapPrice.
-type GetSwapPriceParamsChainId string
+// GetApiV1SwapPriceParamsChainId defines parameters for GetApiV1SwapPrice.
+type GetApiV1SwapPriceParamsChainId string
 
-// GetSwapPriceParamsPlatform defines parameters for GetSwapPrice.
-type GetSwapPriceParamsPlatform string
+// GetApiV1SwapPriceParamsPlatform defines parameters for GetApiV1SwapPrice.
+type GetApiV1SwapPriceParamsPlatform string
 
-// PostCommonSubmitTxJSONRequestBody defines body for PostCommonSubmitTx for application/json ContentType.
-type PostCommonSubmitTxJSONRequestBody = RequestSubmitReq
+// PostApiV1CommonSubmitTxJSONRequestBody defines body for PostApiV1CommonSubmitTx for application/json ContentType.
+type PostApiV1CommonSubmitTxJSONRequestBody = RequestSubmitReq
 
-// PostPrimaryPrepareDepositJSONRequestBody defines body for PostPrimaryPrepareDeposit for application/json ContentType.
-type PostPrimaryPrepareDepositJSONRequestBody = RequestDepositReq
+// PostApiV1PrimaryPrepareDepositJSONRequestBody defines body for PostApiV1PrimaryPrepareDeposit for application/json ContentType.
+type PostApiV1PrimaryPrepareDepositJSONRequestBody = RequestDepositReq
 
-// PostPrimaryPrepareLaunchJSONRequestBody defines body for PostPrimaryPrepareLaunch for application/json ContentType.
-type PostPrimaryPrepareLaunchJSONRequestBody = RequestTokenLaunchReq
+// PostApiV1PrimaryPrepareLaunchJSONRequestBody defines body for PostApiV1PrimaryPrepareLaunch for application/json ContentType.
+type PostApiV1PrimaryPrepareLaunchJSONRequestBody = RequestTokenLaunchReq
 
-// PostPrimaryPrepareReclaimJSONRequestBody defines body for PostPrimaryPrepareReclaim for application/json ContentType.
-type PostPrimaryPrepareReclaimJSONRequestBody = RequestReclaimReq
+// PostApiV1PrimaryPrepareReclaimJSONRequestBody defines body for PostApiV1PrimaryPrepareReclaim for application/json ContentType.
+type PostApiV1PrimaryPrepareReclaimJSONRequestBody = RequestReclaimReq
 
-// PostPrimaryPrepareRedeemJSONRequestBody defines body for PostPrimaryPrepareRedeem for application/json ContentType.
-type PostPrimaryPrepareRedeemJSONRequestBody = RequestRedeemReq
+// PostApiV1PrimaryPrepareRedeemJSONRequestBody defines body for PostApiV1PrimaryPrepareRedeem for application/json ContentType.
+type PostApiV1PrimaryPrepareRedeemJSONRequestBody = RequestRedeemReq
 
-// PostSwapPrepareTxJSONRequestBody defines body for PostSwapPrepareTx for application/json ContentType.
-type PostSwapPrepareTxJSONRequestBody = RequestSwapPrepareReq
+// PostApiV1SwapPrepareTxJSONRequestBody defines body for PostApiV1SwapPrepareTx for application/json ContentType.
+type PostApiV1SwapPrepareTxJSONRequestBody = RequestSwapPrepareReq
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -386,51 +401,51 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-	// GetCommonBalance request
-	GetCommonBalance(ctx context.Context, params *GetCommonBalanceParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetApiV1CommonBalance request
+	GetApiV1CommonBalance(ctx context.Context, params *GetApiV1CommonBalanceParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostCommonSubmitTxWithBody request with any body
-	PostCommonSubmitTxWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostApiV1CommonSubmitTxWithBody request with any body
+	PostApiV1CommonSubmitTxWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostCommonSubmitTx(ctx context.Context, body PostCommonSubmitTxJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiV1CommonSubmitTx(ctx context.Context, body PostApiV1CommonSubmitTxJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetCommonTxResult request
-	GetCommonTxResult(ctx context.Context, params *GetCommonTxResultParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetApiV1CommonTxResult request
+	GetApiV1CommonTxResult(ctx context.Context, params *GetApiV1CommonTxResultParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetKeyGet request
-	GetKeyGet(ctx context.Context, params *GetKeyGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetApiV1KeyGet request
+	GetApiV1KeyGet(ctx context.Context, params *GetApiV1KeyGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostPrimaryPrepareDepositWithBody request with any body
-	PostPrimaryPrepareDepositWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostApiV1PrimaryPrepareDepositWithBody request with any body
+	PostApiV1PrimaryPrepareDepositWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostPrimaryPrepareDeposit(ctx context.Context, body PostPrimaryPrepareDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiV1PrimaryPrepareDeposit(ctx context.Context, body PostApiV1PrimaryPrepareDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostPrimaryPrepareLaunchWithBody request with any body
-	PostPrimaryPrepareLaunchWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostApiV1PrimaryPrepareLaunchWithBody request with any body
+	PostApiV1PrimaryPrepareLaunchWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostPrimaryPrepareLaunch(ctx context.Context, body PostPrimaryPrepareLaunchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiV1PrimaryPrepareLaunch(ctx context.Context, body PostApiV1PrimaryPrepareLaunchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostPrimaryPrepareReclaimWithBody request with any body
-	PostPrimaryPrepareReclaimWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostApiV1PrimaryPrepareReclaimWithBody request with any body
+	PostApiV1PrimaryPrepareReclaimWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostPrimaryPrepareReclaim(ctx context.Context, body PostPrimaryPrepareReclaimJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiV1PrimaryPrepareReclaim(ctx context.Context, body PostApiV1PrimaryPrepareReclaimJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostPrimaryPrepareRedeemWithBody request with any body
-	PostPrimaryPrepareRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostApiV1PrimaryPrepareRedeemWithBody request with any body
+	PostApiV1PrimaryPrepareRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostPrimaryPrepareRedeem(ctx context.Context, body PostPrimaryPrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiV1PrimaryPrepareRedeem(ctx context.Context, body PostApiV1PrimaryPrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostSwapPrepareTxWithBody request with any body
-	PostSwapPrepareTxWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostApiV1SwapPrepareTxWithBody request with any body
+	PostApiV1SwapPrepareTxWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostSwapPrepareTx(ctx context.Context, body PostSwapPrepareTxJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiV1SwapPrepareTx(ctx context.Context, body PostApiV1SwapPrepareTxJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetSwapPrice request
-	GetSwapPrice(ctx context.Context, params *GetSwapPriceParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// GetApiV1SwapPrice request
+	GetApiV1SwapPrice(ctx context.Context, params *GetApiV1SwapPriceParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-func (c *Client) GetCommonBalance(ctx context.Context, params *GetCommonBalanceParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetCommonBalanceRequest(c.Server, params)
+func (c *Client) GetApiV1CommonBalance(ctx context.Context, params *GetApiV1CommonBalanceParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiV1CommonBalanceRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -441,8 +456,8 @@ func (c *Client) GetCommonBalance(ctx context.Context, params *GetCommonBalanceP
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostCommonSubmitTxWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostCommonSubmitTxRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostApiV1CommonSubmitTxWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1CommonSubmitTxRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -453,8 +468,8 @@ func (c *Client) PostCommonSubmitTxWithBody(ctx context.Context, contentType str
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostCommonSubmitTx(ctx context.Context, body PostCommonSubmitTxJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostCommonSubmitTxRequest(c.Server, body)
+func (c *Client) PostApiV1CommonSubmitTx(ctx context.Context, body PostApiV1CommonSubmitTxJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1CommonSubmitTxRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -465,8 +480,8 @@ func (c *Client) PostCommonSubmitTx(ctx context.Context, body PostCommonSubmitTx
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetCommonTxResult(ctx context.Context, params *GetCommonTxResultParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetCommonTxResultRequest(c.Server, params)
+func (c *Client) GetApiV1CommonTxResult(ctx context.Context, params *GetApiV1CommonTxResultParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiV1CommonTxResultRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -477,8 +492,8 @@ func (c *Client) GetCommonTxResult(ctx context.Context, params *GetCommonTxResul
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetKeyGet(ctx context.Context, params *GetKeyGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetKeyGetRequest(c.Server, params)
+func (c *Client) GetApiV1KeyGet(ctx context.Context, params *GetApiV1KeyGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiV1KeyGetRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -489,8 +504,8 @@ func (c *Client) GetKeyGet(ctx context.Context, params *GetKeyGetParams, reqEdit
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostPrimaryPrepareDepositWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostPrimaryPrepareDepositRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostApiV1PrimaryPrepareDepositWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1PrimaryPrepareDepositRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -501,8 +516,8 @@ func (c *Client) PostPrimaryPrepareDepositWithBody(ctx context.Context, contentT
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostPrimaryPrepareDeposit(ctx context.Context, body PostPrimaryPrepareDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostPrimaryPrepareDepositRequest(c.Server, body)
+func (c *Client) PostApiV1PrimaryPrepareDeposit(ctx context.Context, body PostApiV1PrimaryPrepareDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1PrimaryPrepareDepositRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -513,8 +528,8 @@ func (c *Client) PostPrimaryPrepareDeposit(ctx context.Context, body PostPrimary
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostPrimaryPrepareLaunchWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostPrimaryPrepareLaunchRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostApiV1PrimaryPrepareLaunchWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1PrimaryPrepareLaunchRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -525,8 +540,8 @@ func (c *Client) PostPrimaryPrepareLaunchWithBody(ctx context.Context, contentTy
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostPrimaryPrepareLaunch(ctx context.Context, body PostPrimaryPrepareLaunchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostPrimaryPrepareLaunchRequest(c.Server, body)
+func (c *Client) PostApiV1PrimaryPrepareLaunch(ctx context.Context, body PostApiV1PrimaryPrepareLaunchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1PrimaryPrepareLaunchRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -537,8 +552,8 @@ func (c *Client) PostPrimaryPrepareLaunch(ctx context.Context, body PostPrimaryP
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostPrimaryPrepareReclaimWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostPrimaryPrepareReclaimRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostApiV1PrimaryPrepareReclaimWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1PrimaryPrepareReclaimRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -549,8 +564,8 @@ func (c *Client) PostPrimaryPrepareReclaimWithBody(ctx context.Context, contentT
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostPrimaryPrepareReclaim(ctx context.Context, body PostPrimaryPrepareReclaimJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostPrimaryPrepareReclaimRequest(c.Server, body)
+func (c *Client) PostApiV1PrimaryPrepareReclaim(ctx context.Context, body PostApiV1PrimaryPrepareReclaimJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1PrimaryPrepareReclaimRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -561,8 +576,8 @@ func (c *Client) PostPrimaryPrepareReclaim(ctx context.Context, body PostPrimary
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostPrimaryPrepareRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostPrimaryPrepareRedeemRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostApiV1PrimaryPrepareRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1PrimaryPrepareRedeemRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -573,8 +588,8 @@ func (c *Client) PostPrimaryPrepareRedeemWithBody(ctx context.Context, contentTy
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostPrimaryPrepareRedeem(ctx context.Context, body PostPrimaryPrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostPrimaryPrepareRedeemRequest(c.Server, body)
+func (c *Client) PostApiV1PrimaryPrepareRedeem(ctx context.Context, body PostApiV1PrimaryPrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1PrimaryPrepareRedeemRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -585,8 +600,8 @@ func (c *Client) PostPrimaryPrepareRedeem(ctx context.Context, body PostPrimaryP
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostSwapPrepareTxWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostSwapPrepareTxRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostApiV1SwapPrepareTxWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1SwapPrepareTxRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -597,8 +612,8 @@ func (c *Client) PostSwapPrepareTxWithBody(ctx context.Context, contentType stri
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostSwapPrepareTx(ctx context.Context, body PostSwapPrepareTxJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostSwapPrepareTxRequest(c.Server, body)
+func (c *Client) PostApiV1SwapPrepareTx(ctx context.Context, body PostApiV1SwapPrepareTxJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1SwapPrepareTxRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -609,8 +624,8 @@ func (c *Client) PostSwapPrepareTx(ctx context.Context, body PostSwapPrepareTxJS
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetSwapPrice(ctx context.Context, params *GetSwapPriceParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetSwapPriceRequest(c.Server, params)
+func (c *Client) GetApiV1SwapPrice(ctx context.Context, params *GetApiV1SwapPriceParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiV1SwapPriceRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -621,8 +636,8 @@ func (c *Client) GetSwapPrice(ctx context.Context, params *GetSwapPriceParams, r
 	return c.Client.Do(req)
 }
 
-// NewGetCommonBalanceRequest generates requests for GetCommonBalance
-func NewGetCommonBalanceRequest(server string, params *GetCommonBalanceParams) (*http.Request, error) {
+// NewGetApiV1CommonBalanceRequest generates requests for GetApiV1CommonBalance
+func NewGetApiV1CommonBalanceRequest(server string, params *GetApiV1CommonBalanceParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -630,7 +645,7 @@ func NewGetCommonBalanceRequest(server string, params *GetCommonBalanceParams) (
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/common/balance")
+	operationPath := fmt.Sprintf("/api/v1/common/balance")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -690,19 +705,19 @@ func NewGetCommonBalanceRequest(server string, params *GetCommonBalanceParams) (
 	return req, nil
 }
 
-// NewPostCommonSubmitTxRequest calls the generic PostCommonSubmitTx builder with application/json body
-func NewPostCommonSubmitTxRequest(server string, body PostCommonSubmitTxJSONRequestBody) (*http.Request, error) {
+// NewPostApiV1CommonSubmitTxRequest calls the generic PostApiV1CommonSubmitTx builder with application/json body
+func NewPostApiV1CommonSubmitTxRequest(server string, body PostApiV1CommonSubmitTxJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostCommonSubmitTxRequestWithBody(server, "application/json", bodyReader)
+	return NewPostApiV1CommonSubmitTxRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostCommonSubmitTxRequestWithBody generates requests for PostCommonSubmitTx with any type of body
-func NewPostCommonSubmitTxRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostApiV1CommonSubmitTxRequestWithBody generates requests for PostApiV1CommonSubmitTx with any type of body
+func NewPostApiV1CommonSubmitTxRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -710,7 +725,7 @@ func NewPostCommonSubmitTxRequestWithBody(server string, contentType string, bod
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/common/submit_tx")
+	operationPath := fmt.Sprintf("/api/v1/common/submit_tx")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -730,8 +745,8 @@ func NewPostCommonSubmitTxRequestWithBody(server string, contentType string, bod
 	return req, nil
 }
 
-// NewGetCommonTxResultRequest generates requests for GetCommonTxResult
-func NewGetCommonTxResultRequest(server string, params *GetCommonTxResultParams) (*http.Request, error) {
+// NewGetApiV1CommonTxResultRequest generates requests for GetApiV1CommonTxResult
+func NewGetApiV1CommonTxResultRequest(server string, params *GetApiV1CommonTxResultParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -739,7 +754,7 @@ func NewGetCommonTxResultRequest(server string, params *GetCommonTxResultParams)
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/common/tx_result")
+	operationPath := fmt.Sprintf("/api/v1/common/tx_result")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -787,8 +802,8 @@ func NewGetCommonTxResultRequest(server string, params *GetCommonTxResultParams)
 	return req, nil
 }
 
-// NewGetKeyGetRequest generates requests for GetKeyGet
-func NewGetKeyGetRequest(server string, params *GetKeyGetParams) (*http.Request, error) {
+// NewGetApiV1KeyGetRequest generates requests for GetApiV1KeyGet
+func NewGetApiV1KeyGetRequest(server string, params *GetApiV1KeyGetParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -796,7 +811,7 @@ func NewGetKeyGetRequest(server string, params *GetKeyGetParams) (*http.Request,
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/key/get")
+	operationPath := fmt.Sprintf("/api/v1/key/get")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -856,19 +871,19 @@ func NewGetKeyGetRequest(server string, params *GetKeyGetParams) (*http.Request,
 	return req, nil
 }
 
-// NewPostPrimaryPrepareDepositRequest calls the generic PostPrimaryPrepareDeposit builder with application/json body
-func NewPostPrimaryPrepareDepositRequest(server string, body PostPrimaryPrepareDepositJSONRequestBody) (*http.Request, error) {
+// NewPostApiV1PrimaryPrepareDepositRequest calls the generic PostApiV1PrimaryPrepareDeposit builder with application/json body
+func NewPostApiV1PrimaryPrepareDepositRequest(server string, body PostApiV1PrimaryPrepareDepositJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostPrimaryPrepareDepositRequestWithBody(server, "application/json", bodyReader)
+	return NewPostApiV1PrimaryPrepareDepositRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostPrimaryPrepareDepositRequestWithBody generates requests for PostPrimaryPrepareDeposit with any type of body
-func NewPostPrimaryPrepareDepositRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostApiV1PrimaryPrepareDepositRequestWithBody generates requests for PostApiV1PrimaryPrepareDeposit with any type of body
+func NewPostApiV1PrimaryPrepareDepositRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -876,7 +891,7 @@ func NewPostPrimaryPrepareDepositRequestWithBody(server string, contentType stri
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/primary/prepare_deposit")
+	operationPath := fmt.Sprintf("/api/v1/primary/prepare_deposit")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -896,19 +911,19 @@ func NewPostPrimaryPrepareDepositRequestWithBody(server string, contentType stri
 	return req, nil
 }
 
-// NewPostPrimaryPrepareLaunchRequest calls the generic PostPrimaryPrepareLaunch builder with application/json body
-func NewPostPrimaryPrepareLaunchRequest(server string, body PostPrimaryPrepareLaunchJSONRequestBody) (*http.Request, error) {
+// NewPostApiV1PrimaryPrepareLaunchRequest calls the generic PostApiV1PrimaryPrepareLaunch builder with application/json body
+func NewPostApiV1PrimaryPrepareLaunchRequest(server string, body PostApiV1PrimaryPrepareLaunchJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostPrimaryPrepareLaunchRequestWithBody(server, "application/json", bodyReader)
+	return NewPostApiV1PrimaryPrepareLaunchRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostPrimaryPrepareLaunchRequestWithBody generates requests for PostPrimaryPrepareLaunch with any type of body
-func NewPostPrimaryPrepareLaunchRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostApiV1PrimaryPrepareLaunchRequestWithBody generates requests for PostApiV1PrimaryPrepareLaunch with any type of body
+func NewPostApiV1PrimaryPrepareLaunchRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -916,7 +931,7 @@ func NewPostPrimaryPrepareLaunchRequestWithBody(server string, contentType strin
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/primary/prepare_launch")
+	operationPath := fmt.Sprintf("/api/v1/primary/prepare_launch")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -936,19 +951,19 @@ func NewPostPrimaryPrepareLaunchRequestWithBody(server string, contentType strin
 	return req, nil
 }
 
-// NewPostPrimaryPrepareReclaimRequest calls the generic PostPrimaryPrepareReclaim builder with application/json body
-func NewPostPrimaryPrepareReclaimRequest(server string, body PostPrimaryPrepareReclaimJSONRequestBody) (*http.Request, error) {
+// NewPostApiV1PrimaryPrepareReclaimRequest calls the generic PostApiV1PrimaryPrepareReclaim builder with application/json body
+func NewPostApiV1PrimaryPrepareReclaimRequest(server string, body PostApiV1PrimaryPrepareReclaimJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostPrimaryPrepareReclaimRequestWithBody(server, "application/json", bodyReader)
+	return NewPostApiV1PrimaryPrepareReclaimRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostPrimaryPrepareReclaimRequestWithBody generates requests for PostPrimaryPrepareReclaim with any type of body
-func NewPostPrimaryPrepareReclaimRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostApiV1PrimaryPrepareReclaimRequestWithBody generates requests for PostApiV1PrimaryPrepareReclaim with any type of body
+func NewPostApiV1PrimaryPrepareReclaimRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -956,7 +971,7 @@ func NewPostPrimaryPrepareReclaimRequestWithBody(server string, contentType stri
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/primary/prepare_reclaim")
+	operationPath := fmt.Sprintf("/api/v1/primary/prepare_reclaim")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -976,19 +991,19 @@ func NewPostPrimaryPrepareReclaimRequestWithBody(server string, contentType stri
 	return req, nil
 }
 
-// NewPostPrimaryPrepareRedeemRequest calls the generic PostPrimaryPrepareRedeem builder with application/json body
-func NewPostPrimaryPrepareRedeemRequest(server string, body PostPrimaryPrepareRedeemJSONRequestBody) (*http.Request, error) {
+// NewPostApiV1PrimaryPrepareRedeemRequest calls the generic PostApiV1PrimaryPrepareRedeem builder with application/json body
+func NewPostApiV1PrimaryPrepareRedeemRequest(server string, body PostApiV1PrimaryPrepareRedeemJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostPrimaryPrepareRedeemRequestWithBody(server, "application/json", bodyReader)
+	return NewPostApiV1PrimaryPrepareRedeemRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostPrimaryPrepareRedeemRequestWithBody generates requests for PostPrimaryPrepareRedeem with any type of body
-func NewPostPrimaryPrepareRedeemRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostApiV1PrimaryPrepareRedeemRequestWithBody generates requests for PostApiV1PrimaryPrepareRedeem with any type of body
+func NewPostApiV1PrimaryPrepareRedeemRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -996,7 +1011,7 @@ func NewPostPrimaryPrepareRedeemRequestWithBody(server string, contentType strin
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/primary/prepare_redeem")
+	operationPath := fmt.Sprintf("/api/v1/primary/prepare_redeem")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1016,19 +1031,19 @@ func NewPostPrimaryPrepareRedeemRequestWithBody(server string, contentType strin
 	return req, nil
 }
 
-// NewPostSwapPrepareTxRequest calls the generic PostSwapPrepareTx builder with application/json body
-func NewPostSwapPrepareTxRequest(server string, body PostSwapPrepareTxJSONRequestBody) (*http.Request, error) {
+// NewPostApiV1SwapPrepareTxRequest calls the generic PostApiV1SwapPrepareTx builder with application/json body
+func NewPostApiV1SwapPrepareTxRequest(server string, body PostApiV1SwapPrepareTxJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostSwapPrepareTxRequestWithBody(server, "application/json", bodyReader)
+	return NewPostApiV1SwapPrepareTxRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostSwapPrepareTxRequestWithBody generates requests for PostSwapPrepareTx with any type of body
-func NewPostSwapPrepareTxRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostApiV1SwapPrepareTxRequestWithBody generates requests for PostApiV1SwapPrepareTx with any type of body
+func NewPostApiV1SwapPrepareTxRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -1036,7 +1051,7 @@ func NewPostSwapPrepareTxRequestWithBody(server string, contentType string, body
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/swap/prepare_tx")
+	operationPath := fmt.Sprintf("/api/v1/swap/prepare_tx")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1056,8 +1071,8 @@ func NewPostSwapPrepareTxRequestWithBody(server string, contentType string, body
 	return req, nil
 }
 
-// NewGetSwapPriceRequest generates requests for GetSwapPrice
-func NewGetSwapPriceRequest(server string, params *GetSwapPriceParams) (*http.Request, error) {
+// NewGetApiV1SwapPriceRequest generates requests for GetApiV1SwapPrice
+func NewGetApiV1SwapPriceRequest(server string, params *GetApiV1SwapPriceParams) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -1065,7 +1080,7 @@ func NewGetSwapPriceRequest(server string, params *GetSwapPriceParams) (*http.Re
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/swap/price")
+	operationPath := fmt.Sprintf("/api/v1/swap/price")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1216,57 +1231,66 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
-	// GetCommonBalanceWithResponse request
-	GetCommonBalanceWithResponse(ctx context.Context, params *GetCommonBalanceParams, reqEditors ...RequestEditorFn) (*GetCommonBalanceResponse, error)
+	// GetApiV1CommonBalanceWithResponse request
+	GetApiV1CommonBalanceWithResponse(ctx context.Context, params *GetApiV1CommonBalanceParams, reqEditors ...RequestEditorFn) (*GetApiV1CommonBalanceResponse, error)
 
-	// PostCommonSubmitTxWithBodyWithResponse request with any body
-	PostCommonSubmitTxWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostCommonSubmitTxResponse, error)
+	// PostApiV1CommonSubmitTxWithBodyWithResponse request with any body
+	PostApiV1CommonSubmitTxWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1CommonSubmitTxResponse, error)
 
-	PostCommonSubmitTxWithResponse(ctx context.Context, body PostCommonSubmitTxJSONRequestBody, reqEditors ...RequestEditorFn) (*PostCommonSubmitTxResponse, error)
+	PostApiV1CommonSubmitTxWithResponse(ctx context.Context, body PostApiV1CommonSubmitTxJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1CommonSubmitTxResponse, error)
 
-	// GetCommonTxResultWithResponse request
-	GetCommonTxResultWithResponse(ctx context.Context, params *GetCommonTxResultParams, reqEditors ...RequestEditorFn) (*GetCommonTxResultResponse, error)
+	// GetApiV1CommonTxResultWithResponse request
+	GetApiV1CommonTxResultWithResponse(ctx context.Context, params *GetApiV1CommonTxResultParams, reqEditors ...RequestEditorFn) (*GetApiV1CommonTxResultResponse, error)
 
-	// GetKeyGetWithResponse request
-	GetKeyGetWithResponse(ctx context.Context, params *GetKeyGetParams, reqEditors ...RequestEditorFn) (*GetKeyGetResponse, error)
+	// GetApiV1KeyGetWithResponse request
+	GetApiV1KeyGetWithResponse(ctx context.Context, params *GetApiV1KeyGetParams, reqEditors ...RequestEditorFn) (*GetApiV1KeyGetResponse, error)
 
-	// PostPrimaryPrepareDepositWithBodyWithResponse request with any body
-	PostPrimaryPrepareDepositWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareDepositResponse, error)
+	// PostApiV1PrimaryPrepareDepositWithBodyWithResponse request with any body
+	PostApiV1PrimaryPrepareDepositWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareDepositResponse, error)
 
-	PostPrimaryPrepareDepositWithResponse(ctx context.Context, body PostPrimaryPrepareDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareDepositResponse, error)
+	PostApiV1PrimaryPrepareDepositWithResponse(ctx context.Context, body PostApiV1PrimaryPrepareDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareDepositResponse, error)
 
-	// PostPrimaryPrepareLaunchWithBodyWithResponse request with any body
-	PostPrimaryPrepareLaunchWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareLaunchResponse, error)
+	// PostApiV1PrimaryPrepareLaunchWithBodyWithResponse request with any body
+	PostApiV1PrimaryPrepareLaunchWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareLaunchResponse, error)
 
-	PostPrimaryPrepareLaunchWithResponse(ctx context.Context, body PostPrimaryPrepareLaunchJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareLaunchResponse, error)
+	PostApiV1PrimaryPrepareLaunchWithResponse(ctx context.Context, body PostApiV1PrimaryPrepareLaunchJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareLaunchResponse, error)
 
-	// PostPrimaryPrepareReclaimWithBodyWithResponse request with any body
-	PostPrimaryPrepareReclaimWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareReclaimResponse, error)
+	// PostApiV1PrimaryPrepareReclaimWithBodyWithResponse request with any body
+	PostApiV1PrimaryPrepareReclaimWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareReclaimResponse, error)
 
-	PostPrimaryPrepareReclaimWithResponse(ctx context.Context, body PostPrimaryPrepareReclaimJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareReclaimResponse, error)
+	PostApiV1PrimaryPrepareReclaimWithResponse(ctx context.Context, body PostApiV1PrimaryPrepareReclaimJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareReclaimResponse, error)
 
-	// PostPrimaryPrepareRedeemWithBodyWithResponse request with any body
-	PostPrimaryPrepareRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareRedeemResponse, error)
+	// PostApiV1PrimaryPrepareRedeemWithBodyWithResponse request with any body
+	PostApiV1PrimaryPrepareRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareRedeemResponse, error)
 
-	PostPrimaryPrepareRedeemWithResponse(ctx context.Context, body PostPrimaryPrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareRedeemResponse, error)
+	PostApiV1PrimaryPrepareRedeemWithResponse(ctx context.Context, body PostApiV1PrimaryPrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareRedeemResponse, error)
 
-	// PostSwapPrepareTxWithBodyWithResponse request with any body
-	PostSwapPrepareTxWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostSwapPrepareTxResponse, error)
+	// PostApiV1SwapPrepareTxWithBodyWithResponse request with any body
+	PostApiV1SwapPrepareTxWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1SwapPrepareTxResponse, error)
 
-	PostSwapPrepareTxWithResponse(ctx context.Context, body PostSwapPrepareTxJSONRequestBody, reqEditors ...RequestEditorFn) (*PostSwapPrepareTxResponse, error)
+	PostApiV1SwapPrepareTxWithResponse(ctx context.Context, body PostApiV1SwapPrepareTxJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1SwapPrepareTxResponse, error)
 
-	// GetSwapPriceWithResponse request
-	GetSwapPriceWithResponse(ctx context.Context, params *GetSwapPriceParams, reqEditors ...RequestEditorFn) (*GetSwapPriceResponse, error)
+	// GetApiV1SwapPriceWithResponse request
+	GetApiV1SwapPriceWithResponse(ctx context.Context, params *GetApiV1SwapPriceParams, reqEditors ...RequestEditorFn) (*GetApiV1SwapPriceResponse, error)
 }
 
-type GetCommonBalanceResponse struct {
+type GetApiV1CommonBalanceResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ResponseBalanceResp
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                 `json:"code,omitempty"`
+		Data *ResponseBalanceResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
 }
 
 // Status returns HTTPResponse.Status
-func (r GetCommonBalanceResponse) Status() string {
+func (r GetApiV1CommonBalanceResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1274,21 +1298,30 @@ func (r GetCommonBalanceResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetCommonBalanceResponse) StatusCode() int {
+func (r GetApiV1CommonBalanceResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PostCommonSubmitTxResponse struct {
+type PostApiV1CommonSubmitTxResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ResponseSubmitResp
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                `json:"code,omitempty"`
+		Data *ResponseSubmitResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
 }
 
 // Status returns HTTPResponse.Status
-func (r PostCommonSubmitTxResponse) Status() string {
+func (r PostApiV1CommonSubmitTxResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1296,21 +1329,30 @@ func (r PostCommonSubmitTxResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostCommonSubmitTxResponse) StatusCode() int {
+func (r PostApiV1CommonSubmitTxResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type GetCommonTxResultResponse struct {
+type GetApiV1CommonTxResultResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ResponseTxResultResp
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                  `json:"code,omitempty"`
+		Data *ResponseTxResultResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
 }
 
 // Status returns HTTPResponse.Status
-func (r GetCommonTxResultResponse) Status() string {
+func (r GetApiV1CommonTxResultResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1318,21 +1360,30 @@ func (r GetCommonTxResultResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetCommonTxResultResponse) StatusCode() int {
+func (r GetApiV1CommonTxResultResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type GetKeyGetResponse struct {
+type GetApiV1KeyGetResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *string
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int    `json:"code,omitempty"`
+		Data *string `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
 }
 
 // Status returns HTTPResponse.Status
-func (r GetKeyGetResponse) Status() string {
+func (r GetApiV1KeyGetResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1340,21 +1391,30 @@ func (r GetKeyGetResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetKeyGetResponse) StatusCode() int {
+func (r GetApiV1KeyGetResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PostPrimaryPrepareDepositResponse struct {
+type PostApiV1PrimaryPrepareDepositResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ResponseDepositPrepareResp
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                        `json:"code,omitempty"`
+		Data *ResponseDepositPrepareResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
 }
 
 // Status returns HTTPResponse.Status
-func (r PostPrimaryPrepareDepositResponse) Status() string {
+func (r PostApiV1PrimaryPrepareDepositResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1362,21 +1422,30 @@ func (r PostPrimaryPrepareDepositResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostPrimaryPrepareDepositResponse) StatusCode() int {
+func (r PostApiV1PrimaryPrepareDepositResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PostPrimaryPrepareLaunchResponse struct {
+type PostApiV1PrimaryPrepareLaunchResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ResponseLaunchPrepareResp
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                       `json:"code,omitempty"`
+		Data *ResponseLaunchPrepareResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
 }
 
 // Status returns HTTPResponse.Status
-func (r PostPrimaryPrepareLaunchResponse) Status() string {
+func (r PostApiV1PrimaryPrepareLaunchResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1384,21 +1453,30 @@ func (r PostPrimaryPrepareLaunchResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostPrimaryPrepareLaunchResponse) StatusCode() int {
+func (r PostApiV1PrimaryPrepareLaunchResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PostPrimaryPrepareReclaimResponse struct {
+type PostApiV1PrimaryPrepareReclaimResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ResponseReclaimPrepareResp
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                        `json:"code,omitempty"`
+		Data *ResponseReclaimPrepareResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
 }
 
 // Status returns HTTPResponse.Status
-func (r PostPrimaryPrepareReclaimResponse) Status() string {
+func (r PostApiV1PrimaryPrepareReclaimResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1406,21 +1484,30 @@ func (r PostPrimaryPrepareReclaimResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostPrimaryPrepareReclaimResponse) StatusCode() int {
+func (r PostApiV1PrimaryPrepareReclaimResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PostPrimaryPrepareRedeemResponse struct {
+type PostApiV1PrimaryPrepareRedeemResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ResponseRedeemPrepareResp
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                       `json:"code,omitempty"`
+		Data *ResponseRedeemPrepareResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
 }
 
 // Status returns HTTPResponse.Status
-func (r PostPrimaryPrepareRedeemResponse) Status() string {
+func (r PostApiV1PrimaryPrepareRedeemResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1428,21 +1515,30 @@ func (r PostPrimaryPrepareRedeemResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostPrimaryPrepareRedeemResponse) StatusCode() int {
+func (r PostApiV1PrimaryPrepareRedeemResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type PostSwapPrepareTxResponse struct {
+type PostApiV1SwapPrepareTxResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ResponseSwapPrepareResp
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                     `json:"code,omitempty"`
+		Data *ResponseSwapPrepareResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
 }
 
 // Status returns HTTPResponse.Status
-func (r PostSwapPrepareTxResponse) Status() string {
+func (r PostApiV1SwapPrepareTxResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1450,21 +1546,30 @@ func (r PostSwapPrepareTxResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostSwapPrepareTxResponse) StatusCode() int {
+func (r PostApiV1SwapPrepareTxResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-type GetSwapPriceResponse struct {
+type GetApiV1SwapPriceResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
-	JSON200      *ResponseSwapPriceResp
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                   `json:"code,omitempty"`
+		Data *ResponseSwapPriceResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
 }
 
 // Status returns HTTPResponse.Status
-func (r GetSwapPriceResponse) Status() string {
+func (r GetApiV1SwapPriceResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1472,167 +1577,176 @@ func (r GetSwapPriceResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r GetSwapPriceResponse) StatusCode() int {
+func (r GetApiV1SwapPriceResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
 	return 0
 }
 
-// GetCommonBalanceWithResponse request returning *GetCommonBalanceResponse
-func (c *ClientWithResponses) GetCommonBalanceWithResponse(ctx context.Context, params *GetCommonBalanceParams, reqEditors ...RequestEditorFn) (*GetCommonBalanceResponse, error) {
-	rsp, err := c.GetCommonBalance(ctx, params, reqEditors...)
+// GetApiV1CommonBalanceWithResponse request returning *GetApiV1CommonBalanceResponse
+func (c *ClientWithResponses) GetApiV1CommonBalanceWithResponse(ctx context.Context, params *GetApiV1CommonBalanceParams, reqEditors ...RequestEditorFn) (*GetApiV1CommonBalanceResponse, error) {
+	rsp, err := c.GetApiV1CommonBalance(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetCommonBalanceResponse(rsp)
+	return ParseGetApiV1CommonBalanceResponse(rsp)
 }
 
-// PostCommonSubmitTxWithBodyWithResponse request with arbitrary body returning *PostCommonSubmitTxResponse
-func (c *ClientWithResponses) PostCommonSubmitTxWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostCommonSubmitTxResponse, error) {
-	rsp, err := c.PostCommonSubmitTxWithBody(ctx, contentType, body, reqEditors...)
+// PostApiV1CommonSubmitTxWithBodyWithResponse request with arbitrary body returning *PostApiV1CommonSubmitTxResponse
+func (c *ClientWithResponses) PostApiV1CommonSubmitTxWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1CommonSubmitTxResponse, error) {
+	rsp, err := c.PostApiV1CommonSubmitTxWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostCommonSubmitTxResponse(rsp)
+	return ParsePostApiV1CommonSubmitTxResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostCommonSubmitTxWithResponse(ctx context.Context, body PostCommonSubmitTxJSONRequestBody, reqEditors ...RequestEditorFn) (*PostCommonSubmitTxResponse, error) {
-	rsp, err := c.PostCommonSubmitTx(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostApiV1CommonSubmitTxWithResponse(ctx context.Context, body PostApiV1CommonSubmitTxJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1CommonSubmitTxResponse, error) {
+	rsp, err := c.PostApiV1CommonSubmitTx(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostCommonSubmitTxResponse(rsp)
+	return ParsePostApiV1CommonSubmitTxResponse(rsp)
 }
 
-// GetCommonTxResultWithResponse request returning *GetCommonTxResultResponse
-func (c *ClientWithResponses) GetCommonTxResultWithResponse(ctx context.Context, params *GetCommonTxResultParams, reqEditors ...RequestEditorFn) (*GetCommonTxResultResponse, error) {
-	rsp, err := c.GetCommonTxResult(ctx, params, reqEditors...)
+// GetApiV1CommonTxResultWithResponse request returning *GetApiV1CommonTxResultResponse
+func (c *ClientWithResponses) GetApiV1CommonTxResultWithResponse(ctx context.Context, params *GetApiV1CommonTxResultParams, reqEditors ...RequestEditorFn) (*GetApiV1CommonTxResultResponse, error) {
+	rsp, err := c.GetApiV1CommonTxResult(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetCommonTxResultResponse(rsp)
+	return ParseGetApiV1CommonTxResultResponse(rsp)
 }
 
-// GetKeyGetWithResponse request returning *GetKeyGetResponse
-func (c *ClientWithResponses) GetKeyGetWithResponse(ctx context.Context, params *GetKeyGetParams, reqEditors ...RequestEditorFn) (*GetKeyGetResponse, error) {
-	rsp, err := c.GetKeyGet(ctx, params, reqEditors...)
+// GetApiV1KeyGetWithResponse request returning *GetApiV1KeyGetResponse
+func (c *ClientWithResponses) GetApiV1KeyGetWithResponse(ctx context.Context, params *GetApiV1KeyGetParams, reqEditors ...RequestEditorFn) (*GetApiV1KeyGetResponse, error) {
+	rsp, err := c.GetApiV1KeyGet(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetKeyGetResponse(rsp)
+	return ParseGetApiV1KeyGetResponse(rsp)
 }
 
-// PostPrimaryPrepareDepositWithBodyWithResponse request with arbitrary body returning *PostPrimaryPrepareDepositResponse
-func (c *ClientWithResponses) PostPrimaryPrepareDepositWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareDepositResponse, error) {
-	rsp, err := c.PostPrimaryPrepareDepositWithBody(ctx, contentType, body, reqEditors...)
+// PostApiV1PrimaryPrepareDepositWithBodyWithResponse request with arbitrary body returning *PostApiV1PrimaryPrepareDepositResponse
+func (c *ClientWithResponses) PostApiV1PrimaryPrepareDepositWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareDepositResponse, error) {
+	rsp, err := c.PostApiV1PrimaryPrepareDepositWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostPrimaryPrepareDepositResponse(rsp)
+	return ParsePostApiV1PrimaryPrepareDepositResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostPrimaryPrepareDepositWithResponse(ctx context.Context, body PostPrimaryPrepareDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareDepositResponse, error) {
-	rsp, err := c.PostPrimaryPrepareDeposit(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostApiV1PrimaryPrepareDepositWithResponse(ctx context.Context, body PostApiV1PrimaryPrepareDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareDepositResponse, error) {
+	rsp, err := c.PostApiV1PrimaryPrepareDeposit(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostPrimaryPrepareDepositResponse(rsp)
+	return ParsePostApiV1PrimaryPrepareDepositResponse(rsp)
 }
 
-// PostPrimaryPrepareLaunchWithBodyWithResponse request with arbitrary body returning *PostPrimaryPrepareLaunchResponse
-func (c *ClientWithResponses) PostPrimaryPrepareLaunchWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareLaunchResponse, error) {
-	rsp, err := c.PostPrimaryPrepareLaunchWithBody(ctx, contentType, body, reqEditors...)
+// PostApiV1PrimaryPrepareLaunchWithBodyWithResponse request with arbitrary body returning *PostApiV1PrimaryPrepareLaunchResponse
+func (c *ClientWithResponses) PostApiV1PrimaryPrepareLaunchWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareLaunchResponse, error) {
+	rsp, err := c.PostApiV1PrimaryPrepareLaunchWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostPrimaryPrepareLaunchResponse(rsp)
+	return ParsePostApiV1PrimaryPrepareLaunchResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostPrimaryPrepareLaunchWithResponse(ctx context.Context, body PostPrimaryPrepareLaunchJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareLaunchResponse, error) {
-	rsp, err := c.PostPrimaryPrepareLaunch(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostApiV1PrimaryPrepareLaunchWithResponse(ctx context.Context, body PostApiV1PrimaryPrepareLaunchJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareLaunchResponse, error) {
+	rsp, err := c.PostApiV1PrimaryPrepareLaunch(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostPrimaryPrepareLaunchResponse(rsp)
+	return ParsePostApiV1PrimaryPrepareLaunchResponse(rsp)
 }
 
-// PostPrimaryPrepareReclaimWithBodyWithResponse request with arbitrary body returning *PostPrimaryPrepareReclaimResponse
-func (c *ClientWithResponses) PostPrimaryPrepareReclaimWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareReclaimResponse, error) {
-	rsp, err := c.PostPrimaryPrepareReclaimWithBody(ctx, contentType, body, reqEditors...)
+// PostApiV1PrimaryPrepareReclaimWithBodyWithResponse request with arbitrary body returning *PostApiV1PrimaryPrepareReclaimResponse
+func (c *ClientWithResponses) PostApiV1PrimaryPrepareReclaimWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareReclaimResponse, error) {
+	rsp, err := c.PostApiV1PrimaryPrepareReclaimWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostPrimaryPrepareReclaimResponse(rsp)
+	return ParsePostApiV1PrimaryPrepareReclaimResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostPrimaryPrepareReclaimWithResponse(ctx context.Context, body PostPrimaryPrepareReclaimJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareReclaimResponse, error) {
-	rsp, err := c.PostPrimaryPrepareReclaim(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostApiV1PrimaryPrepareReclaimWithResponse(ctx context.Context, body PostApiV1PrimaryPrepareReclaimJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareReclaimResponse, error) {
+	rsp, err := c.PostApiV1PrimaryPrepareReclaim(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostPrimaryPrepareReclaimResponse(rsp)
+	return ParsePostApiV1PrimaryPrepareReclaimResponse(rsp)
 }
 
-// PostPrimaryPrepareRedeemWithBodyWithResponse request with arbitrary body returning *PostPrimaryPrepareRedeemResponse
-func (c *ClientWithResponses) PostPrimaryPrepareRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareRedeemResponse, error) {
-	rsp, err := c.PostPrimaryPrepareRedeemWithBody(ctx, contentType, body, reqEditors...)
+// PostApiV1PrimaryPrepareRedeemWithBodyWithResponse request with arbitrary body returning *PostApiV1PrimaryPrepareRedeemResponse
+func (c *ClientWithResponses) PostApiV1PrimaryPrepareRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareRedeemResponse, error) {
+	rsp, err := c.PostApiV1PrimaryPrepareRedeemWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostPrimaryPrepareRedeemResponse(rsp)
+	return ParsePostApiV1PrimaryPrepareRedeemResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostPrimaryPrepareRedeemWithResponse(ctx context.Context, body PostPrimaryPrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostPrimaryPrepareRedeemResponse, error) {
-	rsp, err := c.PostPrimaryPrepareRedeem(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostApiV1PrimaryPrepareRedeemWithResponse(ctx context.Context, body PostApiV1PrimaryPrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareRedeemResponse, error) {
+	rsp, err := c.PostApiV1PrimaryPrepareRedeem(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostPrimaryPrepareRedeemResponse(rsp)
+	return ParsePostApiV1PrimaryPrepareRedeemResponse(rsp)
 }
 
-// PostSwapPrepareTxWithBodyWithResponse request with arbitrary body returning *PostSwapPrepareTxResponse
-func (c *ClientWithResponses) PostSwapPrepareTxWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostSwapPrepareTxResponse, error) {
-	rsp, err := c.PostSwapPrepareTxWithBody(ctx, contentType, body, reqEditors...)
+// PostApiV1SwapPrepareTxWithBodyWithResponse request with arbitrary body returning *PostApiV1SwapPrepareTxResponse
+func (c *ClientWithResponses) PostApiV1SwapPrepareTxWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1SwapPrepareTxResponse, error) {
+	rsp, err := c.PostApiV1SwapPrepareTxWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostSwapPrepareTxResponse(rsp)
+	return ParsePostApiV1SwapPrepareTxResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostSwapPrepareTxWithResponse(ctx context.Context, body PostSwapPrepareTxJSONRequestBody, reqEditors ...RequestEditorFn) (*PostSwapPrepareTxResponse, error) {
-	rsp, err := c.PostSwapPrepareTx(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostApiV1SwapPrepareTxWithResponse(ctx context.Context, body PostApiV1SwapPrepareTxJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1SwapPrepareTxResponse, error) {
+	rsp, err := c.PostApiV1SwapPrepareTx(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostSwapPrepareTxResponse(rsp)
+	return ParsePostApiV1SwapPrepareTxResponse(rsp)
 }
 
-// GetSwapPriceWithResponse request returning *GetSwapPriceResponse
-func (c *ClientWithResponses) GetSwapPriceWithResponse(ctx context.Context, params *GetSwapPriceParams, reqEditors ...RequestEditorFn) (*GetSwapPriceResponse, error) {
-	rsp, err := c.GetSwapPrice(ctx, params, reqEditors...)
+// GetApiV1SwapPriceWithResponse request returning *GetApiV1SwapPriceResponse
+func (c *ClientWithResponses) GetApiV1SwapPriceWithResponse(ctx context.Context, params *GetApiV1SwapPriceParams, reqEditors ...RequestEditorFn) (*GetApiV1SwapPriceResponse, error) {
+	rsp, err := c.GetApiV1SwapPrice(ctx, params, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParseGetSwapPriceResponse(rsp)
+	return ParseGetApiV1SwapPriceResponse(rsp)
 }
 
-// ParseGetCommonBalanceResponse parses an HTTP response from a GetCommonBalanceWithResponse call
-func ParseGetCommonBalanceResponse(rsp *http.Response) (*GetCommonBalanceResponse, error) {
+// ParseGetApiV1CommonBalanceResponse parses an HTTP response from a GetApiV1CommonBalanceWithResponse call
+func ParseGetApiV1CommonBalanceResponse(rsp *http.Response) (*GetApiV1CommonBalanceResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetCommonBalanceResponse{
+	response := &GetApiV1CommonBalanceResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ResponseBalanceResp
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                 `json:"code,omitempty"`
+			Data *ResponseBalanceResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1643,22 +1757,31 @@ func ParseGetCommonBalanceResponse(rsp *http.Response) (*GetCommonBalanceRespons
 	return response, nil
 }
 
-// ParsePostCommonSubmitTxResponse parses an HTTP response from a PostCommonSubmitTxWithResponse call
-func ParsePostCommonSubmitTxResponse(rsp *http.Response) (*PostCommonSubmitTxResponse, error) {
+// ParsePostApiV1CommonSubmitTxResponse parses an HTTP response from a PostApiV1CommonSubmitTxWithResponse call
+func ParsePostApiV1CommonSubmitTxResponse(rsp *http.Response) (*PostApiV1CommonSubmitTxResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostCommonSubmitTxResponse{
+	response := &PostApiV1CommonSubmitTxResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ResponseSubmitResp
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                `json:"code,omitempty"`
+			Data *ResponseSubmitResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1669,22 +1792,31 @@ func ParsePostCommonSubmitTxResponse(rsp *http.Response) (*PostCommonSubmitTxRes
 	return response, nil
 }
 
-// ParseGetCommonTxResultResponse parses an HTTP response from a GetCommonTxResultWithResponse call
-func ParseGetCommonTxResultResponse(rsp *http.Response) (*GetCommonTxResultResponse, error) {
+// ParseGetApiV1CommonTxResultResponse parses an HTTP response from a GetApiV1CommonTxResultWithResponse call
+func ParseGetApiV1CommonTxResultResponse(rsp *http.Response) (*GetApiV1CommonTxResultResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetCommonTxResultResponse{
+	response := &GetApiV1CommonTxResultResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ResponseTxResultResp
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                  `json:"code,omitempty"`
+			Data *ResponseTxResultResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1695,22 +1827,31 @@ func ParseGetCommonTxResultResponse(rsp *http.Response) (*GetCommonTxResultRespo
 	return response, nil
 }
 
-// ParseGetKeyGetResponse parses an HTTP response from a GetKeyGetWithResponse call
-func ParseGetKeyGetResponse(rsp *http.Response) (*GetKeyGetResponse, error) {
+// ParseGetApiV1KeyGetResponse parses an HTTP response from a GetApiV1KeyGetWithResponse call
+func ParseGetApiV1KeyGetResponse(rsp *http.Response) (*GetApiV1KeyGetResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetKeyGetResponse{
+	response := &GetApiV1KeyGetResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest string
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int    `json:"code,omitempty"`
+			Data *string `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1721,22 +1862,31 @@ func ParseGetKeyGetResponse(rsp *http.Response) (*GetKeyGetResponse, error) {
 	return response, nil
 }
 
-// ParsePostPrimaryPrepareDepositResponse parses an HTTP response from a PostPrimaryPrepareDepositWithResponse call
-func ParsePostPrimaryPrepareDepositResponse(rsp *http.Response) (*PostPrimaryPrepareDepositResponse, error) {
+// ParsePostApiV1PrimaryPrepareDepositResponse parses an HTTP response from a PostApiV1PrimaryPrepareDepositWithResponse call
+func ParsePostApiV1PrimaryPrepareDepositResponse(rsp *http.Response) (*PostApiV1PrimaryPrepareDepositResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostPrimaryPrepareDepositResponse{
+	response := &PostApiV1PrimaryPrepareDepositResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ResponseDepositPrepareResp
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                        `json:"code,omitempty"`
+			Data *ResponseDepositPrepareResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1747,22 +1897,31 @@ func ParsePostPrimaryPrepareDepositResponse(rsp *http.Response) (*PostPrimaryPre
 	return response, nil
 }
 
-// ParsePostPrimaryPrepareLaunchResponse parses an HTTP response from a PostPrimaryPrepareLaunchWithResponse call
-func ParsePostPrimaryPrepareLaunchResponse(rsp *http.Response) (*PostPrimaryPrepareLaunchResponse, error) {
+// ParsePostApiV1PrimaryPrepareLaunchResponse parses an HTTP response from a PostApiV1PrimaryPrepareLaunchWithResponse call
+func ParsePostApiV1PrimaryPrepareLaunchResponse(rsp *http.Response) (*PostApiV1PrimaryPrepareLaunchResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostPrimaryPrepareLaunchResponse{
+	response := &PostApiV1PrimaryPrepareLaunchResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ResponseLaunchPrepareResp
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                       `json:"code,omitempty"`
+			Data *ResponseLaunchPrepareResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1773,22 +1932,31 @@ func ParsePostPrimaryPrepareLaunchResponse(rsp *http.Response) (*PostPrimaryPrep
 	return response, nil
 }
 
-// ParsePostPrimaryPrepareReclaimResponse parses an HTTP response from a PostPrimaryPrepareReclaimWithResponse call
-func ParsePostPrimaryPrepareReclaimResponse(rsp *http.Response) (*PostPrimaryPrepareReclaimResponse, error) {
+// ParsePostApiV1PrimaryPrepareReclaimResponse parses an HTTP response from a PostApiV1PrimaryPrepareReclaimWithResponse call
+func ParsePostApiV1PrimaryPrepareReclaimResponse(rsp *http.Response) (*PostApiV1PrimaryPrepareReclaimResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostPrimaryPrepareReclaimResponse{
+	response := &PostApiV1PrimaryPrepareReclaimResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ResponseReclaimPrepareResp
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                        `json:"code,omitempty"`
+			Data *ResponseReclaimPrepareResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1799,22 +1967,31 @@ func ParsePostPrimaryPrepareReclaimResponse(rsp *http.Response) (*PostPrimaryPre
 	return response, nil
 }
 
-// ParsePostPrimaryPrepareRedeemResponse parses an HTTP response from a PostPrimaryPrepareRedeemWithResponse call
-func ParsePostPrimaryPrepareRedeemResponse(rsp *http.Response) (*PostPrimaryPrepareRedeemResponse, error) {
+// ParsePostApiV1PrimaryPrepareRedeemResponse parses an HTTP response from a PostApiV1PrimaryPrepareRedeemWithResponse call
+func ParsePostApiV1PrimaryPrepareRedeemResponse(rsp *http.Response) (*PostApiV1PrimaryPrepareRedeemResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostPrimaryPrepareRedeemResponse{
+	response := &PostApiV1PrimaryPrepareRedeemResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ResponseRedeemPrepareResp
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                       `json:"code,omitempty"`
+			Data *ResponseRedeemPrepareResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1825,22 +2002,31 @@ func ParsePostPrimaryPrepareRedeemResponse(rsp *http.Response) (*PostPrimaryPrep
 	return response, nil
 }
 
-// ParsePostSwapPrepareTxResponse parses an HTTP response from a PostSwapPrepareTxWithResponse call
-func ParsePostSwapPrepareTxResponse(rsp *http.Response) (*PostSwapPrepareTxResponse, error) {
+// ParsePostApiV1SwapPrepareTxResponse parses an HTTP response from a PostApiV1SwapPrepareTxWithResponse call
+func ParsePostApiV1SwapPrepareTxResponse(rsp *http.Response) (*PostApiV1SwapPrepareTxResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostSwapPrepareTxResponse{
+	response := &PostApiV1SwapPrepareTxResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ResponseSwapPrepareResp
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                     `json:"code,omitempty"`
+			Data *ResponseSwapPrepareResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1851,22 +2037,31 @@ func ParsePostSwapPrepareTxResponse(rsp *http.Response) (*PostSwapPrepareTxRespo
 	return response, nil
 }
 
-// ParseGetSwapPriceResponse parses an HTTP response from a GetSwapPriceWithResponse call
-func ParseGetSwapPriceResponse(rsp *http.Response) (*GetSwapPriceResponse, error) {
+// ParseGetApiV1SwapPriceResponse parses an HTTP response from a GetApiV1SwapPriceWithResponse call
+func ParseGetApiV1SwapPriceResponse(rsp *http.Response) (*GetApiV1SwapPriceResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &GetSwapPriceResponse{
+	response := &GetApiV1SwapPriceResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
 
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ResponseSwapPriceResp
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                   `json:"code,omitempty"`
+			Data *ResponseSwapPriceResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -1880,43 +2075,46 @@ func ParseGetSwapPriceResponse(rsp *http.Response) (*GetSwapPriceResponse, error
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"uv8PAAD//wloJnSRLQAA",
+	"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",
+	"Oow2gQT/CwAA//8njvXIijMAAA==",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
