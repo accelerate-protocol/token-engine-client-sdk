@@ -73,6 +73,27 @@ type CommonChainID string
 // EntityDEXPlatform defines model for entity.DEX_Platform.
 type EntityDEXPlatform string
 
+// RequestBorrowerWithdrawReq defines model for request.BorrowerWithdrawReq.
+type RequestBorrowerWithdrawReq struct {
+	// Amount 提取数额
+	Amount int `json:"amount"`
+
+	// Borrower 投资人地址
+	Borrower string        `json:"borrower"`
+	ChainId  CommonChainID `json:"chain_id"`
+
+	// VaultAddress vault地址
+	VaultAddress string `json:"vault_address"`
+}
+
+// RequestCreatePoolAndLiquidityReq defines model for request.CreatePoolAndLiquidityReq.
+type RequestCreatePoolAndLiquidityReq struct {
+	ChainId CommonChainID `json:"chain_id"`
+
+	// VaultAddress vault地址
+	VaultAddress string `json:"vault_address"`
+}
+
 // RequestDepositReq defines model for request.DepositReq.
 type RequestDepositReq struct {
 	// Amount 投资额(以vault融资货币计价)
@@ -106,8 +127,14 @@ type RequestFinancingRule struct {
 	TargetAmountBaseFinancingCurrency int `json:"target_amount_base_financing_currency"`
 }
 
-// RequestReclaimReq defines model for request.ReclaimReq.
-type RequestReclaimReq struct {
+// RequestLiquidateReq defines model for request.LiquidateReq.
+type RequestLiquidateReq struct {
+	ChainId      CommonChainID `json:"chain_id"`
+	VaultAddress string        `json:"vault_address"`
+}
+
+// RequestRedeemReq defines model for request.RedeemReq.
+type RequestRedeemReq struct {
 	// Amount 提取数额
 	Amount  int           `json:"amount"`
 	ChainId CommonChainID `json:"chain_id"`
@@ -119,14 +146,11 @@ type RequestReclaimReq struct {
 	VaultAddress string `json:"vault_address"`
 }
 
-// RequestRedeemReq defines model for request.RedeemReq.
-type RequestRedeemReq struct {
-	// Amount 提取数额
+// RequestSettleReq defines model for request.SettleReq.
+type RequestSettleReq struct {
+	// Amount 数量
 	Amount  int           `json:"amount"`
 	ChainId CommonChainID `json:"chain_id"`
-
-	// Investor 投资人地址
-	Investor string `json:"investor"`
 
 	// VaultAddress vault地址
 	VaultAddress string `json:"vault_address"`
@@ -173,8 +197,14 @@ type RequestTokenLaunchReq struct {
 
 // RequestTokenManage defines model for request.TokenManage.
 type RequestTokenManage struct {
+	// Borrower 融资成功后的提款人
+	Borrower string `json:"borrower"`
+
+	// Deployer 发行人
 	Deployer string `json:"deployer"`
-	Manager  string `json:"manager"`
+
+	// Manager 管理员
+	Manager string `json:"manager"`
 }
 
 // RequestTokenMeta defines model for request.TokenMeta.
@@ -191,6 +221,11 @@ type ResponseBalanceResp struct {
 	ChainId      *string `json:"chain_id,omitempty"`
 	Owner        *string `json:"owner,omitempty"`
 	TokenAddress *string `json:"token_address,omitempty"`
+}
+
+// ResponseCreatePoolAndLiquidityResp defines model for response.CreatePoolAndLiquidityResp.
+type ResponseCreatePoolAndLiquidityResp struct {
+	TxMsgBase64 string `json:"tx_msg_base64"`
 }
 
 // ResponseDepositPrepareResp defines model for response.DepositPrepareResp.
@@ -225,6 +260,11 @@ type ResponseLaunchPrepareResp struct {
 	VaultTreasuryAddr *string `json:"vault_treasury_addr,omitempty"`
 }
 
+// ResponseLiquidateResp defines model for response.LiquidateResp.
+type ResponseLiquidateResp struct {
+	TxMsgBase64 string `json:"tx_msg_base64"`
+}
+
 // ResponseReclaimPrepareResp defines model for response.ReclaimPrepareResp.
 type ResponseReclaimPrepareResp struct {
 	TxMsgBase64 string `json:"tx_msg_base64"`
@@ -235,11 +275,31 @@ type ResponseRedeemPrepareResp struct {
 	TxMsgBase64 string `json:"tx_msg_base64"`
 }
 
+// ResponseSenderBalanceChange defines model for response.SenderBalanceChange.
+type ResponseSenderBalanceChange struct {
+	// NativeBalanceChange 原生代币余额变化
+	NativeBalanceChange *int `json:"native_balance_change,omitempty"`
+
+	// NativeDecimals 原生代币decimals
+	NativeDecimals *int `json:"native_decimals,omitempty"`
+
+	// TokenBalanceChange 代币余额变化列表
+	TokenBalanceChange *[]ResponseTokenBalanceChange `json:"token_balance_change,omitempty"`
+}
+
+// ResponseSettleResp defines model for response.SettleResp.
+type ResponseSettleResp struct {
+	TxMsgBase64 string `json:"tx_msg_base64"`
+}
+
 // ResponseSubmitResp defines model for response.SubmitResp.
 type ResponseSubmitResp struct {
 	FailedMsg *string `json:"failed_msg,omitempty"`
-	Success   *bool   `json:"success,omitempty"`
-	TxHash    *string `json:"tx_hash,omitempty"`
+
+	// SenderBalanceChange 交易发送者余额变化，交易失败时为nil
+	SenderBalanceChange *ResponseSenderBalanceChange `json:"sender_balance_change,omitempty"`
+	Success             *bool                        `json:"success,omitempty"`
+	TxHash              *string                      `json:"tx_hash,omitempty"`
 }
 
 // ResponseSwapPrepareResp defines model for response.SwapPrepareResp.
@@ -256,6 +316,18 @@ type ResponseSwapPriceResp struct {
 	Price            *float32 `json:"price,omitempty"`
 }
 
+// ResponseTokenBalanceChange defines model for response.TokenBalanceChange.
+type ResponseTokenBalanceChange struct {
+	// BalanceChange 余额变化
+	BalanceChange *int `json:"balance_change,omitempty"`
+
+	// Decimals decimals
+	Decimals *int `json:"decimals,omitempty"`
+
+	// TokenMint 代币地址
+	TokenMint *string `json:"token_mint,omitempty"`
+}
+
 // ResponseTxResultResp defines model for response.TxResultResp.
 type ResponseTxResultResp struct {
 	FailedMsg *string `json:"failed_msg,omitempty"`
@@ -270,8 +342,8 @@ type GetApiV1CommonBalanceParams struct {
 	// Owner 账户地址
 	Owner string `form:"owner" json:"owner"`
 
-	// TokenAddress token地址
-	TokenAddress string `form:"token_address" json:"token_address"`
+	// TokenAddress token地址,原生token无需赋值
+	TokenAddress *string `form:"token_address,omitempty" json:"token_address,omitempty"`
 }
 
 // GetApiV1CommonBalanceParamsChainId defines parameters for GetApiV1CommonBalance.
@@ -313,17 +385,26 @@ type GetApiV1SwapPriceParamsPlatform string
 // PostApiV1CommonSubmitTxJSONRequestBody defines body for PostApiV1CommonSubmitTx for application/json ContentType.
 type PostApiV1CommonSubmitTxJSONRequestBody = RequestSubmitReq
 
+// PostApiV1PrimaryCreatePoolJSONRequestBody defines body for PostApiV1PrimaryCreatePool for application/json ContentType.
+type PostApiV1PrimaryCreatePoolJSONRequestBody = RequestCreatePoolAndLiquidityReq
+
+// PostApiV1PrimaryPrepareBorrowerWithdrawJSONRequestBody defines body for PostApiV1PrimaryPrepareBorrowerWithdraw for application/json ContentType.
+type PostApiV1PrimaryPrepareBorrowerWithdrawJSONRequestBody = RequestBorrowerWithdrawReq
+
 // PostApiV1PrimaryPrepareDepositJSONRequestBody defines body for PostApiV1PrimaryPrepareDeposit for application/json ContentType.
 type PostApiV1PrimaryPrepareDepositJSONRequestBody = RequestDepositReq
 
 // PostApiV1PrimaryPrepareLaunchJSONRequestBody defines body for PostApiV1PrimaryPrepareLaunch for application/json ContentType.
 type PostApiV1PrimaryPrepareLaunchJSONRequestBody = RequestTokenLaunchReq
 
-// PostApiV1PrimaryPrepareReclaimJSONRequestBody defines body for PostApiV1PrimaryPrepareReclaim for application/json ContentType.
-type PostApiV1PrimaryPrepareReclaimJSONRequestBody = RequestReclaimReq
+// PostApiV1PrimaryPrepareLiquidateJSONRequestBody defines body for PostApiV1PrimaryPrepareLiquidate for application/json ContentType.
+type PostApiV1PrimaryPrepareLiquidateJSONRequestBody = RequestLiquidateReq
 
 // PostApiV1PrimaryPrepareRedeemJSONRequestBody defines body for PostApiV1PrimaryPrepareRedeem for application/json ContentType.
 type PostApiV1PrimaryPrepareRedeemJSONRequestBody = RequestRedeemReq
+
+// PostApiV1PrimaryPrepareSettleJSONRequestBody defines body for PostApiV1PrimaryPrepareSettle for application/json ContentType.
+type PostApiV1PrimaryPrepareSettleJSONRequestBody = RequestSettleReq
 
 // PostApiV1SwapPrepareTxJSONRequestBody defines body for PostApiV1SwapPrepareTx for application/json ContentType.
 type PostApiV1SwapPrepareTxJSONRequestBody = RequestSwapPrepareReq
@@ -415,6 +496,16 @@ type ClientInterface interface {
 	// GetApiV1KeyGet request
 	GetApiV1KeyGet(ctx context.Context, params *GetApiV1KeyGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PostApiV1PrimaryCreatePoolWithBody request with any body
+	PostApiV1PrimaryCreatePoolWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV1PrimaryCreatePool(ctx context.Context, body PostApiV1PrimaryCreatePoolJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV1PrimaryPrepareBorrowerWithdrawWithBody request with any body
+	PostApiV1PrimaryPrepareBorrowerWithdrawWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV1PrimaryPrepareBorrowerWithdraw(ctx context.Context, body PostApiV1PrimaryPrepareBorrowerWithdrawJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PostApiV1PrimaryPrepareDepositWithBody request with any body
 	PostApiV1PrimaryPrepareDepositWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -425,15 +516,20 @@ type ClientInterface interface {
 
 	PostApiV1PrimaryPrepareLaunch(ctx context.Context, body PostApiV1PrimaryPrepareLaunchJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostApiV1PrimaryPrepareReclaimWithBody request with any body
-	PostApiV1PrimaryPrepareReclaimWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostApiV1PrimaryPrepareLiquidateWithBody request with any body
+	PostApiV1PrimaryPrepareLiquidateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostApiV1PrimaryPrepareReclaim(ctx context.Context, body PostApiV1PrimaryPrepareReclaimJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiV1PrimaryPrepareLiquidate(ctx context.Context, body PostApiV1PrimaryPrepareLiquidateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiV1PrimaryPrepareRedeemWithBody request with any body
 	PostApiV1PrimaryPrepareRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostApiV1PrimaryPrepareRedeem(ctx context.Context, body PostApiV1PrimaryPrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV1PrimaryPrepareSettleWithBody request with any body
+	PostApiV1PrimaryPrepareSettleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV1PrimaryPrepareSettle(ctx context.Context, body PostApiV1PrimaryPrepareSettleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiV1SwapPrepareTxWithBody request with any body
 	PostApiV1SwapPrepareTxWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -504,6 +600,54 @@ func (c *Client) GetApiV1KeyGet(ctx context.Context, params *GetApiV1KeyGetParam
 	return c.Client.Do(req)
 }
 
+func (c *Client) PostApiV1PrimaryCreatePoolWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1PrimaryCreatePoolRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV1PrimaryCreatePool(ctx context.Context, body PostApiV1PrimaryCreatePoolJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1PrimaryCreatePoolRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV1PrimaryPrepareBorrowerWithdrawWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1PrimaryPrepareBorrowerWithdrawRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV1PrimaryPrepareBorrowerWithdraw(ctx context.Context, body PostApiV1PrimaryPrepareBorrowerWithdrawJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1PrimaryPrepareBorrowerWithdrawRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) PostApiV1PrimaryPrepareDepositWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiV1PrimaryPrepareDepositRequestWithBody(c.Server, contentType, body)
 	if err != nil {
@@ -552,8 +696,8 @@ func (c *Client) PostApiV1PrimaryPrepareLaunch(ctx context.Context, body PostApi
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiV1PrimaryPrepareReclaimWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV1PrimaryPrepareReclaimRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostApiV1PrimaryPrepareLiquidateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1PrimaryPrepareLiquidateRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -564,8 +708,8 @@ func (c *Client) PostApiV1PrimaryPrepareReclaimWithBody(ctx context.Context, con
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiV1PrimaryPrepareReclaim(ctx context.Context, body PostApiV1PrimaryPrepareReclaimJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV1PrimaryPrepareReclaimRequest(c.Server, body)
+func (c *Client) PostApiV1PrimaryPrepareLiquidate(ctx context.Context, body PostApiV1PrimaryPrepareLiquidateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1PrimaryPrepareLiquidateRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -590,6 +734,30 @@ func (c *Client) PostApiV1PrimaryPrepareRedeemWithBody(ctx context.Context, cont
 
 func (c *Client) PostApiV1PrimaryPrepareRedeem(ctx context.Context, body PostApiV1PrimaryPrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiV1PrimaryPrepareRedeemRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV1PrimaryPrepareSettleWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1PrimaryPrepareSettleRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV1PrimaryPrepareSettle(ctx context.Context, body PostApiV1PrimaryPrepareSettleJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV1PrimaryPrepareSettleRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -682,16 +850,20 @@ func NewGetApiV1CommonBalanceRequest(server string, params *GetApiV1CommonBalanc
 			}
 		}
 
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "token_address", runtime.ParamLocationQuery, params.TokenAddress); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
+		if params.TokenAddress != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "token_address", runtime.ParamLocationQuery, *params.TokenAddress); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
 				}
 			}
+
 		}
 
 		queryURL.RawQuery = queryValues.Encode()
@@ -871,6 +1043,86 @@ func NewGetApiV1KeyGetRequest(server string, params *GetApiV1KeyGetParams) (*htt
 	return req, nil
 }
 
+// NewPostApiV1PrimaryCreatePoolRequest calls the generic PostApiV1PrimaryCreatePool builder with application/json body
+func NewPostApiV1PrimaryCreatePoolRequest(server string, body PostApiV1PrimaryCreatePoolJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV1PrimaryCreatePoolRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV1PrimaryCreatePoolRequestWithBody generates requests for PostApiV1PrimaryCreatePool with any type of body
+func NewPostApiV1PrimaryCreatePoolRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/primary/create_pool")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiV1PrimaryPrepareBorrowerWithdrawRequest calls the generic PostApiV1PrimaryPrepareBorrowerWithdraw builder with application/json body
+func NewPostApiV1PrimaryPrepareBorrowerWithdrawRequest(server string, body PostApiV1PrimaryPrepareBorrowerWithdrawJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV1PrimaryPrepareBorrowerWithdrawRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV1PrimaryPrepareBorrowerWithdrawRequestWithBody generates requests for PostApiV1PrimaryPrepareBorrowerWithdraw with any type of body
+func NewPostApiV1PrimaryPrepareBorrowerWithdrawRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/primary/prepare_borrower_withdraw")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewPostApiV1PrimaryPrepareDepositRequest calls the generic PostApiV1PrimaryPrepareDeposit builder with application/json body
 func NewPostApiV1PrimaryPrepareDepositRequest(server string, body PostApiV1PrimaryPrepareDepositJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -951,19 +1203,19 @@ func NewPostApiV1PrimaryPrepareLaunchRequestWithBody(server string, contentType 
 	return req, nil
 }
 
-// NewPostApiV1PrimaryPrepareReclaimRequest calls the generic PostApiV1PrimaryPrepareReclaim builder with application/json body
-func NewPostApiV1PrimaryPrepareReclaimRequest(server string, body PostApiV1PrimaryPrepareReclaimJSONRequestBody) (*http.Request, error) {
+// NewPostApiV1PrimaryPrepareLiquidateRequest calls the generic PostApiV1PrimaryPrepareLiquidate builder with application/json body
+func NewPostApiV1PrimaryPrepareLiquidateRequest(server string, body PostApiV1PrimaryPrepareLiquidateJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostApiV1PrimaryPrepareReclaimRequestWithBody(server, "application/json", bodyReader)
+	return NewPostApiV1PrimaryPrepareLiquidateRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostApiV1PrimaryPrepareReclaimRequestWithBody generates requests for PostApiV1PrimaryPrepareReclaim with any type of body
-func NewPostApiV1PrimaryPrepareReclaimRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostApiV1PrimaryPrepareLiquidateRequestWithBody generates requests for PostApiV1PrimaryPrepareLiquidate with any type of body
+func NewPostApiV1PrimaryPrepareLiquidateRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -971,7 +1223,7 @@ func NewPostApiV1PrimaryPrepareReclaimRequestWithBody(server string, contentType
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/api/v1/primary/prepare_reclaim")
+	operationPath := fmt.Sprintf("/api/v1/primary/prepare_liquidate")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1012,6 +1264,46 @@ func NewPostApiV1PrimaryPrepareRedeemRequestWithBody(server string, contentType 
 	}
 
 	operationPath := fmt.Sprintf("/api/v1/primary/prepare_redeem")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiV1PrimaryPrepareSettleRequest calls the generic PostApiV1PrimaryPrepareSettle builder with application/json body
+func NewPostApiV1PrimaryPrepareSettleRequest(server string, body PostApiV1PrimaryPrepareSettleJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV1PrimaryPrepareSettleRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV1PrimaryPrepareSettleRequestWithBody generates requests for PostApiV1PrimaryPrepareSettle with any type of body
+func NewPostApiV1PrimaryPrepareSettleRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/primary/prepare_settle")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -1245,6 +1537,16 @@ type ClientWithResponsesInterface interface {
 	// GetApiV1KeyGetWithResponse request
 	GetApiV1KeyGetWithResponse(ctx context.Context, params *GetApiV1KeyGetParams, reqEditors ...RequestEditorFn) (*GetApiV1KeyGetResponse, error)
 
+	// PostApiV1PrimaryCreatePoolWithBodyWithResponse request with any body
+	PostApiV1PrimaryCreatePoolWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryCreatePoolResponse, error)
+
+	PostApiV1PrimaryCreatePoolWithResponse(ctx context.Context, body PostApiV1PrimaryCreatePoolJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryCreatePoolResponse, error)
+
+	// PostApiV1PrimaryPrepareBorrowerWithdrawWithBodyWithResponse request with any body
+	PostApiV1PrimaryPrepareBorrowerWithdrawWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareBorrowerWithdrawResponse, error)
+
+	PostApiV1PrimaryPrepareBorrowerWithdrawWithResponse(ctx context.Context, body PostApiV1PrimaryPrepareBorrowerWithdrawJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareBorrowerWithdrawResponse, error)
+
 	// PostApiV1PrimaryPrepareDepositWithBodyWithResponse request with any body
 	PostApiV1PrimaryPrepareDepositWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareDepositResponse, error)
 
@@ -1255,15 +1557,20 @@ type ClientWithResponsesInterface interface {
 
 	PostApiV1PrimaryPrepareLaunchWithResponse(ctx context.Context, body PostApiV1PrimaryPrepareLaunchJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareLaunchResponse, error)
 
-	// PostApiV1PrimaryPrepareReclaimWithBodyWithResponse request with any body
-	PostApiV1PrimaryPrepareReclaimWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareReclaimResponse, error)
+	// PostApiV1PrimaryPrepareLiquidateWithBodyWithResponse request with any body
+	PostApiV1PrimaryPrepareLiquidateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareLiquidateResponse, error)
 
-	PostApiV1PrimaryPrepareReclaimWithResponse(ctx context.Context, body PostApiV1PrimaryPrepareReclaimJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareReclaimResponse, error)
+	PostApiV1PrimaryPrepareLiquidateWithResponse(ctx context.Context, body PostApiV1PrimaryPrepareLiquidateJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareLiquidateResponse, error)
 
 	// PostApiV1PrimaryPrepareRedeemWithBodyWithResponse request with any body
 	PostApiV1PrimaryPrepareRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareRedeemResponse, error)
 
 	PostApiV1PrimaryPrepareRedeemWithResponse(ctx context.Context, body PostApiV1PrimaryPrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareRedeemResponse, error)
+
+	// PostApiV1PrimaryPrepareSettleWithBodyWithResponse request with any body
+	PostApiV1PrimaryPrepareSettleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareSettleResponse, error)
+
+	PostApiV1PrimaryPrepareSettleWithResponse(ctx context.Context, body PostApiV1PrimaryPrepareSettleJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareSettleResponse, error)
 
 	// PostApiV1SwapPrepareTxWithBodyWithResponse request with any body
 	PostApiV1SwapPrepareTxWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1SwapPrepareTxResponse, error)
@@ -1398,6 +1705,68 @@ func (r GetApiV1KeyGetResponse) StatusCode() int {
 	return 0
 }
 
+type PostApiV1PrimaryCreatePoolResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                                `json:"code,omitempty"`
+		Data *ResponseCreatePoolAndLiquidityResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV1PrimaryCreatePoolResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV1PrimaryCreatePoolResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiV1PrimaryPrepareBorrowerWithdrawResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                       `json:"code,omitempty"`
+		Data *ResponseRedeemPrepareResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV1PrimaryPrepareBorrowerWithdrawResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV1PrimaryPrepareBorrowerWithdrawResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type PostApiV1PrimaryPrepareDepositResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -1460,14 +1829,14 @@ func (r PostApiV1PrimaryPrepareLaunchResponse) StatusCode() int {
 	return 0
 }
 
-type PostApiV1PrimaryPrepareReclaimResponse struct {
+type PostApiV1PrimaryPrepareLiquidateResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
 		// Code Code is the response code
 		// @Description 响应状态码
-		Code *int                        `json:"code,omitempty"`
-		Data *ResponseReclaimPrepareResp `json:"data,omitempty"`
+		Code *int                   `json:"code,omitempty"`
+		Data *ResponseLiquidateResp `json:"data,omitempty"`
 
 		// Message Message is the response message
 		// @Description 响应消息
@@ -1476,7 +1845,7 @@ type PostApiV1PrimaryPrepareReclaimResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostApiV1PrimaryPrepareReclaimResponse) Status() string {
+func (r PostApiV1PrimaryPrepareLiquidateResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -1484,7 +1853,7 @@ func (r PostApiV1PrimaryPrepareReclaimResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostApiV1PrimaryPrepareReclaimResponse) StatusCode() int {
+func (r PostApiV1PrimaryPrepareLiquidateResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1497,8 +1866,8 @@ type PostApiV1PrimaryPrepareRedeemResponse struct {
 	JSON200      *struct {
 		// Code Code is the response code
 		// @Description 响应状态码
-		Code *int                       `json:"code,omitempty"`
-		Data *ResponseRedeemPrepareResp `json:"data,omitempty"`
+		Code *int                        `json:"code,omitempty"`
+		Data *ResponseReclaimPrepareResp `json:"data,omitempty"`
 
 		// Message Message is the response message
 		// @Description 响应消息
@@ -1516,6 +1885,37 @@ func (r PostApiV1PrimaryPrepareRedeemResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PostApiV1PrimaryPrepareRedeemResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiV1PrimaryPrepareSettleResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                `json:"code,omitempty"`
+		Data *ResponseSettleResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV1PrimaryPrepareSettleResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV1PrimaryPrepareSettleResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1628,6 +2028,40 @@ func (c *ClientWithResponses) GetApiV1KeyGetWithResponse(ctx context.Context, pa
 	return ParseGetApiV1KeyGetResponse(rsp)
 }
 
+// PostApiV1PrimaryCreatePoolWithBodyWithResponse request with arbitrary body returning *PostApiV1PrimaryCreatePoolResponse
+func (c *ClientWithResponses) PostApiV1PrimaryCreatePoolWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryCreatePoolResponse, error) {
+	rsp, err := c.PostApiV1PrimaryCreatePoolWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV1PrimaryCreatePoolResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV1PrimaryCreatePoolWithResponse(ctx context.Context, body PostApiV1PrimaryCreatePoolJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryCreatePoolResponse, error) {
+	rsp, err := c.PostApiV1PrimaryCreatePool(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV1PrimaryCreatePoolResponse(rsp)
+}
+
+// PostApiV1PrimaryPrepareBorrowerWithdrawWithBodyWithResponse request with arbitrary body returning *PostApiV1PrimaryPrepareBorrowerWithdrawResponse
+func (c *ClientWithResponses) PostApiV1PrimaryPrepareBorrowerWithdrawWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareBorrowerWithdrawResponse, error) {
+	rsp, err := c.PostApiV1PrimaryPrepareBorrowerWithdrawWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV1PrimaryPrepareBorrowerWithdrawResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV1PrimaryPrepareBorrowerWithdrawWithResponse(ctx context.Context, body PostApiV1PrimaryPrepareBorrowerWithdrawJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareBorrowerWithdrawResponse, error) {
+	rsp, err := c.PostApiV1PrimaryPrepareBorrowerWithdraw(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV1PrimaryPrepareBorrowerWithdrawResponse(rsp)
+}
+
 // PostApiV1PrimaryPrepareDepositWithBodyWithResponse request with arbitrary body returning *PostApiV1PrimaryPrepareDepositResponse
 func (c *ClientWithResponses) PostApiV1PrimaryPrepareDepositWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareDepositResponse, error) {
 	rsp, err := c.PostApiV1PrimaryPrepareDepositWithBody(ctx, contentType, body, reqEditors...)
@@ -1662,21 +2096,21 @@ func (c *ClientWithResponses) PostApiV1PrimaryPrepareLaunchWithResponse(ctx cont
 	return ParsePostApiV1PrimaryPrepareLaunchResponse(rsp)
 }
 
-// PostApiV1PrimaryPrepareReclaimWithBodyWithResponse request with arbitrary body returning *PostApiV1PrimaryPrepareReclaimResponse
-func (c *ClientWithResponses) PostApiV1PrimaryPrepareReclaimWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareReclaimResponse, error) {
-	rsp, err := c.PostApiV1PrimaryPrepareReclaimWithBody(ctx, contentType, body, reqEditors...)
+// PostApiV1PrimaryPrepareLiquidateWithBodyWithResponse request with arbitrary body returning *PostApiV1PrimaryPrepareLiquidateResponse
+func (c *ClientWithResponses) PostApiV1PrimaryPrepareLiquidateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareLiquidateResponse, error) {
+	rsp, err := c.PostApiV1PrimaryPrepareLiquidateWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostApiV1PrimaryPrepareReclaimResponse(rsp)
+	return ParsePostApiV1PrimaryPrepareLiquidateResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostApiV1PrimaryPrepareReclaimWithResponse(ctx context.Context, body PostApiV1PrimaryPrepareReclaimJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareReclaimResponse, error) {
-	rsp, err := c.PostApiV1PrimaryPrepareReclaim(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostApiV1PrimaryPrepareLiquidateWithResponse(ctx context.Context, body PostApiV1PrimaryPrepareLiquidateJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareLiquidateResponse, error) {
+	rsp, err := c.PostApiV1PrimaryPrepareLiquidate(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostApiV1PrimaryPrepareReclaimResponse(rsp)
+	return ParsePostApiV1PrimaryPrepareLiquidateResponse(rsp)
 }
 
 // PostApiV1PrimaryPrepareRedeemWithBodyWithResponse request with arbitrary body returning *PostApiV1PrimaryPrepareRedeemResponse
@@ -1694,6 +2128,23 @@ func (c *ClientWithResponses) PostApiV1PrimaryPrepareRedeemWithResponse(ctx cont
 		return nil, err
 	}
 	return ParsePostApiV1PrimaryPrepareRedeemResponse(rsp)
+}
+
+// PostApiV1PrimaryPrepareSettleWithBodyWithResponse request with arbitrary body returning *PostApiV1PrimaryPrepareSettleResponse
+func (c *ClientWithResponses) PostApiV1PrimaryPrepareSettleWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareSettleResponse, error) {
+	rsp, err := c.PostApiV1PrimaryPrepareSettleWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV1PrimaryPrepareSettleResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV1PrimaryPrepareSettleWithResponse(ctx context.Context, body PostApiV1PrimaryPrepareSettleJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryPrepareSettleResponse, error) {
+	rsp, err := c.PostApiV1PrimaryPrepareSettle(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV1PrimaryPrepareSettleResponse(rsp)
 }
 
 // PostApiV1SwapPrepareTxWithBodyWithResponse request with arbitrary body returning *PostApiV1SwapPrepareTxResponse
@@ -1862,6 +2313,76 @@ func ParseGetApiV1KeyGetResponse(rsp *http.Response) (*GetApiV1KeyGetResponse, e
 	return response, nil
 }
 
+// ParsePostApiV1PrimaryCreatePoolResponse parses an HTTP response from a PostApiV1PrimaryCreatePoolWithResponse call
+func ParsePostApiV1PrimaryCreatePoolResponse(rsp *http.Response) (*PostApiV1PrimaryCreatePoolResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV1PrimaryCreatePoolResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                                `json:"code,omitempty"`
+			Data *ResponseCreatePoolAndLiquidityResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV1PrimaryPrepareBorrowerWithdrawResponse parses an HTTP response from a PostApiV1PrimaryPrepareBorrowerWithdrawWithResponse call
+func ParsePostApiV1PrimaryPrepareBorrowerWithdrawResponse(rsp *http.Response) (*PostApiV1PrimaryPrepareBorrowerWithdrawResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV1PrimaryPrepareBorrowerWithdrawResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                       `json:"code,omitempty"`
+			Data *ResponseRedeemPrepareResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParsePostApiV1PrimaryPrepareDepositResponse parses an HTTP response from a PostApiV1PrimaryPrepareDepositWithResponse call
 func ParsePostApiV1PrimaryPrepareDepositResponse(rsp *http.Response) (*PostApiV1PrimaryPrepareDepositResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -1932,15 +2453,15 @@ func ParsePostApiV1PrimaryPrepareLaunchResponse(rsp *http.Response) (*PostApiV1P
 	return response, nil
 }
 
-// ParsePostApiV1PrimaryPrepareReclaimResponse parses an HTTP response from a PostApiV1PrimaryPrepareReclaimWithResponse call
-func ParsePostApiV1PrimaryPrepareReclaimResponse(rsp *http.Response) (*PostApiV1PrimaryPrepareReclaimResponse, error) {
+// ParsePostApiV1PrimaryPrepareLiquidateResponse parses an HTTP response from a PostApiV1PrimaryPrepareLiquidateWithResponse call
+func ParsePostApiV1PrimaryPrepareLiquidateResponse(rsp *http.Response) (*PostApiV1PrimaryPrepareLiquidateResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostApiV1PrimaryPrepareReclaimResponse{
+	response := &PostApiV1PrimaryPrepareLiquidateResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -1950,8 +2471,8 @@ func ParsePostApiV1PrimaryPrepareReclaimResponse(rsp *http.Response) (*PostApiV1
 		var dest struct {
 			// Code Code is the response code
 			// @Description 响应状态码
-			Code *int                        `json:"code,omitempty"`
-			Data *ResponseReclaimPrepareResp `json:"data,omitempty"`
+			Code *int                   `json:"code,omitempty"`
+			Data *ResponseLiquidateResp `json:"data,omitempty"`
 
 			// Message Message is the response message
 			// @Description 响应消息
@@ -1985,8 +2506,43 @@ func ParsePostApiV1PrimaryPrepareRedeemResponse(rsp *http.Response) (*PostApiV1P
 		var dest struct {
 			// Code Code is the response code
 			// @Description 响应状态码
-			Code *int                       `json:"code,omitempty"`
-			Data *ResponseRedeemPrepareResp `json:"data,omitempty"`
+			Code *int                        `json:"code,omitempty"`
+			Data *ResponseReclaimPrepareResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV1PrimaryPrepareSettleResponse parses an HTTP response from a PostApiV1PrimaryPrepareSettleWithResponse call
+func ParsePostApiV1PrimaryPrepareSettleResponse(rsp *http.Response) (*PostApiV1PrimaryPrepareSettleResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV1PrimaryPrepareSettleResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                `json:"code,omitempty"`
+			Data *ResponseSettleResp `json:"data,omitempty"`
 
 			// Message Message is the response message
 			// @Description 响应消息
@@ -2075,46 +2631,54 @@ func ParseGetApiV1SwapPriceResponse(rsp *http.Response) (*GetApiV1SwapPriceRespo
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"7TDePNg4OB1Gm0CC/wUAAP//XnxsNJ0zAAA=",
+	"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",
+	"Tp30vY0nwX8DAAD//yglJFhzQgAA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
