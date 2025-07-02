@@ -179,6 +179,9 @@ type RequestSwapPrepareReq struct {
 	Platform    EntityDEXPlatform `json:"platform"`
 	Sender      string            `json:"sender"`
 	SlippageBps *int              `json:"slippage_bps,omitempty"`
+
+	// VaultAddress vault地址
+	VaultAddress string `json:"vault_address"`
 }
 
 // RequestTokenLaunchReq defines model for request.TokenLaunchReq.
@@ -309,11 +312,13 @@ type ResponseSwapPrepareResp struct {
 
 // ResponseSwapPriceResp defines model for response.SwapPriceResp.
 type ResponseSwapPriceResp struct {
-	InputMint        *string  `json:"input_mint,omitempty"`
-	InputMintAmount  *string  `json:"input_mint_amount,omitempty"`
-	OutputMint       *string  `json:"output_mint,omitempty"`
-	OutputMintAmount *string  `json:"output_mint_amount,omitempty"`
-	Price            *float32 `json:"price,omitempty"`
+	InputMint        *string `json:"input_mint,omitempty"`
+	InputMintAmount  *string `json:"input_mint_amount,omitempty"`
+	OutputMint       *string `json:"output_mint,omitempty"`
+	OutputMintAmount *string `json:"output_mint_amount,omitempty"`
+
+	// Price 一个单位的input可以兑换多少output(已除以各自decimals)
+	Price *float32 `json:"price,omitempty"`
 }
 
 // ResponseTokenBalanceChange defines model for response.TokenBalanceChange.
@@ -369,11 +374,14 @@ type GetApiV1KeyGetParams struct {
 type GetApiV1SwapPriceParams struct {
 	Amount             string                          `form:"amount" json:"amount"`
 	ChainId            GetApiV1SwapPriceParamsChainId  `form:"chain_id" json:"chain_id"`
+	InputMintDecimals  *int                            `form:"inputMintDecimals,omitempty" json:"inputMintDecimals,omitempty"`
 	InputMint          string                          `form:"input_mint" json:"input_mint"`
-	InputMintDecimals  int                             `form:"input_mint_decimals" json:"input_mint_decimals"`
+	OutputMintDecimals *int                            `form:"outputMintDecimals,omitempty" json:"outputMintDecimals,omitempty"`
 	OutputMint         string                          `form:"output_mint" json:"output_mint"`
-	OutputMintDecimals int                             `form:"output_mint_decimals" json:"output_mint_decimals"`
 	Platform           GetApiV1SwapPriceParamsPlatform `form:"platform" json:"platform"`
+
+	// VaultAddress vault地址
+	VaultAddress string `form:"vault_address" json:"vault_address"`
 }
 
 // GetApiV1SwapPriceParamsChainId defines parameters for GetApiV1SwapPrice.
@@ -1409,6 +1417,22 @@ func NewGetApiV1SwapPriceRequest(server string, params *GetApiV1SwapPriceParams)
 			}
 		}
 
+		if params.InputMintDecimals != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "inputMintDecimals", runtime.ParamLocationQuery, *params.InputMintDecimals); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "input_mint", runtime.ParamLocationQuery, params.InputMint); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
@@ -1421,16 +1445,20 @@ func NewGetApiV1SwapPriceRequest(server string, params *GetApiV1SwapPriceParams)
 			}
 		}
 
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "input_mint_decimals", runtime.ParamLocationQuery, params.InputMintDecimals); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
+		if params.OutputMintDecimals != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "outputMintDecimals", runtime.ParamLocationQuery, *params.OutputMintDecimals); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
 				}
 			}
+
 		}
 
 		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "output_mint", runtime.ParamLocationQuery, params.OutputMint); err != nil {
@@ -1445,7 +1473,7 @@ func NewGetApiV1SwapPriceRequest(server string, params *GetApiV1SwapPriceParams)
 			}
 		}
 
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "output_mint_decimals", runtime.ParamLocationQuery, params.OutputMintDecimals); err != nil {
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "platform", runtime.ParamLocationQuery, params.Platform); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err
@@ -1457,7 +1485,7 @@ func NewGetApiV1SwapPriceRequest(server string, params *GetApiV1SwapPriceParams)
 			}
 		}
 
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "platform", runtime.ParamLocationQuery, params.Platform); err != nil {
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "vault_address", runtime.ParamLocationQuery, params.VaultAddress); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err
@@ -2631,54 +2659,55 @@ func ParseGetApiV1SwapPriceResponse(rsp *http.Response) (*GetApiV1SwapPriceRespo
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"Tp30vY0nwX8DAAD//yglJFhzQgAA",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
