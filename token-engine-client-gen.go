@@ -799,12 +799,6 @@ type PostApiV1PrimaryPrepareSettleJSONRequestBody = RequestSettleReq
 // PostApiV1SwapPrepareTxJSONRequestBody defines body for PostApiV1SwapPrepareTx for application/json ContentType.
 type PostApiV1SwapPrepareTxJSONRequestBody = RequestSwapPrepareReq
 
-// PostApiV1TransferPrepareJSONRequestBody defines body for PostApiV1TransferPrepare for application/json ContentType.
-type PostApiV1TransferPrepareJSONRequestBody = RequestTransferPrepareReq
-
-// PostApiV1TransferSubmitJSONRequestBody defines body for PostApiV1TransferSubmit for application/json ContentType.
-type PostApiV1TransferSubmitJSONRequestBody = RequestTransferSubmitReq
-
 // PostApiV2DeployPrepareJSONRequestBody defines body for PostApiV2DeployPrepare for application/json ContentType.
 type PostApiV2DeployPrepareJSONRequestBody = RequestDeployPrepareReq
 
@@ -828,6 +822,12 @@ type PostApiV2PrimaryVaultPrepareRedeemJSONRequestBody = RequestVaultRedeemReq
 
 // PostApiV2PrimaryVaultPrepareWithdrawJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareWithdraw for application/json ContentType.
 type PostApiV2PrimaryVaultPrepareWithdrawJSONRequestBody = RequestVaultWithdrawReq
+
+// PostApiV2TransferPrepareJSONRequestBody defines body for PostApiV2TransferPrepare for application/json ContentType.
+type PostApiV2TransferPrepareJSONRequestBody = RequestTransferPrepareReq
+
+// PostApiV2TransferSubmitJSONRequestBody defines body for PostApiV2TransferSubmit for application/json ContentType.
+type PostApiV2TransferSubmitJSONRequestBody = RequestTransferSubmitReq
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error
@@ -961,16 +961,6 @@ type ClientInterface interface {
 	// GetApiV1SwapPrice request
 	GetApiV1SwapPrice(ctx context.Context, params *GetApiV1SwapPriceParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostApiV1TransferPrepareWithBody request with any body
-	PostApiV1TransferPrepareWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostApiV1TransferPrepare(ctx context.Context, body PostApiV1TransferPrepareJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostApiV1TransferSubmitWithBody request with any body
-	PostApiV1TransferSubmitWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostApiV1TransferSubmit(ctx context.Context, body PostApiV1TransferSubmitJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// PostApiV2DeployPrepareWithBody request with any body
 	PostApiV2DeployPrepareWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1010,6 +1000,16 @@ type ClientInterface interface {
 	PostApiV2PrimaryVaultPrepareWithdrawWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostApiV2PrimaryVaultPrepareWithdraw(ctx context.Context, body PostApiV2PrimaryVaultPrepareWithdrawJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV2TransferPrepareWithBody request with any body
+	PostApiV2TransferPrepareWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2TransferPrepare(ctx context.Context, body PostApiV2TransferPrepareJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV2TransferSubmitWithBody request with any body
+	PostApiV2TransferSubmitWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2TransferSubmit(ctx context.Context, body PostApiV2TransferSubmitJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) GetApiV1CommonBalance(ctx context.Context, params *GetApiV1CommonBalanceParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -1288,54 +1288,6 @@ func (c *Client) GetApiV1SwapPrice(ctx context.Context, params *GetApiV1SwapPric
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiV1TransferPrepareWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV1TransferPrepareRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV1TransferPrepare(ctx context.Context, body PostApiV1TransferPrepareJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV1TransferPrepareRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV1TransferSubmitWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV1TransferSubmitRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV1TransferSubmit(ctx context.Context, body PostApiV1TransferSubmitJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV1TransferSubmitRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 func (c *Client) PostApiV2DeployPrepareWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiV2DeployPrepareRequestWithBody(c.Server, contentType, body)
 	if err != nil {
@@ -1518,6 +1470,54 @@ func (c *Client) PostApiV2PrimaryVaultPrepareWithdrawWithBody(ctx context.Contex
 
 func (c *Client) PostApiV2PrimaryVaultPrepareWithdraw(ctx context.Context, body PostApiV2PrimaryVaultPrepareWithdrawJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiV2PrimaryVaultPrepareWithdrawRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2TransferPrepareWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2TransferPrepareRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2TransferPrepare(ctx context.Context, body PostApiV2TransferPrepareJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2TransferPrepareRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2TransferSubmitWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2TransferSubmitRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2TransferSubmit(ctx context.Context, body PostApiV2TransferSubmitJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2TransferSubmitRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2195,86 +2195,6 @@ func NewGetApiV1SwapPriceRequest(server string, params *GetApiV1SwapPriceParams)
 	return req, nil
 }
 
-// NewPostApiV1TransferPrepareRequest calls the generic PostApiV1TransferPrepare builder with application/json body
-func NewPostApiV1TransferPrepareRequest(server string, body PostApiV1TransferPrepareJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostApiV1TransferPrepareRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostApiV1TransferPrepareRequestWithBody generates requests for PostApiV1TransferPrepare with any type of body
-func NewPostApiV1TransferPrepareRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v1/transfer/prepare")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewPostApiV1TransferSubmitRequest calls the generic PostApiV1TransferSubmit builder with application/json body
-func NewPostApiV1TransferSubmitRequest(server string, body PostApiV1TransferSubmitJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostApiV1TransferSubmitRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostApiV1TransferSubmitRequestWithBody generates requests for PostApiV1TransferSubmit with any type of body
-func NewPostApiV1TransferSubmitRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v1/transfer/submit")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
 // NewPostApiV2DeployPrepareRequest calls the generic PostApiV2DeployPrepare builder with application/json body
 func NewPostApiV2DeployPrepareRequest(server string, body PostApiV2DeployPrepareJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -2595,6 +2515,86 @@ func NewPostApiV2PrimaryVaultPrepareWithdrawRequestWithBody(server string, conte
 	return req, nil
 }
 
+// NewPostApiV2TransferPrepareRequest calls the generic PostApiV2TransferPrepare builder with application/json body
+func NewPostApiV2TransferPrepareRequest(server string, body PostApiV2TransferPrepareJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2TransferPrepareRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2TransferPrepareRequestWithBody generates requests for PostApiV2TransferPrepare with any type of body
+func NewPostApiV2TransferPrepareRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/transfer/prepare")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiV2TransferSubmitRequest calls the generic PostApiV2TransferSubmit builder with application/json body
+func NewPostApiV2TransferSubmitRequest(server string, body PostApiV2TransferSubmitJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2TransferSubmitRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2TransferSubmitRequestWithBody generates requests for PostApiV2TransferSubmit with any type of body
+func NewPostApiV2TransferSubmitRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/transfer/submit")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -2697,16 +2697,6 @@ type ClientWithResponsesInterface interface {
 	// GetApiV1SwapPriceWithResponse request
 	GetApiV1SwapPriceWithResponse(ctx context.Context, params *GetApiV1SwapPriceParams, reqEditors ...RequestEditorFn) (*GetApiV1SwapPriceResponse, error)
 
-	// PostApiV1TransferPrepareWithBodyWithResponse request with any body
-	PostApiV1TransferPrepareWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1TransferPrepareResponse, error)
-
-	PostApiV1TransferPrepareWithResponse(ctx context.Context, body PostApiV1TransferPrepareJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1TransferPrepareResponse, error)
-
-	// PostApiV1TransferSubmitWithBodyWithResponse request with any body
-	PostApiV1TransferSubmitWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1TransferSubmitResponse, error)
-
-	PostApiV1TransferSubmitWithResponse(ctx context.Context, body PostApiV1TransferSubmitJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1TransferSubmitResponse, error)
-
 	// PostApiV2DeployPrepareWithBodyWithResponse request with any body
 	PostApiV2DeployPrepareWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2DeployPrepareResponse, error)
 
@@ -2746,6 +2736,16 @@ type ClientWithResponsesInterface interface {
 	PostApiV2PrimaryVaultPrepareWithdrawWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareWithdrawResponse, error)
 
 	PostApiV2PrimaryVaultPrepareWithdrawWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareWithdrawJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareWithdrawResponse, error)
+
+	// PostApiV2TransferPrepareWithBodyWithResponse request with any body
+	PostApiV2TransferPrepareWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2TransferPrepareResponse, error)
+
+	PostApiV2TransferPrepareWithResponse(ctx context.Context, body PostApiV2TransferPrepareJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2TransferPrepareResponse, error)
+
+	// PostApiV2TransferSubmitWithBodyWithResponse request with any body
+	PostApiV2TransferSubmitWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2TransferSubmitResponse, error)
+
+	PostApiV2TransferSubmitWithResponse(ctx context.Context, body PostApiV2TransferSubmitJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2TransferSubmitResponse, error)
 }
 
 type GetApiV1CommonBalanceResponse struct {
@@ -3151,68 +3151,6 @@ func (r GetApiV1SwapPriceResponse) StatusCode() int {
 	return 0
 }
 
-type PostApiV1TransferPrepareResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                         `json:"code,omitempty"`
-		Data *ResponseTransferPrepareResp `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r PostApiV1TransferPrepareResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostApiV1TransferPrepareResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostApiV1TransferSubmitResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                        `json:"code,omitempty"`
-		Data *ResponseTransferSubmitResp `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r PostApiV1TransferSubmitResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostApiV1TransferSubmitResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type PostApiV2DeployPrepareResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -3461,6 +3399,68 @@ func (r PostApiV2PrimaryVaultPrepareWithdrawResponse) StatusCode() int {
 	return 0
 }
 
+type PostApiV2TransferPrepareResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                         `json:"code,omitempty"`
+		Data *ResponseTransferPrepareResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2TransferPrepareResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2TransferPrepareResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiV2TransferSubmitResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                        `json:"code,omitempty"`
+		Data *ResponseTransferSubmitResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2TransferSubmitResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2TransferSubmitResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 // GetApiV1CommonBalanceWithResponse request returning *GetApiV1CommonBalanceResponse
 func (c *ClientWithResponses) GetApiV1CommonBalanceWithResponse(ctx context.Context, params *GetApiV1CommonBalanceParams, reqEditors ...RequestEditorFn) (*GetApiV1CommonBalanceResponse, error) {
 	rsp, err := c.GetApiV1CommonBalance(ctx, params, reqEditors...)
@@ -3658,40 +3658,6 @@ func (c *ClientWithResponses) GetApiV1SwapPriceWithResponse(ctx context.Context,
 	return ParseGetApiV1SwapPriceResponse(rsp)
 }
 
-// PostApiV1TransferPrepareWithBodyWithResponse request with arbitrary body returning *PostApiV1TransferPrepareResponse
-func (c *ClientWithResponses) PostApiV1TransferPrepareWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1TransferPrepareResponse, error) {
-	rsp, err := c.PostApiV1TransferPrepareWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV1TransferPrepareResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostApiV1TransferPrepareWithResponse(ctx context.Context, body PostApiV1TransferPrepareJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1TransferPrepareResponse, error) {
-	rsp, err := c.PostApiV1TransferPrepare(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV1TransferPrepareResponse(rsp)
-}
-
-// PostApiV1TransferSubmitWithBodyWithResponse request with arbitrary body returning *PostApiV1TransferSubmitResponse
-func (c *ClientWithResponses) PostApiV1TransferSubmitWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1TransferSubmitResponse, error) {
-	rsp, err := c.PostApiV1TransferSubmitWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV1TransferSubmitResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostApiV1TransferSubmitWithResponse(ctx context.Context, body PostApiV1TransferSubmitJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV1TransferSubmitResponse, error) {
-	rsp, err := c.PostApiV1TransferSubmit(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV1TransferSubmitResponse(rsp)
-}
-
 // PostApiV2DeployPrepareWithBodyWithResponse request with arbitrary body returning *PostApiV2DeployPrepareResponse
 func (c *ClientWithResponses) PostApiV2DeployPrepareWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2DeployPrepareResponse, error) {
 	rsp, err := c.PostApiV2DeployPrepareWithBody(ctx, contentType, body, reqEditors...)
@@ -3826,6 +3792,40 @@ func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareWithdrawWithResponse(c
 		return nil, err
 	}
 	return ParsePostApiV2PrimaryVaultPrepareWithdrawResponse(rsp)
+}
+
+// PostApiV2TransferPrepareWithBodyWithResponse request with arbitrary body returning *PostApiV2TransferPrepareResponse
+func (c *ClientWithResponses) PostApiV2TransferPrepareWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2TransferPrepareResponse, error) {
+	rsp, err := c.PostApiV2TransferPrepareWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2TransferPrepareResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2TransferPrepareWithResponse(ctx context.Context, body PostApiV2TransferPrepareJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2TransferPrepareResponse, error) {
+	rsp, err := c.PostApiV2TransferPrepare(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2TransferPrepareResponse(rsp)
+}
+
+// PostApiV2TransferSubmitWithBodyWithResponse request with arbitrary body returning *PostApiV2TransferSubmitResponse
+func (c *ClientWithResponses) PostApiV2TransferSubmitWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2TransferSubmitResponse, error) {
+	rsp, err := c.PostApiV2TransferSubmitWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2TransferSubmitResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2TransferSubmitWithResponse(ctx context.Context, body PostApiV2TransferSubmitJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2TransferSubmitResponse, error) {
+	rsp, err := c.PostApiV2TransferSubmit(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2TransferSubmitResponse(rsp)
 }
 
 // ParseGetApiV1CommonBalanceResponse parses an HTTP response from a GetApiV1CommonBalanceWithResponse call
@@ -4283,76 +4283,6 @@ func ParseGetApiV1SwapPriceResponse(rsp *http.Response) (*GetApiV1SwapPriceRespo
 	return response, nil
 }
 
-// ParsePostApiV1TransferPrepareResponse parses an HTTP response from a PostApiV1TransferPrepareWithResponse call
-func ParsePostApiV1TransferPrepareResponse(rsp *http.Response) (*PostApiV1TransferPrepareResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostApiV1TransferPrepareResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                         `json:"code,omitempty"`
-			Data *ResponseTransferPrepareResp `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostApiV1TransferSubmitResponse parses an HTTP response from a PostApiV1TransferSubmitWithResponse call
-func ParsePostApiV1TransferSubmitResponse(rsp *http.Response) (*PostApiV1TransferSubmitResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostApiV1TransferSubmitResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                        `json:"code,omitempty"`
-			Data *ResponseTransferSubmitResp `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParsePostApiV2DeployPrepareResponse parses an HTTP response from a PostApiV2DeployPrepareWithResponse call
 func ParsePostApiV2DeployPrepareResponse(rsp *http.Response) (*PostApiV2DeployPrepareResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -4633,90 +4563,160 @@ func ParsePostApiV2PrimaryVaultPrepareWithdrawResponse(rsp *http.Response) (*Pos
 	return response, nil
 }
 
+// ParsePostApiV2TransferPrepareResponse parses an HTTP response from a PostApiV2TransferPrepareWithResponse call
+func ParsePostApiV2TransferPrepareResponse(rsp *http.Response) (*PostApiV2TransferPrepareResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2TransferPrepareResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                         `json:"code,omitempty"`
+			Data *ResponseTransferPrepareResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV2TransferSubmitResponse parses an HTTP response from a PostApiV2TransferSubmitWithResponse call
+func ParsePostApiV2TransferSubmitResponse(rsp *http.Response) (*PostApiV2TransferSubmitResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2TransferSubmitResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                        `json:"code,omitempty"`
+			Data *ResponseTransferSubmitResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
