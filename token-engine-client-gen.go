@@ -79,11 +79,6 @@ const (
 	RaydiumCLMM GetApiV1SwapPriceParamsPlatform = "Raydium CLMM"
 )
 
-// Defines values for GetApiV2PrimaryDividendGetParamsChainId.
-const (
-	N1001 GetApiV2PrimaryDividendGetParamsChainId = "1001"
-)
-
 // CommonApiResp API标准响应格式
 type CommonApiResp struct {
 	// Code Code is the response code
@@ -105,103 +100,21 @@ type CommonChainID string
 // EntityDEXPlatform defines model for entity.DEX_Platform.
 type EntityDEXPlatform string
 
-// EntityDepositPrepareTx defines model for entity.DepositPrepareTx.
-type EntityDepositPrepareTx struct {
-	ChainId      *string `json:"chain_id,omitempty"`
-	ContractName *string `json:"contract_name,omitempty"`
-	From         *string `json:"from,omitempty"`
-	GasLimit     *int    `json:"gas_limit,omitempty"`
-	GasPrice     *string `json:"gas_price,omitempty"`
-	Hash         *string `json:"hash,omitempty"`
-	Nonce        *int    `json:"nonce,omitempty"`
-	RawTx        *string `json:"raw_tx,omitempty"`
+// EntityPrePrepareData defines model for entity.PrePrepareData.
+type EntityPrePrepareData struct {
+	ChainId *string `json:"chain_id,omitempty"`
+
+	// DataBase64 待签名数据
+	DataBase64 *string `json:"data_base64,omitempty"`
+}
+
+// EntityPrepareTxResponse defines model for entity.PrepareTxResponse.
+type EntityPrepareTxResponse struct {
+	// CorrelationId 该交易全局唯一ID
+	CorrelationId *string `json:"correlation_id,omitempty"`
 
 	// TxMsgBase64 待签名数据
 	TxMsgBase64 *string `json:"tx_msg_base64,omitempty"`
-}
-
-// EntityFundingOverviewTx defines model for entity.FundingOverviewTx.
-type EntityFundingOverviewTx struct {
-	ChainId      *string `json:"chain_id,omitempty"`
-	ContractName *string `json:"contract_name,omitempty"`
-	From         *string `json:"from,omitempty"`
-	GasLimit     *int    `json:"gas_limit,omitempty"`
-	GasPrice     *string `json:"gas_price,omitempty"`
-	Hash         *string `json:"hash,omitempty"`
-	Nonce        *int    `json:"nonce,omitempty"`
-	RawTx        *string `json:"raw_tx,omitempty"`
-}
-
-// EntityTokenLaunchPrepareTx defines model for entity.TokenLaunchPrepareTx.
-type EntityTokenLaunchPrepareTx struct {
-	ChainId      *string `json:"chain_id,omitempty"`
-	ContractName *string `json:"contract_name,omitempty"`
-
-	// DividendAddr 分红地址
-	DividendAddr *string `json:"dividend_addr,omitempty"`
-	From         *string `json:"from,omitempty"`
-	GasLimit     *int    `json:"gas_limit,omitempty"`
-	GasPrice     *string `json:"gas_price,omitempty"`
-	Hash         *string `json:"hash,omitempty"`
-	Nonce        *int    `json:"nonce,omitempty"`
-	RawTx        *string `json:"raw_tx,omitempty"`
-
-	// TxMsgBase64 待签名数据
-	TxMsgBase64 *string `json:"tx_msg_base64,omitempty"`
-
-	// VaultAddr vault地址
-	VaultAddr *string `json:"vault_addr,omitempty"`
-
-	// VaultMintAddr vault mint token地址
-	VaultMintAddr *string `json:"vault_mint_addr,omitempty"`
-}
-
-// EntityVaultClaimRewardTx defines model for entity.VaultClaimRewardTx.
-type EntityVaultClaimRewardTx struct {
-	ChainId      *string `json:"chain_id,omitempty"`
-	ContractName *string `json:"contract_name,omitempty"`
-	From         *string `json:"from,omitempty"`
-	GasLimit     *int    `json:"gas_limit,omitempty"`
-	GasPrice     *string `json:"gas_price,omitempty"`
-	Hash         *string `json:"hash,omitempty"`
-	Nonce        *int    `json:"nonce,omitempty"`
-	RawTx        *string `json:"raw_tx,omitempty"`
-}
-
-// EntityVaultDistributeDividendTx defines model for entity.VaultDistributeDividendTx.
-type EntityVaultDistributeDividendTx struct {
-	ChainId      *string `json:"chain_id,omitempty"`
-	ContractName *string `json:"contract_name,omitempty"`
-	From         *string `json:"from,omitempty"`
-	GasLimit     *int    `json:"gas_limit,omitempty"`
-	GasPrice     *string `json:"gas_price,omitempty"`
-	Hash         *string `json:"hash,omitempty"`
-	Nonce        *int    `json:"nonce,omitempty"`
-	RawTx        *string `json:"raw_tx,omitempty"`
-}
-
-// EntityVaultRedeemTx defines model for entity.VaultRedeemTx.
-type EntityVaultRedeemTx struct {
-	ChainId      *string `json:"chain_id,omitempty"`
-	ContractName *string `json:"contract_name,omitempty"`
-	From         *string `json:"from,omitempty"`
-	GasLimit     *int    `json:"gas_limit,omitempty"`
-	GasPrice     *string `json:"gas_price,omitempty"`
-	Hash         *string `json:"hash,omitempty"`
-	Nonce        *int    `json:"nonce,omitempty"`
-	RawTx        *string `json:"raw_tx,omitempty"`
-}
-
-// EntityWithdrawPrepareTx defines model for entity.WithdrawPrepareTx.
-type EntityWithdrawPrepareTx struct {
-	ChainId      *string `json:"chain_id,omitempty"`
-	ContractName *string `json:"contract_name,omitempty"`
-	From         *string `json:"from,omitempty"`
-	GasLimit     *int    `json:"gas_limit,omitempty"`
-	GasPrice     *string `json:"gas_price,omitempty"`
-	Hash         *string `json:"hash,omitempty"`
-	Nonce        *int    `json:"nonce,omitempty"`
-	RawTx        *string `json:"raw_tx,omitempty"`
 }
 
 // RequestApprovePrepareReq defines model for request.ApprovePrepareReq.
@@ -261,18 +174,6 @@ type RequestCreatePoolAndLiquidityReq struct {
 	VaultAddress string `json:"vault_address"`
 }
 
-// RequestDeployPrepareReq defines model for request.DeployPrepareReq.
-type RequestDeployPrepareReq struct {
-	// ChainId 链ID
-	ChainId int `json:"chain_id"`
-
-	// ContractNames 要部署的合约名称列表
-	ContractNames []string `json:"contract_names"`
-
-	// FromAddress 部署者地址
-	FromAddress string `json:"from_address"`
-}
-
 // RequestDeploySubmitReq defines model for request.DeploySubmitReq.
 type RequestDeploySubmitReq struct {
 	// ChainId 链ID
@@ -320,6 +221,9 @@ type RequestFinancingRuleInfo struct {
 	// DecimalsMultiplier 精度倍数, 例如，使用ETH融资，就是 "1", 使用USDT融资，就是 "1"
 	DecimalsMultiplier *string `json:"decimals_multiplier,omitempty"`
 
+	// EnableWhitelist 是否开启投资白名单
+	EnableWhitelist bool `json:"enable_whitelist"`
+
 	// ExcessFundraisingRatioBps 超募比例bps uint64
 	ExcessFundraisingRatioBps *string `json:"excess_fundraising_ratio_bps,omitempty"`
 
@@ -355,6 +259,9 @@ type RequestFinancingRuleInfo struct {
 
 	// TargetAmountBaseFinancingCurrency 目标融资额 uint64, 比如100万, "1000000"
 	TargetAmountBaseFinancingCurrency string `json:"target_amount_base_financing_currency"`
+
+	// Whitelist 投资人白名单列表
+	Whitelist *[]string `json:"whitelist,omitempty"`
 }
 
 // RequestFundingOverviewReq defines model for request.FundingOverviewReq.
@@ -369,6 +276,36 @@ type RequestFundingOverviewReq struct {
 type RequestLiquidateReq struct {
 	ChainId      CommonChainID `json:"chain_id"`
 	VaultAddress string        `json:"vault_address"`
+}
+
+// RequestOffChainDepositReq defines model for request.OffChainDepositReq.
+type RequestOffChainDepositReq struct {
+	// Amount 投资额(以vault融资货币计价) uint64
+	Amount  string        `json:"amount"`
+	ChainId CommonChainID `json:"chain_id"`
+
+	// Manager 管理员地址
+	Manager string `json:"manager"`
+
+	// Recipient 接收人地址
+	Recipient string `json:"recipient"`
+
+	// VaultAddress vault地址
+	VaultAddress string `json:"vault_address"`
+}
+
+// RequestOffChainRedeemReq defines model for request.OffChainRedeemReq.
+type RequestOffChainRedeemReq struct {
+	ChainId CommonChainID `json:"chain_id"`
+
+	// Manager 管理员地址
+	Manager string `json:"manager"`
+
+	// Recipient 接收人地址
+	Recipient string `json:"recipient"`
+
+	// VaultAddress vault地址
+	VaultAddress string `json:"vault_address"`
 }
 
 // RequestProcessTxReq defines model for request.ProcessTxReq.
@@ -538,6 +475,32 @@ type RequestTransferSubmitReq struct {
 	SignedTx string `json:"signed_tx"`
 }
 
+// RequestVaultApproveDividendReq defines model for request.VaultApproveDividendReq.
+type RequestVaultApproveDividendReq struct {
+	// Amount 派息额(以vault融资货币计价) uint64
+	Amount  string        `json:"amount"`
+	ChainId CommonChainID `json:"chain_id"`
+
+	// Manager 管理员地址
+	Manager string `json:"manager"`
+
+	// VaultAddress vault地址
+	VaultAddress string `json:"vault_address"`
+}
+
+// RequestVaultApproveRedeemReq defines model for request.VaultApproveRedeemReq.
+type RequestVaultApproveRedeemReq struct {
+	// Amount share份额(以vault share货币计价) uint64
+	Amount  string        `json:"amount"`
+	ChainId CommonChainID `json:"chain_id"`
+
+	// Investor 投资者地址
+	Investor string `json:"investor"`
+
+	// VaultAddress vault地址
+	VaultAddress string `json:"vault_address"`
+}
+
 // RequestVaultClaimRewardReq defines model for request.VaultClaimRewardReq.
 type RequestVaultClaimRewardReq struct {
 	// Amount 提取数额 uint64
@@ -555,9 +518,6 @@ type RequestVaultClaimRewardReq struct {
 // RequestVaultCreateReq defines model for request.VaultCreateReq.
 type RequestVaultCreateReq struct {
 	ChainId CommonChainID `json:"chain_id"`
-
-	// EnableWhitelist 是否开启白名单
-	EnableWhitelist *bool `json:"enable_whitelist,omitempty"`
 
 	// FinancingRuleData 融资信息
 	FinancingRuleData RequestFinancingRuleInfo `json:"financing_rule_data"`
@@ -578,6 +538,9 @@ type RequestVaultDepositReq struct {
 	// Investor 投资人地址
 	Investor string `json:"investor"`
 
+	// Signature 管理员base64签名，prepare deposit阶段必填
+	Signature *string `json:"signature,omitempty"`
+
 	// VaultAddress vault地址
 	VaultAddress string `json:"vault_address"`
 }
@@ -591,11 +554,11 @@ type RequestVaultDistributeDividendReq struct {
 	AssetAddr *string       `json:"asset_addr,omitempty"`
 	ChainId   CommonChainID `json:"chain_id"`
 
-	// Sender 用户地址
-	Sender *string `json:"sender,omitempty"`
-
 	// Signature 派息签名
 	Signature string `json:"signature"`
+
+	// UserAddr 用户地址
+	UserAddr *string `json:"user_addr,omitempty"`
 
 	// VaultAddr Vault地址
 	VaultAddr *string `json:"vault_addr,omitempty"`
@@ -621,20 +584,44 @@ type RequestVaultManagement struct {
 
 // RequestVaultRedeemReq defines model for request.VaultRedeemReq.
 type RequestVaultRedeemReq struct {
+	// Amount 提取数额
+	Amount  int           `json:"amount"`
 	ChainId CommonChainID `json:"chain_id"`
 
 	// Investor 投资人地址
-	Investor  string `json:"investor"`
-	Signature string `json:"signature"`
+	Investor string `json:"investor"`
+
+	// Signature 管理员签名，prepare redeem阶段必填
+	Signature *string `json:"signature,omitempty"`
 
 	// VaultAddress vault地址
 	VaultAddress string `json:"vault_address"`
 }
 
-// RequestVaultWithdrawReq defines model for request.VaultWithdrawReq.
-type RequestVaultWithdrawReq struct {
-	// Amount 提取数额 uint64
-	Amount  string        `json:"amount"`
+// RequestVaultUnPauseTokenReq defines model for request.VaultUnPauseTokenReq.
+type RequestVaultUnPauseTokenReq struct {
+	ChainId CommonChainID `json:"chain_id"`
+
+	// Manager 管理员地址
+	Manager *string `json:"manager,omitempty"`
+
+	// VaultAddress vault地址
+	VaultAddress string `json:"vault_address"`
+}
+
+// RequestVaultWithdrawAssetReq defines model for request.VaultWithdrawAssetReq.
+type RequestVaultWithdrawAssetReq struct {
+	ChainId CommonChainID `json:"chain_id"`
+
+	// VaultAddress vault地址
+	VaultAddress string `json:"vault_address"`
+
+	// Withdrawer 提款人
+	Withdrawer string `json:"withdrawer"`
+}
+
+// RequestVaultWithdrawManagerFeeReq defines model for request.VaultWithdrawManagerFeeReq.
+type RequestVaultWithdrawManagerFeeReq struct {
 	ChainId CommonChainID `json:"chain_id"`
 
 	// VaultAddress vault地址
@@ -700,12 +687,6 @@ type ResponseBalanceResp struct {
 // ResponseCreatePoolAndLiquidityResp defines model for response.CreatePoolAndLiquidityResp.
 type ResponseCreatePoolAndLiquidityResp struct {
 	TxMsgBase64 string `json:"tx_msg_base64"`
-}
-
-// ResponseDeployPrepareResp defines model for response.DeployPrepareResp.
-type ResponseDeployPrepareResp struct {
-	// UnsignedTxs 未签名的部署交易列表
-	UnsignedTxs *[]ResponseUnsignedDeploymentTx `json:"unsigned_txs,omitempty"`
 }
 
 // ResponseDeploySubmitResp defines model for response.DeploySubmitResp.
@@ -956,42 +937,6 @@ type ResponseTxResultResp struct {
 	TxHash    *string `json:"tx_hash,omitempty"`
 }
 
-// ResponseUnsignedDeploymentTx defines model for response.UnsignedDeploymentTx.
-type ResponseUnsignedDeploymentTx struct {
-	// ContractName 合约名称
-	ContractName *string `json:"contract_name,omitempty"`
-
-	// GasLimit Gas限制
-	GasLimit *int `json:"gas_limit,omitempty"`
-
-	// GasPrice Gas价格 (wei)
-	GasPrice *string `json:"gas_price,omitempty"`
-
-	// Nonce 交易序号
-	Nonce *int `json:"nonce,omitempty"`
-
-	// TxHex 未签名交易的十六进制表示
-	TxHex *string `json:"tx_hex,omitempty"`
-}
-
-// ResponseUserDividendResp defines model for response.UserDividendResp.
-type ResponseUserDividendResp struct {
-	// AssetAddr 资产地址
-	AssetAddr *string `json:"asset_addr,omitempty"`
-
-	// Balance 余额
-	Balance *string `json:"balance,omitempty"`
-
-	// Decimals 精度
-	Decimals *int `json:"decimals,omitempty"`
-
-	// UserAddr 用户地址
-	UserAddr *string `json:"user_addr,omitempty"`
-
-	// Vault Vault ID
-	Vault *string `json:"vault,omitempty"`
-}
-
 // GetApiV1CommonBalanceParams defines parameters for GetApiV1CommonBalance.
 type GetApiV1CommonBalanceParams struct {
 	ChainId GetApiV1CommonBalanceParamsChainId `form:"chain_id" json:"chain_id"`
@@ -1055,24 +1000,6 @@ type GetApiV1SwapPriceParamsChainId string
 // GetApiV1SwapPriceParamsPlatform defines parameters for GetApiV1SwapPrice.
 type GetApiV1SwapPriceParamsPlatform string
 
-// GetApiV2PrimaryDividendGetParams defines parameters for GetApiV2PrimaryDividendGet.
-type GetApiV2PrimaryDividendGetParams struct {
-	// AssetAddr 资产地址
-	AssetAddr string `form:"asset_addr" json:"asset_addr"`
-
-	// ChainId 链ID
-	ChainId GetApiV2PrimaryDividendGetParamsChainId `form:"chain_id" json:"chain_id"`
-
-	// Sender 用户地址
-	Sender string `form:"sender" json:"sender"`
-
-	// Vault Vault
-	Vault string `form:"vault" json:"vault"`
-}
-
-// GetApiV2PrimaryDividendGetParamsChainId defines parameters for GetApiV2PrimaryDividendGet.
-type GetApiV2PrimaryDividendGetParamsChainId string
-
 // GetApiV2TokenTxsHolderInfoParams defines parameters for GetApiV2TokenTxsHolderInfo.
 type GetApiV2TokenTxsHolderInfoParams struct {
 	// Mint Token mint 地址
@@ -1130,14 +1057,17 @@ type PostApiV2ApprovePrepareJSONRequestBody = RequestApprovePrepareReq
 // PostApiV2BalanceGetJSONRequestBody defines body for PostApiV2BalanceGet for application/json ContentType.
 type PostApiV2BalanceGetJSONRequestBody = RequestBalanceQueryReq
 
-// PostApiV2DeployPrepareJSONRequestBody defines body for PostApiV2DeployPrepare for application/json ContentType.
-type PostApiV2DeployPrepareJSONRequestBody = RequestDeployPrepareReq
-
 // PostApiV2DeploySubmitJSONRequestBody defines body for PostApiV2DeploySubmit for application/json ContentType.
 type PostApiV2DeploySubmitJSONRequestBody = RequestDeploySubmitReq
 
 // GetApiV2PrimaryVaultFundingOverviewJSONRequestBody defines body for GetApiV2PrimaryVaultFundingOverview for application/json ContentType.
 type GetApiV2PrimaryVaultFundingOverviewJSONRequestBody = RequestFundingOverviewReq
+
+// PostApiV2PrimaryVaultPrePrepareDepositJSONRequestBody defines body for PostApiV2PrimaryVaultPrePrepareDeposit for application/json ContentType.
+type PostApiV2PrimaryVaultPrePrepareDepositJSONRequestBody = RequestVaultDepositReq
+
+// PostApiV2PrimaryVaultPrePrepareRedeemJSONRequestBody defines body for PostApiV2PrimaryVaultPrePrepareRedeem for application/json ContentType.
+type PostApiV2PrimaryVaultPrePrepareRedeemJSONRequestBody = RequestVaultRedeemReq
 
 // PostApiV2PrimaryVaultPrepareClaimRewardJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareClaimReward for application/json ContentType.
 type PostApiV2PrimaryVaultPrepareClaimRewardJSONRequestBody = RequestVaultClaimRewardReq
@@ -1148,20 +1078,35 @@ type PostApiV2PrimaryVaultPrepareCreateJSONRequestBody = RequestVaultCreateReq
 // PostApiV2PrimaryVaultPrepareDepositJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareDeposit for application/json ContentType.
 type PostApiV2PrimaryVaultPrepareDepositJSONRequestBody = RequestVaultDepositReq
 
+// PostApiV2PrimaryVaultPrepareDepositApproveJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareDepositApprove for application/json ContentType.
+type PostApiV2PrimaryVaultPrepareDepositApproveJSONRequestBody = RequestVaultDepositReq
+
 // PostApiV2PrimaryVaultPrepareDistributeDividendJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareDistributeDividend for application/json ContentType.
 type PostApiV2PrimaryVaultPrepareDistributeDividendJSONRequestBody = RequestVaultDistributeDividendReq
+
+// PostApiV2PrimaryVaultPrepareDistributeDividendApproveJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareDistributeDividendApprove for application/json ContentType.
+type PostApiV2PrimaryVaultPrepareDistributeDividendApproveJSONRequestBody = RequestVaultApproveDividendReq
+
+// PostApiV2PrimaryVaultPrepareOffChainDepositJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareOffChainDeposit for application/json ContentType.
+type PostApiV2PrimaryVaultPrepareOffChainDepositJSONRequestBody = RequestOffChainDepositReq
+
+// PostApiV2PrimaryVaultPrepareOffChainRedeemJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareOffChainRedeem for application/json ContentType.
+type PostApiV2PrimaryVaultPrepareOffChainRedeemJSONRequestBody = RequestOffChainRedeemReq
 
 // PostApiV2PrimaryVaultPrepareRedeemJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareRedeem for application/json ContentType.
 type PostApiV2PrimaryVaultPrepareRedeemJSONRequestBody = RequestVaultRedeemReq
 
+// PostApiV2PrimaryVaultPrepareRedeemApproveJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareRedeemApprove for application/json ContentType.
+type PostApiV2PrimaryVaultPrepareRedeemApproveJSONRequestBody = RequestVaultApproveRedeemReq
+
+// PostApiV2PrimaryVaultPrepareUnpauseTokenJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareUnpauseToken for application/json ContentType.
+type PostApiV2PrimaryVaultPrepareUnpauseTokenJSONRequestBody = RequestVaultUnPauseTokenReq
+
 // PostApiV2PrimaryVaultPrepareWithdrawJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareWithdraw for application/json ContentType.
-type PostApiV2PrimaryVaultPrepareWithdrawJSONRequestBody = RequestVaultWithdrawReq
+type PostApiV2PrimaryVaultPrepareWithdrawJSONRequestBody = RequestVaultWithdrawAssetReq
 
-// PostApiV2PrimaryVaultSubmitDepositTxJSONRequestBody defines body for PostApiV2PrimaryVaultSubmitDepositTx for application/json ContentType.
-type PostApiV2PrimaryVaultSubmitDepositTxJSONRequestBody = RequestVaultCreateReq
-
-// PostApiV2PrimaryVaultSubmitTxJSONRequestBody defines body for PostApiV2PrimaryVaultSubmitTx for application/json ContentType.
-type PostApiV2PrimaryVaultSubmitTxJSONRequestBody = RequestVaultCreateReq
+// PostApiV2PrimaryVaultPrepareWithdrawFeeJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareWithdrawFee for application/json ContentType.
+type PostApiV2PrimaryVaultPrepareWithdrawFeeJSONRequestBody = RequestVaultWithdrawManagerFeeReq
 
 // PostApiV2TokenTxsProcessJSONRequestBody defines body for PostApiV2TokenTxsProcess for application/json ContentType.
 type PostApiV2TokenTxsProcessJSONRequestBody = RequestProcessTxReq
@@ -1315,23 +1260,25 @@ type ClientInterface interface {
 
 	PostApiV2BalanceGet(ctx context.Context, body PostApiV2BalanceGetJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostApiV2DeployPrepareWithBody request with any body
-	PostApiV2DeployPrepareWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostApiV2DeployPrepare(ctx context.Context, body PostApiV2DeployPrepareJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// PostApiV2DeploySubmitWithBody request with any body
 	PostApiV2DeploySubmitWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostApiV2DeploySubmit(ctx context.Context, body PostApiV2DeploySubmitJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiV2PrimaryDividendGet request
-	GetApiV2PrimaryDividendGet(ctx context.Context, params *GetApiV2PrimaryDividendGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// GetApiV2PrimaryVaultFundingOverviewWithBody request with any body
 	GetApiV2PrimaryVaultFundingOverviewWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	GetApiV2PrimaryVaultFundingOverview(ctx context.Context, body GetApiV2PrimaryVaultFundingOverviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV2PrimaryVaultPrePrepareDepositWithBody request with any body
+	PostApiV2PrimaryVaultPrePrepareDepositWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2PrimaryVaultPrePrepareDeposit(ctx context.Context, body PostApiV2PrimaryVaultPrePrepareDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV2PrimaryVaultPrePrepareRedeemWithBody request with any body
+	PostApiV2PrimaryVaultPrePrepareRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2PrimaryVaultPrePrepareRedeem(ctx context.Context, body PostApiV2PrimaryVaultPrePrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiV2PrimaryVaultPrepareClaimRewardWithBody request with any body
 	PostApiV2PrimaryVaultPrepareClaimRewardWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1348,30 +1295,55 @@ type ClientInterface interface {
 
 	PostApiV2PrimaryVaultPrepareDeposit(ctx context.Context, body PostApiV2PrimaryVaultPrepareDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PostApiV2PrimaryVaultPrepareDepositApproveWithBody request with any body
+	PostApiV2PrimaryVaultPrepareDepositApproveWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2PrimaryVaultPrepareDepositApprove(ctx context.Context, body PostApiV2PrimaryVaultPrepareDepositApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PostApiV2PrimaryVaultPrepareDistributeDividendWithBody request with any body
 	PostApiV2PrimaryVaultPrepareDistributeDividendWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostApiV2PrimaryVaultPrepareDistributeDividend(ctx context.Context, body PostApiV2PrimaryVaultPrepareDistributeDividendJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV2PrimaryVaultPrepareDistributeDividendApproveWithBody request with any body
+	PostApiV2PrimaryVaultPrepareDistributeDividendApproveWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2PrimaryVaultPrepareDistributeDividendApprove(ctx context.Context, body PostApiV2PrimaryVaultPrepareDistributeDividendApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV2PrimaryVaultPrepareOffChainDepositWithBody request with any body
+	PostApiV2PrimaryVaultPrepareOffChainDepositWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2PrimaryVaultPrepareOffChainDeposit(ctx context.Context, body PostApiV2PrimaryVaultPrepareOffChainDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV2PrimaryVaultPrepareOffChainRedeemWithBody request with any body
+	PostApiV2PrimaryVaultPrepareOffChainRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2PrimaryVaultPrepareOffChainRedeem(ctx context.Context, body PostApiV2PrimaryVaultPrepareOffChainRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiV2PrimaryVaultPrepareRedeemWithBody request with any body
 	PostApiV2PrimaryVaultPrepareRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostApiV2PrimaryVaultPrepareRedeem(ctx context.Context, body PostApiV2PrimaryVaultPrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PostApiV2PrimaryVaultPrepareRedeemApproveWithBody request with any body
+	PostApiV2PrimaryVaultPrepareRedeemApproveWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2PrimaryVaultPrepareRedeemApprove(ctx context.Context, body PostApiV2PrimaryVaultPrepareRedeemApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV2PrimaryVaultPrepareUnpauseTokenWithBody request with any body
+	PostApiV2PrimaryVaultPrepareUnpauseTokenWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2PrimaryVaultPrepareUnpauseToken(ctx context.Context, body PostApiV2PrimaryVaultPrepareUnpauseTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PostApiV2PrimaryVaultPrepareWithdrawWithBody request with any body
 	PostApiV2PrimaryVaultPrepareWithdrawWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostApiV2PrimaryVaultPrepareWithdraw(ctx context.Context, body PostApiV2PrimaryVaultPrepareWithdrawJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// PostApiV2PrimaryVaultSubmitDepositTxWithBody request with any body
-	PostApiV2PrimaryVaultSubmitDepositTxWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+	// PostApiV2PrimaryVaultPrepareWithdrawFeeWithBody request with any body
+	PostApiV2PrimaryVaultPrepareWithdrawFeeWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	PostApiV2PrimaryVaultSubmitDepositTx(ctx context.Context, body PostApiV2PrimaryVaultSubmitDepositTxJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostApiV2PrimaryVaultSubmitTxWithBody request with any body
-	PostApiV2PrimaryVaultSubmitTxWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostApiV2PrimaryVaultSubmitTx(ctx context.Context, body PostApiV2PrimaryVaultSubmitTxJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+	PostApiV2PrimaryVaultPrepareWithdrawFee(ctx context.Context, body PostApiV2PrimaryVaultPrepareWithdrawFeeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetApiV2TokenTxsHolderInfo request
 	GetApiV2TokenTxsHolderInfo(ctx context.Context, params *GetApiV2TokenTxsHolderInfoParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1712,30 +1684,6 @@ func (c *Client) PostApiV2BalanceGet(ctx context.Context, body PostApiV2BalanceG
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiV2DeployPrepareWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2DeployPrepareRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2DeployPrepare(ctx context.Context, body PostApiV2DeployPrepareJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2DeployPrepareRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 func (c *Client) PostApiV2DeploySubmitWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiV2DeploySubmitRequestWithBody(c.Server, contentType, body)
 	if err != nil {
@@ -1760,18 +1708,6 @@ func (c *Client) PostApiV2DeploySubmit(ctx context.Context, body PostApiV2Deploy
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiV2PrimaryDividendGet(ctx context.Context, params *GetApiV2PrimaryDividendGetParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiV2PrimaryDividendGetRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 func (c *Client) GetApiV2PrimaryVaultFundingOverviewWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetApiV2PrimaryVaultFundingOverviewRequestWithBody(c.Server, contentType, body)
 	if err != nil {
@@ -1786,6 +1722,54 @@ func (c *Client) GetApiV2PrimaryVaultFundingOverviewWithBody(ctx context.Context
 
 func (c *Client) GetApiV2PrimaryVaultFundingOverview(ctx context.Context, body GetApiV2PrimaryVaultFundingOverviewJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetApiV2PrimaryVaultFundingOverviewRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2PrimaryVaultPrePrepareDepositWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrePrepareDepositRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2PrimaryVaultPrePrepareDeposit(ctx context.Context, body PostApiV2PrimaryVaultPrePrepareDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrePrepareDepositRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2PrimaryVaultPrePrepareRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrePrepareRedeemRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2PrimaryVaultPrePrepareRedeem(ctx context.Context, body PostApiV2PrimaryVaultPrePrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrePrepareRedeemRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1868,6 +1852,30 @@ func (c *Client) PostApiV2PrimaryVaultPrepareDeposit(ctx context.Context, body P
 	return c.Client.Do(req)
 }
 
+func (c *Client) PostApiV2PrimaryVaultPrepareDepositApproveWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareDepositApproveRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2PrimaryVaultPrepareDepositApprove(ctx context.Context, body PostApiV2PrimaryVaultPrepareDepositApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareDepositApproveRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) PostApiV2PrimaryVaultPrepareDistributeDividendWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiV2PrimaryVaultPrepareDistributeDividendRequestWithBody(c.Server, contentType, body)
 	if err != nil {
@@ -1882,6 +1890,78 @@ func (c *Client) PostApiV2PrimaryVaultPrepareDistributeDividendWithBody(ctx cont
 
 func (c *Client) PostApiV2PrimaryVaultPrepareDistributeDividend(ctx context.Context, body PostApiV2PrimaryVaultPrepareDistributeDividendJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiV2PrimaryVaultPrepareDistributeDividendRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2PrimaryVaultPrepareDistributeDividendApproveWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareDistributeDividendApproveRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2PrimaryVaultPrepareDistributeDividendApprove(ctx context.Context, body PostApiV2PrimaryVaultPrepareDistributeDividendApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareDistributeDividendApproveRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2PrimaryVaultPrepareOffChainDepositWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareOffChainDepositRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2PrimaryVaultPrepareOffChainDeposit(ctx context.Context, body PostApiV2PrimaryVaultPrepareOffChainDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareOffChainDepositRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2PrimaryVaultPrepareOffChainRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareOffChainRedeemRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2PrimaryVaultPrepareOffChainRedeem(ctx context.Context, body PostApiV2PrimaryVaultPrepareOffChainRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareOffChainRedeemRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1916,6 +1996,54 @@ func (c *Client) PostApiV2PrimaryVaultPrepareRedeem(ctx context.Context, body Po
 	return c.Client.Do(req)
 }
 
+func (c *Client) PostApiV2PrimaryVaultPrepareRedeemApproveWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareRedeemApproveRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2PrimaryVaultPrepareRedeemApprove(ctx context.Context, body PostApiV2PrimaryVaultPrepareRedeemApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareRedeemApproveRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2PrimaryVaultPrepareUnpauseTokenWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareUnpauseTokenRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2PrimaryVaultPrepareUnpauseToken(ctx context.Context, body PostApiV2PrimaryVaultPrepareUnpauseTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareUnpauseTokenRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) PostApiV2PrimaryVaultPrepareWithdrawWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiV2PrimaryVaultPrepareWithdrawRequestWithBody(c.Server, contentType, body)
 	if err != nil {
@@ -1940,8 +2068,8 @@ func (c *Client) PostApiV2PrimaryVaultPrepareWithdraw(ctx context.Context, body 
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiV2PrimaryVaultSubmitDepositTxWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2PrimaryVaultSubmitDepositTxRequestWithBody(c.Server, contentType, body)
+func (c *Client) PostApiV2PrimaryVaultPrepareWithdrawFeeWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareWithdrawFeeRequestWithBody(c.Server, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -1952,32 +2080,8 @@ func (c *Client) PostApiV2PrimaryVaultSubmitDepositTxWithBody(ctx context.Contex
 	return c.Client.Do(req)
 }
 
-func (c *Client) PostApiV2PrimaryVaultSubmitDepositTx(ctx context.Context, body PostApiV2PrimaryVaultSubmitDepositTxJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2PrimaryVaultSubmitDepositTxRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2PrimaryVaultSubmitTxWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2PrimaryVaultSubmitTxRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2PrimaryVaultSubmitTx(ctx context.Context, body PostApiV2PrimaryVaultSubmitTxJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2PrimaryVaultSubmitTxRequest(c.Server, body)
+func (c *Client) PostApiV2PrimaryVaultPrepareWithdrawFee(ctx context.Context, body PostApiV2PrimaryVaultPrepareWithdrawFeeJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareWithdrawFeeRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2920,46 +3024,6 @@ func NewPostApiV2BalanceGetRequestWithBody(server string, contentType string, bo
 	return req, nil
 }
 
-// NewPostApiV2DeployPrepareRequest calls the generic PostApiV2DeployPrepare builder with application/json body
-func NewPostApiV2DeployPrepareRequest(server string, body PostApiV2DeployPrepareJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostApiV2DeployPrepareRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostApiV2DeployPrepareRequestWithBody generates requests for PostApiV2DeployPrepare with any type of body
-func NewPostApiV2DeployPrepareRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/deploy/prepare")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
 // NewPostApiV2DeploySubmitRequest calls the generic PostApiV2DeploySubmit builder with application/json body
 func NewPostApiV2DeploySubmitRequest(server string, body PostApiV2DeploySubmitJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -3000,87 +3064,6 @@ func NewPostApiV2DeploySubmitRequestWithBody(server string, contentType string, 
 	return req, nil
 }
 
-// NewGetApiV2PrimaryDividendGetRequest generates requests for GetApiV2PrimaryDividendGet
-func NewGetApiV2PrimaryDividendGetRequest(server string, params *GetApiV2PrimaryDividendGetParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/primary/dividend/get")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "asset_addr", runtime.ParamLocationQuery, params.AssetAddr); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "chain_id", runtime.ParamLocationQuery, params.ChainId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "sender", runtime.ParamLocationQuery, params.Sender); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "vault", runtime.ParamLocationQuery, params.Vault); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewGetApiV2PrimaryVaultFundingOverviewRequest calls the generic GetApiV2PrimaryVaultFundingOverview builder with application/json body
 func NewGetApiV2PrimaryVaultFundingOverviewRequest(server string, body GetApiV2PrimaryVaultFundingOverviewJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -3112,6 +3095,86 @@ func NewGetApiV2PrimaryVaultFundingOverviewRequestWithBody(server string, conten
 	}
 
 	req, err := http.NewRequest("GET", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiV2PrimaryVaultPrePrepareDepositRequest calls the generic PostApiV2PrimaryVaultPrePrepareDeposit builder with application/json body
+func NewPostApiV2PrimaryVaultPrePrepareDepositRequest(server string, body PostApiV2PrimaryVaultPrePrepareDepositJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2PrimaryVaultPrePrepareDepositRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2PrimaryVaultPrePrepareDepositRequestWithBody generates requests for PostApiV2PrimaryVaultPrePrepareDeposit with any type of body
+func NewPostApiV2PrimaryVaultPrePrepareDepositRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/primary/vault/pre_prepare_deposit")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiV2PrimaryVaultPrePrepareRedeemRequest calls the generic PostApiV2PrimaryVaultPrePrepareRedeem builder with application/json body
+func NewPostApiV2PrimaryVaultPrePrepareRedeemRequest(server string, body PostApiV2PrimaryVaultPrePrepareRedeemJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2PrimaryVaultPrePrepareRedeemRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2PrimaryVaultPrePrepareRedeemRequestWithBody generates requests for PostApiV2PrimaryVaultPrePrepareRedeem with any type of body
+func NewPostApiV2PrimaryVaultPrePrepareRedeemRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/primary/vault/pre_prepare_redeem")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
@@ -3241,6 +3304,46 @@ func NewPostApiV2PrimaryVaultPrepareDepositRequestWithBody(server string, conten
 	return req, nil
 }
 
+// NewPostApiV2PrimaryVaultPrepareDepositApproveRequest calls the generic PostApiV2PrimaryVaultPrepareDepositApprove builder with application/json body
+func NewPostApiV2PrimaryVaultPrepareDepositApproveRequest(server string, body PostApiV2PrimaryVaultPrepareDepositApproveJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2PrimaryVaultPrepareDepositApproveRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2PrimaryVaultPrepareDepositApproveRequestWithBody generates requests for PostApiV2PrimaryVaultPrepareDepositApprove with any type of body
+func NewPostApiV2PrimaryVaultPrepareDepositApproveRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/primary/vault/prepare_deposit_approve")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewPostApiV2PrimaryVaultPrepareDistributeDividendRequest calls the generic PostApiV2PrimaryVaultPrepareDistributeDividend builder with application/json body
 func NewPostApiV2PrimaryVaultPrepareDistributeDividendRequest(server string, body PostApiV2PrimaryVaultPrepareDistributeDividendJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -3262,6 +3365,126 @@ func NewPostApiV2PrimaryVaultPrepareDistributeDividendRequestWithBody(server str
 	}
 
 	operationPath := fmt.Sprintf("/api/v2/primary/vault/prepare_distribute_dividend")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiV2PrimaryVaultPrepareDistributeDividendApproveRequest calls the generic PostApiV2PrimaryVaultPrepareDistributeDividendApprove builder with application/json body
+func NewPostApiV2PrimaryVaultPrepareDistributeDividendApproveRequest(server string, body PostApiV2PrimaryVaultPrepareDistributeDividendApproveJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2PrimaryVaultPrepareDistributeDividendApproveRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2PrimaryVaultPrepareDistributeDividendApproveRequestWithBody generates requests for PostApiV2PrimaryVaultPrepareDistributeDividendApprove with any type of body
+func NewPostApiV2PrimaryVaultPrepareDistributeDividendApproveRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/primary/vault/prepare_distribute_dividend_approve")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiV2PrimaryVaultPrepareOffChainDepositRequest calls the generic PostApiV2PrimaryVaultPrepareOffChainDeposit builder with application/json body
+func NewPostApiV2PrimaryVaultPrepareOffChainDepositRequest(server string, body PostApiV2PrimaryVaultPrepareOffChainDepositJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2PrimaryVaultPrepareOffChainDepositRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2PrimaryVaultPrepareOffChainDepositRequestWithBody generates requests for PostApiV2PrimaryVaultPrepareOffChainDeposit with any type of body
+func NewPostApiV2PrimaryVaultPrepareOffChainDepositRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/primary/vault/prepare_off_chain_deposit")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiV2PrimaryVaultPrepareOffChainRedeemRequest calls the generic PostApiV2PrimaryVaultPrepareOffChainRedeem builder with application/json body
+func NewPostApiV2PrimaryVaultPrepareOffChainRedeemRequest(server string, body PostApiV2PrimaryVaultPrepareOffChainRedeemJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2PrimaryVaultPrepareOffChainRedeemRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2PrimaryVaultPrepareOffChainRedeemRequestWithBody generates requests for PostApiV2PrimaryVaultPrepareOffChainRedeem with any type of body
+func NewPostApiV2PrimaryVaultPrepareOffChainRedeemRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/primary/vault/prepare_off_chain_redeem")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -3321,6 +3544,86 @@ func NewPostApiV2PrimaryVaultPrepareRedeemRequestWithBody(server string, content
 	return req, nil
 }
 
+// NewPostApiV2PrimaryVaultPrepareRedeemApproveRequest calls the generic PostApiV2PrimaryVaultPrepareRedeemApprove builder with application/json body
+func NewPostApiV2PrimaryVaultPrepareRedeemApproveRequest(server string, body PostApiV2PrimaryVaultPrepareRedeemApproveJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2PrimaryVaultPrepareRedeemApproveRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2PrimaryVaultPrepareRedeemApproveRequestWithBody generates requests for PostApiV2PrimaryVaultPrepareRedeemApprove with any type of body
+func NewPostApiV2PrimaryVaultPrepareRedeemApproveRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/primary/vault/prepare_redeem_approve")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiV2PrimaryVaultPrepareUnpauseTokenRequest calls the generic PostApiV2PrimaryVaultPrepareUnpauseToken builder with application/json body
+func NewPostApiV2PrimaryVaultPrepareUnpauseTokenRequest(server string, body PostApiV2PrimaryVaultPrepareUnpauseTokenJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2PrimaryVaultPrepareUnpauseTokenRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2PrimaryVaultPrepareUnpauseTokenRequestWithBody generates requests for PostApiV2PrimaryVaultPrepareUnpauseToken with any type of body
+func NewPostApiV2PrimaryVaultPrepareUnpauseTokenRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/primary/vault/prepare_unpause_token")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewPostApiV2PrimaryVaultPrepareWithdrawRequest calls the generic PostApiV2PrimaryVaultPrepareWithdraw builder with application/json body
 func NewPostApiV2PrimaryVaultPrepareWithdrawRequest(server string, body PostApiV2PrimaryVaultPrepareWithdrawJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -3361,19 +3664,19 @@ func NewPostApiV2PrimaryVaultPrepareWithdrawRequestWithBody(server string, conte
 	return req, nil
 }
 
-// NewPostApiV2PrimaryVaultSubmitDepositTxRequest calls the generic PostApiV2PrimaryVaultSubmitDepositTx builder with application/json body
-func NewPostApiV2PrimaryVaultSubmitDepositTxRequest(server string, body PostApiV2PrimaryVaultSubmitDepositTxJSONRequestBody) (*http.Request, error) {
+// NewPostApiV2PrimaryVaultPrepareWithdrawFeeRequest calls the generic PostApiV2PrimaryVaultPrepareWithdrawFee builder with application/json body
+func NewPostApiV2PrimaryVaultPrepareWithdrawFeeRequest(server string, body PostApiV2PrimaryVaultPrepareWithdrawFeeJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
 	buf, err := json.Marshal(body)
 	if err != nil {
 		return nil, err
 	}
 	bodyReader = bytes.NewReader(buf)
-	return NewPostApiV2PrimaryVaultSubmitDepositTxRequestWithBody(server, "application/json", bodyReader)
+	return NewPostApiV2PrimaryVaultPrepareWithdrawFeeRequestWithBody(server, "application/json", bodyReader)
 }
 
-// NewPostApiV2PrimaryVaultSubmitDepositTxRequestWithBody generates requests for PostApiV2PrimaryVaultSubmitDepositTx with any type of body
-func NewPostApiV2PrimaryVaultSubmitDepositTxRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+// NewPostApiV2PrimaryVaultPrepareWithdrawFeeRequestWithBody generates requests for PostApiV2PrimaryVaultPrepareWithdrawFee with any type of body
+func NewPostApiV2PrimaryVaultPrepareWithdrawFeeRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
 	var err error
 
 	serverURL, err := url.Parse(server)
@@ -3381,47 +3684,7 @@ func NewPostApiV2PrimaryVaultSubmitDepositTxRequestWithBody(server string, conte
 		return nil, err
 	}
 
-	operationPath := fmt.Sprintf("/api/v2/primary/vault/submit_deposit_tx")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewPostApiV2PrimaryVaultSubmitTxRequest calls the generic PostApiV2PrimaryVaultSubmitTx builder with application/json body
-func NewPostApiV2PrimaryVaultSubmitTxRequest(server string, body PostApiV2PrimaryVaultSubmitTxJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostApiV2PrimaryVaultSubmitTxRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostApiV2PrimaryVaultSubmitTxRequestWithBody generates requests for PostApiV2PrimaryVaultSubmitTx with any type of body
-func NewPostApiV2PrimaryVaultSubmitTxRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/primary/vault/submit_tx")
+	operationPath := fmt.Sprintf("/api/v2/primary/vault/prepare_withdraw_fee")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -3865,23 +4128,25 @@ type ClientWithResponsesInterface interface {
 
 	PostApiV2BalanceGetWithResponse(ctx context.Context, body PostApiV2BalanceGetJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2BalanceGetResponse, error)
 
-	// PostApiV2DeployPrepareWithBodyWithResponse request with any body
-	PostApiV2DeployPrepareWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2DeployPrepareResponse, error)
-
-	PostApiV2DeployPrepareWithResponse(ctx context.Context, body PostApiV2DeployPrepareJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2DeployPrepareResponse, error)
-
 	// PostApiV2DeploySubmitWithBodyWithResponse request with any body
 	PostApiV2DeploySubmitWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2DeploySubmitResponse, error)
 
 	PostApiV2DeploySubmitWithResponse(ctx context.Context, body PostApiV2DeploySubmitJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2DeploySubmitResponse, error)
 
-	// GetApiV2PrimaryDividendGetWithResponse request
-	GetApiV2PrimaryDividendGetWithResponse(ctx context.Context, params *GetApiV2PrimaryDividendGetParams, reqEditors ...RequestEditorFn) (*GetApiV2PrimaryDividendGetResponse, error)
-
 	// GetApiV2PrimaryVaultFundingOverviewWithBodyWithResponse request with any body
 	GetApiV2PrimaryVaultFundingOverviewWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GetApiV2PrimaryVaultFundingOverviewResponse, error)
 
 	GetApiV2PrimaryVaultFundingOverviewWithResponse(ctx context.Context, body GetApiV2PrimaryVaultFundingOverviewJSONRequestBody, reqEditors ...RequestEditorFn) (*GetApiV2PrimaryVaultFundingOverviewResponse, error)
+
+	// PostApiV2PrimaryVaultPrePrepareDepositWithBodyWithResponse request with any body
+	PostApiV2PrimaryVaultPrePrepareDepositWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrePrepareDepositResponse, error)
+
+	PostApiV2PrimaryVaultPrePrepareDepositWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrePrepareDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrePrepareDepositResponse, error)
+
+	// PostApiV2PrimaryVaultPrePrepareRedeemWithBodyWithResponse request with any body
+	PostApiV2PrimaryVaultPrePrepareRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrePrepareRedeemResponse, error)
+
+	PostApiV2PrimaryVaultPrePrepareRedeemWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrePrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrePrepareRedeemResponse, error)
 
 	// PostApiV2PrimaryVaultPrepareClaimRewardWithBodyWithResponse request with any body
 	PostApiV2PrimaryVaultPrepareClaimRewardWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareClaimRewardResponse, error)
@@ -3898,30 +4163,55 @@ type ClientWithResponsesInterface interface {
 
 	PostApiV2PrimaryVaultPrepareDepositWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareDepositResponse, error)
 
+	// PostApiV2PrimaryVaultPrepareDepositApproveWithBodyWithResponse request with any body
+	PostApiV2PrimaryVaultPrepareDepositApproveWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareDepositApproveResponse, error)
+
+	PostApiV2PrimaryVaultPrepareDepositApproveWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareDepositApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareDepositApproveResponse, error)
+
 	// PostApiV2PrimaryVaultPrepareDistributeDividendWithBodyWithResponse request with any body
 	PostApiV2PrimaryVaultPrepareDistributeDividendWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareDistributeDividendResponse, error)
 
 	PostApiV2PrimaryVaultPrepareDistributeDividendWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareDistributeDividendJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareDistributeDividendResponse, error)
+
+	// PostApiV2PrimaryVaultPrepareDistributeDividendApproveWithBodyWithResponse request with any body
+	PostApiV2PrimaryVaultPrepareDistributeDividendApproveWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse, error)
+
+	PostApiV2PrimaryVaultPrepareDistributeDividendApproveWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareDistributeDividendApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse, error)
+
+	// PostApiV2PrimaryVaultPrepareOffChainDepositWithBodyWithResponse request with any body
+	PostApiV2PrimaryVaultPrepareOffChainDepositWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareOffChainDepositResponse, error)
+
+	PostApiV2PrimaryVaultPrepareOffChainDepositWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareOffChainDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareOffChainDepositResponse, error)
+
+	// PostApiV2PrimaryVaultPrepareOffChainRedeemWithBodyWithResponse request with any body
+	PostApiV2PrimaryVaultPrepareOffChainRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareOffChainRedeemResponse, error)
+
+	PostApiV2PrimaryVaultPrepareOffChainRedeemWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareOffChainRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareOffChainRedeemResponse, error)
 
 	// PostApiV2PrimaryVaultPrepareRedeemWithBodyWithResponse request with any body
 	PostApiV2PrimaryVaultPrepareRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareRedeemResponse, error)
 
 	PostApiV2PrimaryVaultPrepareRedeemWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareRedeemResponse, error)
 
+	// PostApiV2PrimaryVaultPrepareRedeemApproveWithBodyWithResponse request with any body
+	PostApiV2PrimaryVaultPrepareRedeemApproveWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareRedeemApproveResponse, error)
+
+	PostApiV2PrimaryVaultPrepareRedeemApproveWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareRedeemApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareRedeemApproveResponse, error)
+
+	// PostApiV2PrimaryVaultPrepareUnpauseTokenWithBodyWithResponse request with any body
+	PostApiV2PrimaryVaultPrepareUnpauseTokenWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareUnpauseTokenResponse, error)
+
+	PostApiV2PrimaryVaultPrepareUnpauseTokenWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareUnpauseTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareUnpauseTokenResponse, error)
+
 	// PostApiV2PrimaryVaultPrepareWithdrawWithBodyWithResponse request with any body
 	PostApiV2PrimaryVaultPrepareWithdrawWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareWithdrawResponse, error)
 
 	PostApiV2PrimaryVaultPrepareWithdrawWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareWithdrawJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareWithdrawResponse, error)
 
-	// PostApiV2PrimaryVaultSubmitDepositTxWithBodyWithResponse request with any body
-	PostApiV2PrimaryVaultSubmitDepositTxWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultSubmitDepositTxResponse, error)
+	// PostApiV2PrimaryVaultPrepareWithdrawFeeWithBodyWithResponse request with any body
+	PostApiV2PrimaryVaultPrepareWithdrawFeeWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareWithdrawFeeResponse, error)
 
-	PostApiV2PrimaryVaultSubmitDepositTxWithResponse(ctx context.Context, body PostApiV2PrimaryVaultSubmitDepositTxJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultSubmitDepositTxResponse, error)
-
-	// PostApiV2PrimaryVaultSubmitTxWithBodyWithResponse request with any body
-	PostApiV2PrimaryVaultSubmitTxWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultSubmitTxResponse, error)
-
-	PostApiV2PrimaryVaultSubmitTxWithResponse(ctx context.Context, body PostApiV2PrimaryVaultSubmitTxJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultSubmitTxResponse, error)
+	PostApiV2PrimaryVaultPrepareWithdrawFeeWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareWithdrawFeeJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareWithdrawFeeResponse, error)
 
 	// GetApiV2TokenTxsHolderInfoWithResponse request
 	GetApiV2TokenTxsHolderInfoWithResponse(ctx context.Context, params *GetApiV2TokenTxsHolderInfoParams, reqEditors ...RequestEditorFn) (*GetApiV2TokenTxsHolderInfoResponse, error)
@@ -4415,37 +4705,6 @@ func (r PostApiV2BalanceGetResponse) StatusCode() int {
 	return 0
 }
 
-type PostApiV2DeployPrepareResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                       `json:"code,omitempty"`
-		Data *ResponseDeployPrepareResp `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r PostApiV2DeployPrepareResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostApiV2DeployPrepareResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type PostApiV2DeploySubmitResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -4477,37 +4736,6 @@ func (r PostApiV2DeploySubmitResponse) StatusCode() int {
 	return 0
 }
 
-type GetApiV2PrimaryDividendGetResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                      `json:"code,omitempty"`
-		Data *ResponseUserDividendResp `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r GetApiV2PrimaryDividendGetResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetApiV2PrimaryDividendGetResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type GetApiV2PrimaryVaultFundingOverviewResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -4515,7 +4743,7 @@ type GetApiV2PrimaryVaultFundingOverviewResponse struct {
 		// Code Code is the response code
 		// @Description 响应状态码
 		Code *int                     `json:"code,omitempty"`
-		Data *EntityFundingOverviewTx `json:"data,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
 
 		// Message Message is the response message
 		// @Description 响应消息
@@ -4539,14 +4767,76 @@ func (r GetApiV2PrimaryVaultFundingOverviewResponse) StatusCode() int {
 	return 0
 }
 
+type PostApiV2PrimaryVaultPrePrepareDepositResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                  `json:"code,omitempty"`
+		Data *EntityPrePrepareData `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2PrimaryVaultPrePrepareDepositResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2PrimaryVaultPrePrepareDepositResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiV2PrimaryVaultPrePrepareRedeemResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                  `json:"code,omitempty"`
+		Data *EntityPrePrepareData `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2PrimaryVaultPrePrepareRedeemResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2PrimaryVaultPrePrepareRedeemResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type PostApiV2PrimaryVaultPrepareClaimRewardResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
 		// Code Code is the response code
 		// @Description 响应状态码
-		Code *int                      `json:"code,omitempty"`
-		Data *EntityVaultClaimRewardTx `json:"data,omitempty"`
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
 
 		// Message Message is the response message
 		// @Description 响应消息
@@ -4576,8 +4866,8 @@ type PostApiV2PrimaryVaultPrepareCreateResponse struct {
 	JSON200      *struct {
 		// Code Code is the response code
 		// @Description 响应状态码
-		Code *int                        `json:"code,omitempty"`
-		Data *EntityTokenLaunchPrepareTx `json:"data,omitempty"`
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
 
 		// Message Message is the response message
 		// @Description 响应消息
@@ -4607,8 +4897,8 @@ type PostApiV2PrimaryVaultPrepareDepositResponse struct {
 	JSON200      *struct {
 		// Code Code is the response code
 		// @Description 响应状态码
-		Code *int                    `json:"code,omitempty"`
-		Data *EntityDepositPrepareTx `json:"data,omitempty"`
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
 
 		// Message Message is the response message
 		// @Description 响应消息
@@ -4632,14 +4922,45 @@ func (r PostApiV2PrimaryVaultPrepareDepositResponse) StatusCode() int {
 	return 0
 }
 
+type PostApiV2PrimaryVaultPrepareDepositApproveResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2PrimaryVaultPrepareDepositApproveResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2PrimaryVaultPrepareDepositApproveResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type PostApiV2PrimaryVaultPrepareDistributeDividendResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
 		// Code Code is the response code
 		// @Description 响应状态码
-		Code *int                             `json:"code,omitempty"`
-		Data *EntityVaultDistributeDividendTx `json:"data,omitempty"`
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
 
 		// Message Message is the response message
 		// @Description 响应消息
@@ -4663,14 +4984,107 @@ func (r PostApiV2PrimaryVaultPrepareDistributeDividendResponse) StatusCode() int
 	return 0
 }
 
+type PostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiV2PrimaryVaultPrepareOffChainDepositResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2PrimaryVaultPrepareOffChainDepositResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2PrimaryVaultPrepareOffChainDepositResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiV2PrimaryVaultPrepareOffChainRedeemResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2PrimaryVaultPrepareOffChainRedeemResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2PrimaryVaultPrepareOffChainRedeemResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type PostApiV2PrimaryVaultPrepareRedeemResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
 		// Code Code is the response code
 		// @Description 响应状态码
-		Code *int                 `json:"code,omitempty"`
-		Data *EntityVaultRedeemTx `json:"data,omitempty"`
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
 
 		// Message Message is the response message
 		// @Description 响应消息
@@ -4694,6 +5108,68 @@ func (r PostApiV2PrimaryVaultPrepareRedeemResponse) StatusCode() int {
 	return 0
 }
 
+type PostApiV2PrimaryVaultPrepareRedeemApproveResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2PrimaryVaultPrepareRedeemApproveResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2PrimaryVaultPrepareRedeemApproveResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiV2PrimaryVaultPrepareUnpauseTokenResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2PrimaryVaultPrepareUnpauseTokenResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2PrimaryVaultPrepareUnpauseTokenResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type PostApiV2PrimaryVaultPrepareWithdrawResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -4701,7 +5177,7 @@ type PostApiV2PrimaryVaultPrepareWithdrawResponse struct {
 		// Code Code is the response code
 		// @Description 响应状态码
 		Code *int                     `json:"code,omitempty"`
-		Data *EntityWithdrawPrepareTx `json:"data,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
 
 		// Message Message is the response message
 		// @Description 响应消息
@@ -4725,14 +5201,14 @@ func (r PostApiV2PrimaryVaultPrepareWithdrawResponse) StatusCode() int {
 	return 0
 }
 
-type PostApiV2PrimaryVaultSubmitDepositTxResponse struct {
+type PostApiV2PrimaryVaultPrepareWithdrawFeeResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
 	JSON200      *struct {
 		// Code Code is the response code
 		// @Description 响应状态码
-		Code *int                        `json:"code,omitempty"`
-		Data *EntityTokenLaunchPrepareTx `json:"data,omitempty"`
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
 
 		// Message Message is the response message
 		// @Description 响应消息
@@ -4741,7 +5217,7 @@ type PostApiV2PrimaryVaultSubmitDepositTxResponse struct {
 }
 
 // Status returns HTTPResponse.Status
-func (r PostApiV2PrimaryVaultSubmitDepositTxResponse) Status() string {
+func (r PostApiV2PrimaryVaultPrepareWithdrawFeeResponse) Status() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Status
 	}
@@ -4749,38 +5225,7 @@ func (r PostApiV2PrimaryVaultSubmitDepositTxResponse) Status() string {
 }
 
 // StatusCode returns HTTPResponse.StatusCode
-func (r PostApiV2PrimaryVaultSubmitDepositTxResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostApiV2PrimaryVaultSubmitTxResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                        `json:"code,omitempty"`
-		Data *EntityTokenLaunchPrepareTx `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r PostApiV2PrimaryVaultSubmitTxResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostApiV2PrimaryVaultSubmitTxResponse) StatusCode() int {
+func (r PostApiV2PrimaryVaultPrepareWithdrawFeeResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -5196,23 +5641,6 @@ func (c *ClientWithResponses) PostApiV2BalanceGetWithResponse(ctx context.Contex
 	return ParsePostApiV2BalanceGetResponse(rsp)
 }
 
-// PostApiV2DeployPrepareWithBodyWithResponse request with arbitrary body returning *PostApiV2DeployPrepareResponse
-func (c *ClientWithResponses) PostApiV2DeployPrepareWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2DeployPrepareResponse, error) {
-	rsp, err := c.PostApiV2DeployPrepareWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2DeployPrepareResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostApiV2DeployPrepareWithResponse(ctx context.Context, body PostApiV2DeployPrepareJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2DeployPrepareResponse, error) {
-	rsp, err := c.PostApiV2DeployPrepare(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2DeployPrepareResponse(rsp)
-}
-
 // PostApiV2DeploySubmitWithBodyWithResponse request with arbitrary body returning *PostApiV2DeploySubmitResponse
 func (c *ClientWithResponses) PostApiV2DeploySubmitWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2DeploySubmitResponse, error) {
 	rsp, err := c.PostApiV2DeploySubmitWithBody(ctx, contentType, body, reqEditors...)
@@ -5230,15 +5658,6 @@ func (c *ClientWithResponses) PostApiV2DeploySubmitWithResponse(ctx context.Cont
 	return ParsePostApiV2DeploySubmitResponse(rsp)
 }
 
-// GetApiV2PrimaryDividendGetWithResponse request returning *GetApiV2PrimaryDividendGetResponse
-func (c *ClientWithResponses) GetApiV2PrimaryDividendGetWithResponse(ctx context.Context, params *GetApiV2PrimaryDividendGetParams, reqEditors ...RequestEditorFn) (*GetApiV2PrimaryDividendGetResponse, error) {
-	rsp, err := c.GetApiV2PrimaryDividendGet(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetApiV2PrimaryDividendGetResponse(rsp)
-}
-
 // GetApiV2PrimaryVaultFundingOverviewWithBodyWithResponse request with arbitrary body returning *GetApiV2PrimaryVaultFundingOverviewResponse
 func (c *ClientWithResponses) GetApiV2PrimaryVaultFundingOverviewWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*GetApiV2PrimaryVaultFundingOverviewResponse, error) {
 	rsp, err := c.GetApiV2PrimaryVaultFundingOverviewWithBody(ctx, contentType, body, reqEditors...)
@@ -5254,6 +5673,40 @@ func (c *ClientWithResponses) GetApiV2PrimaryVaultFundingOverviewWithResponse(ct
 		return nil, err
 	}
 	return ParseGetApiV2PrimaryVaultFundingOverviewResponse(rsp)
+}
+
+// PostApiV2PrimaryVaultPrePrepareDepositWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrePrepareDepositResponse
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrePrepareDepositWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrePrepareDepositResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrePrepareDepositWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrePrepareDepositResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrePrepareDepositWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrePrepareDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrePrepareDepositResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrePrepareDeposit(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrePrepareDepositResponse(rsp)
+}
+
+// PostApiV2PrimaryVaultPrePrepareRedeemWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrePrepareRedeemResponse
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrePrepareRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrePrepareRedeemResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrePrepareRedeemWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrePrepareRedeemResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrePrepareRedeemWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrePrepareRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrePrepareRedeemResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrePrepareRedeem(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrePrepareRedeemResponse(rsp)
 }
 
 // PostApiV2PrimaryVaultPrepareClaimRewardWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareClaimRewardResponse
@@ -5307,6 +5760,23 @@ func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareDepositWithResponse(ct
 	return ParsePostApiV2PrimaryVaultPrepareDepositResponse(rsp)
 }
 
+// PostApiV2PrimaryVaultPrepareDepositApproveWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareDepositApproveResponse
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareDepositApproveWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareDepositApproveResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareDepositApproveWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrepareDepositApproveResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareDepositApproveWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareDepositApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareDepositApproveResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareDepositApprove(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrepareDepositApproveResponse(rsp)
+}
+
 // PostApiV2PrimaryVaultPrepareDistributeDividendWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareDistributeDividendResponse
 func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareDistributeDividendWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareDistributeDividendResponse, error) {
 	rsp, err := c.PostApiV2PrimaryVaultPrepareDistributeDividendWithBody(ctx, contentType, body, reqEditors...)
@@ -5322,6 +5792,57 @@ func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareDistributeDividendWith
 		return nil, err
 	}
 	return ParsePostApiV2PrimaryVaultPrepareDistributeDividendResponse(rsp)
+}
+
+// PostApiV2PrimaryVaultPrepareDistributeDividendApproveWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareDistributeDividendApproveWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareDistributeDividendApproveWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareDistributeDividendApproveWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareDistributeDividendApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareDistributeDividendApprove(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse(rsp)
+}
+
+// PostApiV2PrimaryVaultPrepareOffChainDepositWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareOffChainDepositResponse
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareOffChainDepositWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareOffChainDepositResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareOffChainDepositWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrepareOffChainDepositResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareOffChainDepositWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareOffChainDepositJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareOffChainDepositResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareOffChainDeposit(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrepareOffChainDepositResponse(rsp)
+}
+
+// PostApiV2PrimaryVaultPrepareOffChainRedeemWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareOffChainRedeemResponse
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareOffChainRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareOffChainRedeemResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareOffChainRedeemWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrepareOffChainRedeemResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareOffChainRedeemWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareOffChainRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareOffChainRedeemResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareOffChainRedeem(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrepareOffChainRedeemResponse(rsp)
 }
 
 // PostApiV2PrimaryVaultPrepareRedeemWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareRedeemResponse
@@ -5341,6 +5862,40 @@ func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareRedeemWithResponse(ctx
 	return ParsePostApiV2PrimaryVaultPrepareRedeemResponse(rsp)
 }
 
+// PostApiV2PrimaryVaultPrepareRedeemApproveWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareRedeemApproveResponse
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareRedeemApproveWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareRedeemApproveResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareRedeemApproveWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrepareRedeemApproveResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareRedeemApproveWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareRedeemApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareRedeemApproveResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareRedeemApprove(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrepareRedeemApproveResponse(rsp)
+}
+
+// PostApiV2PrimaryVaultPrepareUnpauseTokenWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareUnpauseTokenResponse
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareUnpauseTokenWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareUnpauseTokenResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareUnpauseTokenWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrepareUnpauseTokenResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareUnpauseTokenWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareUnpauseTokenJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareUnpauseTokenResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareUnpauseToken(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrepareUnpauseTokenResponse(rsp)
+}
+
 // PostApiV2PrimaryVaultPrepareWithdrawWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareWithdrawResponse
 func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareWithdrawWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareWithdrawResponse, error) {
 	rsp, err := c.PostApiV2PrimaryVaultPrepareWithdrawWithBody(ctx, contentType, body, reqEditors...)
@@ -5358,38 +5913,21 @@ func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareWithdrawWithResponse(c
 	return ParsePostApiV2PrimaryVaultPrepareWithdrawResponse(rsp)
 }
 
-// PostApiV2PrimaryVaultSubmitDepositTxWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultSubmitDepositTxResponse
-func (c *ClientWithResponses) PostApiV2PrimaryVaultSubmitDepositTxWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultSubmitDepositTxResponse, error) {
-	rsp, err := c.PostApiV2PrimaryVaultSubmitDepositTxWithBody(ctx, contentType, body, reqEditors...)
+// PostApiV2PrimaryVaultPrepareWithdrawFeeWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareWithdrawFeeResponse
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareWithdrawFeeWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareWithdrawFeeResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareWithdrawFeeWithBody(ctx, contentType, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostApiV2PrimaryVaultSubmitDepositTxResponse(rsp)
+	return ParsePostApiV2PrimaryVaultPrepareWithdrawFeeResponse(rsp)
 }
 
-func (c *ClientWithResponses) PostApiV2PrimaryVaultSubmitDepositTxWithResponse(ctx context.Context, body PostApiV2PrimaryVaultSubmitDepositTxJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultSubmitDepositTxResponse, error) {
-	rsp, err := c.PostApiV2PrimaryVaultSubmitDepositTx(ctx, body, reqEditors...)
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareWithdrawFeeWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareWithdrawFeeJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareWithdrawFeeResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareWithdrawFee(ctx, body, reqEditors...)
 	if err != nil {
 		return nil, err
 	}
-	return ParsePostApiV2PrimaryVaultSubmitDepositTxResponse(rsp)
-}
-
-// PostApiV2PrimaryVaultSubmitTxWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultSubmitTxResponse
-func (c *ClientWithResponses) PostApiV2PrimaryVaultSubmitTxWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultSubmitTxResponse, error) {
-	rsp, err := c.PostApiV2PrimaryVaultSubmitTxWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2PrimaryVaultSubmitTxResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostApiV2PrimaryVaultSubmitTxWithResponse(ctx context.Context, body PostApiV2PrimaryVaultSubmitTxJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultSubmitTxResponse, error) {
-	rsp, err := c.PostApiV2PrimaryVaultSubmitTx(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2PrimaryVaultSubmitTxResponse(rsp)
+	return ParsePostApiV2PrimaryVaultPrepareWithdrawFeeResponse(rsp)
 }
 
 // GetApiV2TokenTxsHolderInfoWithResponse request returning *GetApiV2TokenTxsHolderInfoResponse
@@ -6003,41 +6541,6 @@ func ParsePostApiV2BalanceGetResponse(rsp *http.Response) (*PostApiV2BalanceGetR
 	return response, nil
 }
 
-// ParsePostApiV2DeployPrepareResponse parses an HTTP response from a PostApiV2DeployPrepareWithResponse call
-func ParsePostApiV2DeployPrepareResponse(rsp *http.Response) (*PostApiV2DeployPrepareResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostApiV2DeployPrepareResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                       `json:"code,omitempty"`
-			Data *ResponseDeployPrepareResp `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParsePostApiV2DeploySubmitResponse parses an HTTP response from a PostApiV2DeploySubmitWithResponse call
 func ParsePostApiV2DeploySubmitResponse(rsp *http.Response) (*PostApiV2DeploySubmitResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -6073,41 +6576,6 @@ func ParsePostApiV2DeploySubmitResponse(rsp *http.Response) (*PostApiV2DeploySub
 	return response, nil
 }
 
-// ParseGetApiV2PrimaryDividendGetResponse parses an HTTP response from a GetApiV2PrimaryDividendGetWithResponse call
-func ParseGetApiV2PrimaryDividendGetResponse(rsp *http.Response) (*GetApiV2PrimaryDividendGetResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetApiV2PrimaryDividendGetResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                      `json:"code,omitempty"`
-			Data *ResponseUserDividendResp `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParseGetApiV2PrimaryVaultFundingOverviewResponse parses an HTTP response from a GetApiV2PrimaryVaultFundingOverviewWithResponse call
 func ParseGetApiV2PrimaryVaultFundingOverviewResponse(rsp *http.Response) (*GetApiV2PrimaryVaultFundingOverviewResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -6127,7 +6595,77 @@ func ParseGetApiV2PrimaryVaultFundingOverviewResponse(rsp *http.Response) (*GetA
 			// Code Code is the response code
 			// @Description 响应状态码
 			Code *int                     `json:"code,omitempty"`
-			Data *EntityFundingOverviewTx `json:"data,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV2PrimaryVaultPrePrepareDepositResponse parses an HTTP response from a PostApiV2PrimaryVaultPrePrepareDepositWithResponse call
+func ParsePostApiV2PrimaryVaultPrePrepareDepositResponse(rsp *http.Response) (*PostApiV2PrimaryVaultPrePrepareDepositResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2PrimaryVaultPrePrepareDepositResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                  `json:"code,omitempty"`
+			Data *EntityPrePrepareData `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV2PrimaryVaultPrePrepareRedeemResponse parses an HTTP response from a PostApiV2PrimaryVaultPrePrepareRedeemWithResponse call
+func ParsePostApiV2PrimaryVaultPrePrepareRedeemResponse(rsp *http.Response) (*PostApiV2PrimaryVaultPrePrepareRedeemResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2PrimaryVaultPrePrepareRedeemResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                  `json:"code,omitempty"`
+			Data *EntityPrePrepareData `json:"data,omitempty"`
 
 			// Message Message is the response message
 			// @Description 响应消息
@@ -6161,8 +6699,8 @@ func ParsePostApiV2PrimaryVaultPrepareClaimRewardResponse(rsp *http.Response) (*
 		var dest struct {
 			// Code Code is the response code
 			// @Description 响应状态码
-			Code *int                      `json:"code,omitempty"`
-			Data *EntityVaultClaimRewardTx `json:"data,omitempty"`
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
 
 			// Message Message is the response message
 			// @Description 响应消息
@@ -6196,8 +6734,8 @@ func ParsePostApiV2PrimaryVaultPrepareCreateResponse(rsp *http.Response) (*PostA
 		var dest struct {
 			// Code Code is the response code
 			// @Description 响应状态码
-			Code *int                        `json:"code,omitempty"`
-			Data *EntityTokenLaunchPrepareTx `json:"data,omitempty"`
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
 
 			// Message Message is the response message
 			// @Description 响应消息
@@ -6231,8 +6769,43 @@ func ParsePostApiV2PrimaryVaultPrepareDepositResponse(rsp *http.Response) (*Post
 		var dest struct {
 			// Code Code is the response code
 			// @Description 响应状态码
-			Code *int                    `json:"code,omitempty"`
-			Data *EntityDepositPrepareTx `json:"data,omitempty"`
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV2PrimaryVaultPrepareDepositApproveResponse parses an HTTP response from a PostApiV2PrimaryVaultPrepareDepositApproveWithResponse call
+func ParsePostApiV2PrimaryVaultPrepareDepositApproveResponse(rsp *http.Response) (*PostApiV2PrimaryVaultPrepareDepositApproveResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2PrimaryVaultPrepareDepositApproveResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
 
 			// Message Message is the response message
 			// @Description 响应消息
@@ -6266,8 +6839,113 @@ func ParsePostApiV2PrimaryVaultPrepareDistributeDividendResponse(rsp *http.Respo
 		var dest struct {
 			// Code Code is the response code
 			// @Description 响应状态码
-			Code *int                             `json:"code,omitempty"`
-			Data *EntityVaultDistributeDividendTx `json:"data,omitempty"`
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse parses an HTTP response from a PostApiV2PrimaryVaultPrepareDistributeDividendApproveWithResponse call
+func ParsePostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse(rsp *http.Response) (*PostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV2PrimaryVaultPrepareOffChainDepositResponse parses an HTTP response from a PostApiV2PrimaryVaultPrepareOffChainDepositWithResponse call
+func ParsePostApiV2PrimaryVaultPrepareOffChainDepositResponse(rsp *http.Response) (*PostApiV2PrimaryVaultPrepareOffChainDepositResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2PrimaryVaultPrepareOffChainDepositResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV2PrimaryVaultPrepareOffChainRedeemResponse parses an HTTP response from a PostApiV2PrimaryVaultPrepareOffChainRedeemWithResponse call
+func ParsePostApiV2PrimaryVaultPrepareOffChainRedeemResponse(rsp *http.Response) (*PostApiV2PrimaryVaultPrepareOffChainRedeemResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2PrimaryVaultPrepareOffChainRedeemResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
 
 			// Message Message is the response message
 			// @Description 响应消息
@@ -6301,8 +6979,78 @@ func ParsePostApiV2PrimaryVaultPrepareRedeemResponse(rsp *http.Response) (*PostA
 		var dest struct {
 			// Code Code is the response code
 			// @Description 响应状态码
-			Code *int                 `json:"code,omitempty"`
-			Data *EntityVaultRedeemTx `json:"data,omitempty"`
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV2PrimaryVaultPrepareRedeemApproveResponse parses an HTTP response from a PostApiV2PrimaryVaultPrepareRedeemApproveWithResponse call
+func ParsePostApiV2PrimaryVaultPrepareRedeemApproveResponse(rsp *http.Response) (*PostApiV2PrimaryVaultPrepareRedeemApproveResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2PrimaryVaultPrepareRedeemApproveResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV2PrimaryVaultPrepareUnpauseTokenResponse parses an HTTP response from a PostApiV2PrimaryVaultPrepareUnpauseTokenWithResponse call
+func ParsePostApiV2PrimaryVaultPrepareUnpauseTokenResponse(rsp *http.Response) (*PostApiV2PrimaryVaultPrepareUnpauseTokenResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2PrimaryVaultPrepareUnpauseTokenResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
 
 			// Message Message is the response message
 			// @Description 响应消息
@@ -6337,7 +7085,7 @@ func ParsePostApiV2PrimaryVaultPrepareWithdrawResponse(rsp *http.Response) (*Pos
 			// Code Code is the response code
 			// @Description 响应状态码
 			Code *int                     `json:"code,omitempty"`
-			Data *EntityWithdrawPrepareTx `json:"data,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
 
 			// Message Message is the response message
 			// @Description 响应消息
@@ -6353,15 +7101,15 @@ func ParsePostApiV2PrimaryVaultPrepareWithdrawResponse(rsp *http.Response) (*Pos
 	return response, nil
 }
 
-// ParsePostApiV2PrimaryVaultSubmitDepositTxResponse parses an HTTP response from a PostApiV2PrimaryVaultSubmitDepositTxWithResponse call
-func ParsePostApiV2PrimaryVaultSubmitDepositTxResponse(rsp *http.Response) (*PostApiV2PrimaryVaultSubmitDepositTxResponse, error) {
+// ParsePostApiV2PrimaryVaultPrepareWithdrawFeeResponse parses an HTTP response from a PostApiV2PrimaryVaultPrepareWithdrawFeeWithResponse call
+func ParsePostApiV2PrimaryVaultPrepareWithdrawFeeResponse(rsp *http.Response) (*PostApiV2PrimaryVaultPrepareWithdrawFeeResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
 	defer func() { _ = rsp.Body.Close() }()
 	if err != nil {
 		return nil, err
 	}
 
-	response := &PostApiV2PrimaryVaultSubmitDepositTxResponse{
+	response := &PostApiV2PrimaryVaultPrepareWithdrawFeeResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -6371,43 +7119,8 @@ func ParsePostApiV2PrimaryVaultSubmitDepositTxResponse(rsp *http.Response) (*Pos
 		var dest struct {
 			// Code Code is the response code
 			// @Description 响应状态码
-			Code *int                        `json:"code,omitempty"`
-			Data *EntityTokenLaunchPrepareTx `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostApiV2PrimaryVaultSubmitTxResponse parses an HTTP response from a PostApiV2PrimaryVaultSubmitTxWithResponse call
-func ParsePostApiV2PrimaryVaultSubmitTxResponse(rsp *http.Response) (*PostApiV2PrimaryVaultSubmitTxResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostApiV2PrimaryVaultSubmitTxResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                        `json:"code,omitempty"`
-			Data *EntityTokenLaunchPrepareTx `json:"data,omitempty"`
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
 
 			// Message Message is the response message
 			// @Description 响应消息
@@ -6636,116 +7349,118 @@ func ParsePostApiV2TransferSubmitResponse(rsp *http.Response) (*PostApiV2Transfe
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
