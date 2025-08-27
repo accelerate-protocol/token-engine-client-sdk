@@ -65,6 +65,13 @@ type VaultWithdraw struct {
 	AssetTokenAmount string `json:"asset_token_amount"` //提款的U的数量
 }
 
+// VaultWithdrawFee vault提取管理费成功后推送的数据
+type VaultWithdrawFee struct {
+	BaseData
+	ReceiverAddress  string `json:"receiver_address"`   //提款接收地址
+	AssetTokenAmount string `json:"asset_token_amount"` //提款的U的数量
+}
+
 // VaultDividend 管理员派息分红后推送的数据
 type VaultDividend struct {
 	BaseData
