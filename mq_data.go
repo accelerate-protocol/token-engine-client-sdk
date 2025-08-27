@@ -9,6 +9,7 @@ const (
 	MessageTypeVaultLaunch         MessageType = iota //vault 发行
 	MessageTypeVaultInvest                            //vault 投资
 	MessageTypeVaultWithdraw                          //vault 融资成功后的提款
+	MessageTypeVaultWithdrawFee                       //vault 融资成功后的提取管理费
 	MessageTypeVaultDividend                          //vault 管理员派息分红
 	MessageTypeVaultClaim                             //vault 投资者领取分红
 	MessageTypeVaultRedeem                            //vault 融资失败后的投资者赎回
