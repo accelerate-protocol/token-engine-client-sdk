@@ -14,6 +14,14 @@ const (
 	MessageTypeVaultRedeem                            //vault 融资失败后的投资者赎回
 	MessageTypeVaultUnLockTransfer                    //vault 融资成功后解锁transfer功能
 	MessageTypeTokenTransfer                          //代币转账
+	// -- new --
+	MessageTypeVaultInvestApprove // vault 投资前授权
+	MessageTypeWithdrawManageFee  // vault manager fee 提款
+	MessageTypeUnpauseToken       // vault 解锁代币transfer
+	MessageTypeApproveDividend    // vault 管理员派息授权
+	MessageTypeApproveRedeem      // vault 投资者赎回授权
+	MessageTypeOffChainDeposit    // vault offchain deposit
+	MessageTypeOffChainRedeem     // vault offchain redeem
 )
 
 type Message struct {
@@ -97,4 +105,75 @@ type TokenTransfer struct {
 	ReceiverAddress string `json:"receiver_address"` //接收人地址
 	TokenAmount     string `json:"token_amount"`     //transfer数量
 	TokenAddress    string `json:"token_address"`    //token合约地址
+}
+
+type VaultInvestApprove struct {
+	BaseData
+	Invistor     string `json:"investor"`
+	FundingAddr  string `json:"funding_addr"`
+	Amount       string `json:"amount"`
+	TokenAddr    string `json:"token_addr"`
+	VaultAddress string `json:"vault_address"` //vault合约地址
+}
+
+type ApproveDividend struct {
+	BaseData
+	Invistor     string `json:"investor"`
+	FundingAddr  string `json:"funding_addr"`
+	Amount       string `json:"amount"`
+	TokenAddr    string `json:"token_addr"`
+	VaultAddress string `json:"vault_address"` //vault合约地址
+}
+
+// ManagerApproveDividend
+type ManagerApproveDividend struct {
+	BaseData
+	Manager      string `json:"manager"`
+	YieldAddr    string `json:"yield_addr"`
+	Amount       string `json:"amount"`
+	TokenAddr    string `json:"token_addr"`
+	VaultAddress string `json:"vault_address"` //vault合约地址
+}
+
+type ManagerApproveRedeem struct {
+	BaseData
+	Investor     string `json:"investor"`
+	FundingAddr  string `json:"funding_addr"`
+	Amount       string `json:"amount"`
+	TokenAddr    string `json:"token_addr"`
+	VaultAddress string `json:"vault_address"` //vault合约地址
+}
+
+type WithdrawManageFee struct {
+	BaseData
+	Withdrawer   string `json:"withdrawer"`    //提款接收地址
+	Amount       string `json:"amount"`        //提款的U的数量
+	VaultAddress string `json:"vault_address"` //vault合约地址
+}
+
+type UnpauseToken struct {
+	BaseData
+}
+
+type ApproveRedeem struct {
+	BaseData
+	Spender   string `json:"spender"`
+	Amount    string `json:"amount"`
+	TokenAddr string `json:"token_addr"`
+}
+
+type OffChainDeposit struct {
+	BaseData
+	ReceiverAddress  string `json:"receiver_address"`   //vault token 接收地址
+	VaultTokenAmount string `json:"vault_token_amount"` //获得的vault token数量
+	AssetTokenAmount string `json:"asset_token_amount"` //花费的U的数量
+	VaultAddress     string `json:"vault_address"`      //vault合约地址
+}
+
+type OffChainRedeem struct {
+	BaseData
+	ReceiverAddress  string `json:"receiver_address"`   //赎回的U的接收人地址(单链时为投资者地址，多链时为支付系统账户地址)
+	VaultTokenAmount string `json:"vault_token_amount"` //burned vault token数量
+	AssetTokenAmount string `json:"asset_token_amount"` //赎回的U的数量
+	VaultAddress     string `json:"vault_address"`      //vault合约地址
 }
