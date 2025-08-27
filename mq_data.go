@@ -8,11 +8,13 @@ type MessageType uint
 const (
 	MessageTypeVaultLaunch         MessageType = iota //vault 发行
 	MessageTypeVaultInvest                            //vault 投资
+	MessageTypeVaultOffChainInvest                    //链下认购
 	MessageTypeVaultWithdraw                          //vault 融资成功后的提款
 	MessageTypeVaultWithdrawFee                       //vault 融资成功后的提取管理费
 	MessageTypeVaultDividend                          //vault 管理员派息分红
 	MessageTypeVaultClaim                             //vault 投资者领取分红
 	MessageTypeVaultRedeem                            //vault 融资失败后的投资者赎回
+	MessageTypeVaultOffChainRedeem                    //vault 融资失败后的给链下投资者赎回
 	MessageTypeVaultUnLockTransfer                    //vault 融资成功后解锁transfer功能
 	MessageTypeTokenTransfer                          //代币转账
 )
@@ -42,6 +44,7 @@ type BaseData struct {
 	Ts            int64  `json:"ts"`             //交易发生的链上秒级时间戳，失败时可为0
 	Sender        string `json:"sender"`         //交易发起人
 	Success       bool   `json:"success"`        //交易是否成功，失败时也要推送
+	FailReason    string `json:"fail_reason"`    //失败原因描述
 }
 
 // VaultLaunch vault发行成功后推送的数据
@@ -57,6 +60,13 @@ type VaultInvest struct {
 	ReceiverAddress  string `json:"receiver_address"`   //vault token 接收地址
 	VaultTokenAmount string `json:"vault_token_amount"` //获得的vault token数量
 	AssetTokenAmount string `json:"asset_token_amount"` //花费的U的数量
+}
+
+// VaultOffChainInvest vault链下投资成功后推送的数据
+type VaultOffChainInvest struct {
+	BaseData
+	ReceiverAddress  string `json:"receiver_address"`   //vault token 接收地址
+	VaultTokenAmount string `json:"vault_token_amount"` //获得的vault token数量
 }
 
 // VaultWithdraw vault提款成功后推送的数据
@@ -92,6 +102,12 @@ type VaultRedeem struct {
 	ReceiverAddress  string `json:"receiver_address"`   //赎回的U的接收人地址(单链时为投资者地址，多链时为支付系统账户地址)
 	VaultTokenAmount string `json:"vault_token_amount"` //burned vault token数量
 	AssetTokenAmount string `json:"asset_token_amount"` //赎回的U的数量
+}
+
+// VaultOffChainRedeem 管理员给投资者链下赎回成功后推送的数据
+type VaultOffChainRedeem struct {
+	BaseData
+	VaultTokenAmount string `json:"vault_token_amount"` //burned vault token数量
 }
 
 // VaultUnLockTransfer 融资成功后解锁transfer功能成功后推送的数据
