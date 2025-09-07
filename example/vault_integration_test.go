@@ -24,6 +24,44 @@ var (
 	mockUSDC        = "0x91C936406aaF278fc9772dCB911659390C99755C"                       // mockUSDC 地址
 )
 
+// 添加发行人白名单
+func TestAddVaultDeployerIntegration(t *testing.T) {
+	// 创建测试实例，连接本地 token-engine 服务
+	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+	t.Logf("开始 AddDeployer 集成测试")
+	req := &VaultAddDeployerRequest{
+		ChainId:         chainId,
+		DeployerAddress: "0x318AC2c326700F9245BB2673B0885E4358dc2977",
+		OwnerAddress:    admin,
+	}
+	prepareResp := test.callPrepareAddDeployer(t, req)
+	require.NotNil(t, prepareResp)
+	require.NotEmpty(t, prepareResp.TxMsgBase64)
+
+	t.Logf("准备交易成功，CorrelationId: %s", prepareResp.CorrelationId)
+	tx := &types.Transaction{}
+	data, err := base64.StdEncoding.DecodeString(prepareResp.TxMsgBase64)
+	require.NoError(t, err)
+	err = tx.UnmarshalBinary(data)
+	require.NoError(t, err)
+	// 3. 签名交易
+	signedTx, err := signTransaction(t, chainId, adminPrivateKey, tx)
+	require.NoError(t, err)
+
+	t.Logf("交易签名成功，准备提交交易")
+	// 4. 调用 /api/v1/common/submit_tx 接口提交交易
+	submitResp := test.callSubmitTx(t, &SubmitTxRequest{
+		ChainId:      req.ChainId,
+		Sender:       req.OwnerAddress,
+		TxMsgBase64:  prepareResp.TxMsgBase64,
+		SignTxBase64: signedTx,
+	})
+	require.NotNil(t, submitResp)
+	require.NotEmpty(t, submitResp.TxHash)
+
+	t.Logf("交易提交成功，TxHash: %s", submitResp.TxHash)
+}
+
 // TestVaultIntegration VaultLaunch 集成测试
 func TestVaultSuccessIntegration(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
