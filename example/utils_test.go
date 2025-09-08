@@ -9,22 +9,54 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
 
 	client "github.com/accelerate-protocol/token-engine-client-sdk"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/nsqio/go-nsq"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 var appId = "test_axc" // 与 MQ topic 一致
+var erc20Abi = "[{\"inputs\":[{\"internalType\":\"string\",\"name\":\"name_\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"symbol_\",\"type\":\"string\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"subtractedValue\",\"type\":\"uint256\"}],\"name\":\"decreaseAllowance\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"addedValue\",\"type\":\"uint256\"}],\"name\":\"increaseAllowance\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
+
+type Signer struct {
+	PrivateKey string `toml:"private_key"`
+	Address    string `toml:"address"`
+}
+
+const (
+	ChainIdBSCTestnet  = "97"
+	ChainIdBaseSepolia = "84532"
+)
+
+// Config 配置文件结构
+type Config struct {
+	Server struct {
+		URL string `toml:"url"`
+	} `toml:"server"`
+
+	Admin Signer   `toml:"admin"`
+	Users []Signer `toml:"users"`
+
+	Contracts struct {
+		MockUSDC string `toml:"mock_usdc"`
+	} `toml:"contracts"`
+
+	Blockchain struct {
+		ChainID string `toml:"chain_id"`
+	} `toml:"blockchain"`
+}
 
 // MQClient MQ 客户端
 type MQClient struct {
@@ -134,6 +166,7 @@ func NewVaultAddDeployerIntegrationTest(baseURL string, t *testing.T) *VaultAddD
 type VaultLaunchIntegrationTest struct {
 	baseURL    string
 	httpClient *http.Client
+	ethClient  *ethclient.Client
 	ctx        context.Context
 	mq         *MQClient
 }
@@ -141,9 +174,21 @@ type VaultLaunchIntegrationTest struct {
 // NewVaultLaunchIntegrationTest 创建集成测试实例
 func NewVaultLaunchIntegrationTest(baseURL string, t *testing.T) *VaultLaunchIntegrationTest {
 	m := setupTestMQ(t)
+	var ethURL string
+	switch chainId {
+	case ChainIdBaseSepolia:
+		ethURL = "https://base-sepolia.g.alchemy.com/v2/9NAr3qhyUGw766ZqM8HmAqfBrt4FKr0a"
+	case ChainIdBSCTestnet:
+		ethURL = "https://bsc-testnet-rpc.publicnode.com"
+	default:
+		t.Fatalf("不支持的 chainId: %s", chainId)
+	}
+	ethClient, err := ethclient.Dial(ethURL)
+	require.NoError(t, err)
 	return &VaultLaunchIntegrationTest{
 		baseURL:    baseURL,
 		httpClient: &http.Client{Timeout: 30 * time.Second},
+		ethClient:  ethClient,
 		ctx:        context.Background(),
 		mq:         m,
 	}
@@ -324,6 +369,7 @@ type SubmitTxRequest struct {
 // VaultDepositRequest Vault 投资请求
 type VaultDepositRequest struct {
 	ChainId      string `json:"chain_id"`
+	Sender       string `json:"sender"`
 	Investor     string `json:"investor"`
 	VaultAddress string `json:"vault_address"`
 	Amount       string `json:"amount"`
@@ -388,7 +434,6 @@ func (test *VaultLaunchIntegrationTest) callPrepareCreateVault(t *testing.T, req
 	require.NoError(t, err)
 
 	t.Logf("调用 /api/v2/primary/vault/prepare_create")
-	t.Logf("请求体: %s", string(reqBody))
 
 	// 创建 HTTP 请求
 	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/primary/vault/prepare_create", bytes.NewBuffer(reqBody))
@@ -423,14 +468,107 @@ func (test *VaultLaunchIntegrationTest) callPrepareCreateVault(t *testing.T, req
 	return &prepareResp
 }
 
+// callPrepareUnPauseToken 调用 prepare_unpause_token 接口
+func (test *VaultLaunchIntegrationTest) callPrepareUnPauseToken(t *testing.T, req *client.RequestVaultUnPauseTokenReq) *PrepareTxResponse {
+	// 创建请求体
+	reqBody, err := json.Marshal(req)
+	require.NoError(t, err)
+
+	// 创建 HTTP 请求
+	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/primary/vault/prepare_unpause_token", bytes.NewBuffer(reqBody))
+	require.NoError(t, err)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", appId)
+
+	// 执行请求
+	resp, err := test.httpClient.Do(httpReq)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// 解析响应
+	var apiResp APIResponse
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	require.NoError(t, err)
+	assert.Equal(t, 0, apiResp.Code)
+
+	t.Log("收到 prepare_unpause_token 响应")
+
+	// 解析数据
+	respData, err := json.Marshal(apiResp.Data)
+	require.NoError(t, err)
+
+	var prepareResp PrepareTxResponse
+	err = json.Unmarshal(respData, &prepareResp)
+	require.NoError(t, err)
+
+	return &prepareResp
+}
+
+// validateVaultUnPauseTokenTx 验证 unpause_token 交易
+func (test *VaultLaunchIntegrationTest) validateVaultUnPauseTokenReceipt(t *testing.T, txHash string) {
+	// 解析交易哈希
+	txHashObj := common.HexToHash(txHash)
+
+	// 获取交易回执
+	receipt, err := test.ethClient.TransactionReceipt(context.Background(), txHashObj)
+	if err != nil {
+		t.Fatalf("获取交易回执失败: %v", err)
+	}
+
+	// 验证交易状态
+	if receipt.Status != types.ReceiptStatusSuccessful {
+		t.Fatalf("交易执行失败，状态码: %d", receipt.Status)
+	}
+	t.Logf("交易执行成功，区块高度: %d", receipt.BlockNumber.Uint64())
+}
+
+// callTokenBalance 获取地址的代币余额
+func (test *VaultLaunchIntegrationTest) callTokenBalance(t *testing.T, req *client.RequestBalanceQueryReq) string {
+	// 创建请求体
+	reqBody, err := json.Marshal(req)
+	require.NoError(t, err)
+
+	// 创建 HTTP 请求
+	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/balance/get", bytes.NewBuffer(reqBody))
+	require.NoError(t, err)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", appId)
+
+	// 执行请求
+	resp, err := test.httpClient.Do(httpReq)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// 解析响应
+	var apiResp APIResponse
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	require.NoError(t, err)
+	assert.Equal(t, 0, apiResp.Code)
+
+	t.Log("收到 balance 响应")
+
+	// 解析数据
+	respData, err := json.Marshal(apiResp.Data)
+	require.NoError(t, err)
+
+	var balanceResp client.ResponseBalanceResp
+	err = json.Unmarshal(respData, &balanceResp)
+	require.NoError(t, err)
+
+	return *balanceResp.Balance
+}
+
 // callPrepareAddDeployer 调用 prepare_add_deployer 接口
 func (test *VaultLaunchIntegrationTest) callPrepareAddDeployer(t *testing.T, req *VaultAddDeployerRequest) *PrepareTxResponse {
 	// 创建请求体
 	reqBody, err := json.Marshal(req)
 	require.NoError(t, err)
-
-	t.Logf("调用 /api/v2/primary/vault/prepare_add_deployer")
-	t.Logf("请求体: %s", string(reqBody))
 
 	// 创建 HTTP 请求
 	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/primary/vault/prepare_add_deployer", bytes.NewBuffer(reqBody))
@@ -470,8 +608,6 @@ func (test *VaultLaunchIntegrationTest) callSubmitTx(t *testing.T, req *SubmitTx
 	// 创建请求体
 	reqBody, err := json.Marshal(req)
 	require.NoError(t, err)
-
-	t.Logf("调用 /api/v1/common/submit_tx")
 
 	// 创建 HTTP 请求
 	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v1/common/submit_tx", bytes.NewBuffer(reqBody))
@@ -568,6 +704,23 @@ func (test *VaultLaunchIntegrationTest) waitForMQMessage(t *testing.T, txHash st
 				t.Logf("找到匹配的 VaultDividend 交易消息: %s", txHash)
 				select {
 				case messageChan <- &vaultDividend:
+					// 消息已发送到通道
+				default:
+					// 通道已满，忽略
+				}
+			}
+		case uint(client.MessageTypeOffChainDeposit):
+			// 解析 OffChainDeposit 消息
+			var offChainDeposit client.OffChainDeposit
+			if err := msg.DecodeData(&offChainDeposit); err != nil {
+				t.Logf("解析 OffChainDeposit 消息失败: %v", err)
+				return err
+			}
+			// 检查是否是我们要等待的交易
+			if offChainDeposit.TxHash == txHash && uint(messageType) == uint(client.MessageTypeOffChainDeposit) {
+				t.Logf("找到匹配的 OffChainDeposit 交易消息: %s", txHash)
+				select {
+				case messageChan <- &offChainDeposit:
 					// 消息已发送到通道
 				default:
 					// 通道已满，忽略
@@ -676,9 +829,6 @@ func (test *VaultLaunchIntegrationTest) callPrepareDepositApprove(t *testing.T, 
 	reqBody, err := json.Marshal(req)
 	require.NoError(t, err)
 
-	t.Logf("调用 /api/v2/primary/vault/prepare_deposit_approve")
-	t.Logf("请求体: %s", string(reqBody))
-
 	// 创建 HTTP 请求
 	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/primary/vault/prepare_deposit_approve", bytes.NewBuffer(reqBody))
 	require.NoError(t, err)
@@ -718,9 +868,6 @@ func (test *VaultLaunchIntegrationTest) callPrePrepareDeposit(t *testing.T, req 
 	reqBody, err := json.Marshal(req)
 	require.NoError(t, err)
 
-	t.Logf("调用 /api/v2/primary/vault/pre_prepare_deposit")
-	t.Logf("请求体: %s", string(reqBody))
-
 	// 创建 HTTP 请求
 	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/primary/vault/pre_prepare_deposit", bytes.NewBuffer(reqBody))
 	require.NoError(t, err)
@@ -757,9 +904,6 @@ func (test *VaultLaunchIntegrationTest) callPrepareDeposit(t *testing.T, req *Va
 	// 创建请求体
 	reqBody, err := json.Marshal(req)
 	require.NoError(t, err)
-
-	t.Logf("调用 /api/v2/primary/vault/prepare_deposit")
-	t.Logf("请求体: %s", string(reqBody))
 
 	// 创建 HTTP 请求
 	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/primary/vault/prepare_deposit", bytes.NewBuffer(reqBody))
@@ -923,9 +1067,6 @@ func (test *VaultLaunchIntegrationTest) callPrepareRedeemApprove(t *testing.T, r
 	reqBody, err := json.Marshal(req)
 	require.NoError(t, err)
 
-	t.Logf("调用 /api/v2/primary/vault/prepare_redeem_approve")
-	t.Logf("请求体: %s", string(reqBody))
-
 	// 创建 HTTP 请求
 	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/primary/vault/prepare_redeem_approve", bytes.NewBuffer(reqBody))
 	require.NoError(t, err)
@@ -946,8 +1087,6 @@ func (test *VaultLaunchIntegrationTest) callPrepareRedeemApprove(t *testing.T, r
 	require.NoError(t, err)
 	assert.Equal(t, 0, apiResp.Code)
 
-	t.Logf("prepare_redeem_approve 响应: %+v", apiResp)
-
 	// 解析数据
 	respData, err := json.Marshal(apiResp.Data)
 	require.NoError(t, err)
@@ -960,13 +1099,10 @@ func (test *VaultLaunchIntegrationTest) callPrepareRedeemApprove(t *testing.T, r
 }
 
 // callPrePrepareRedeem 调用 pre_prepare_redeem 接口
-func (test *VaultLaunchIntegrationTest) callPrePrepareRedeem(t *testing.T, req *VaultRedeemRequest) *PrePrepareDataResponse {
+func (test *VaultLaunchIntegrationTest) callPrePrepareRedeem(t *testing.T, req *client.RequestVaultRedeemReq) *PrePrepareDataResponse {
 	// 创建请求体
 	reqBody, err := json.Marshal(req)
 	require.NoError(t, err)
-
-	t.Logf("调用 /api/v2/primary/vault/pre_prepare_redeem")
-	t.Logf("请求体: %s", string(reqBody))
 
 	// 创建 HTTP 请求
 	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/primary/vault/pre_prepare_redeem", bytes.NewBuffer(reqBody))
@@ -1002,13 +1138,12 @@ func (test *VaultLaunchIntegrationTest) callPrePrepareRedeem(t *testing.T, req *
 }
 
 // callPrepareRedeem 调用 prepare_redeem 接口
-func (test *VaultLaunchIntegrationTest) callPrepareRedeem(t *testing.T, req *VaultRedeemRequest) *PrepareTxResponse {
+func (test *VaultLaunchIntegrationTest) callPrepareRedeem(t *testing.T, req *client.RequestVaultRedeemReq) *PrepareTxResponse {
 	// 创建请求体
 	reqBody, err := json.Marshal(req)
 	require.NoError(t, err)
 
 	t.Logf("调用 /api/v2/primary/vault/prepare_redeem")
-	t.Logf("请求体: %s", string(reqBody))
 
 	// 创建 HTTP 请求
 	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/primary/vault/prepare_redeem", bytes.NewBuffer(reqBody))
@@ -1044,13 +1179,13 @@ func (test *VaultLaunchIntegrationTest) callPrepareRedeem(t *testing.T, req *Vau
 }
 
 // validateVaultRedeemMQMessage 验证 VaultRedeem MQ 消息
-func (test *VaultLaunchIntegrationTest) validateVaultRedeemMQMessage(t *testing.T, mqMessage *client.VaultRedeem, req *VaultRedeemRequest, txHash string) {
+func (test *VaultLaunchIntegrationTest) validateVaultRedeemMQMessage(t *testing.T, mqMessage *client.VaultRedeem, req *client.RequestVaultRedeemReq, txHash string) {
 	// 验证基础数据
 	assert.Equal(t, txHash, mqMessage.TxHash)
 	assert.True(t, mqMessage.Success)
 	assert.Empty(t, mqMessage.FailReason)
 	assert.Equal(t, req.AssetReceiver, mqMessage.ReceiverAddress)
-	assert.Equal(t, req.Amount, mqMessage.AssetTokenAmount)
+	assert.Equal(t, req.Amount, mqMessage.VaultTokenAmount)
 
 	// 验证时间戳
 	assert.Greater(t, mqMessage.Ts, int64(0))
@@ -1108,7 +1243,6 @@ func (test *VaultLaunchIntegrationTest) callPrepareDividend(t *testing.T, req *c
 	require.NoError(t, err)
 
 	t.Logf("调用 /api/v2/primary/vault/prepare_distribute_dividend")
-	t.Logf("请求体: %s", string(reqBody))
 
 	// 创建 HTTP 请求
 	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/primary/vault/prepare_distribute_dividend", bytes.NewBuffer(reqBody))
@@ -1168,7 +1302,6 @@ func (test *VaultLaunchIntegrationTest) callPrepareClaim(t *testing.T, req *clie
 	require.NoError(t, err)
 
 	t.Logf("调用 /api/v2/primary/vault/prepare_claim_reward")
-	t.Logf("请求体: %s", string(reqBody))
 
 	// 创建 HTTP 请求
 	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/primary/vault/prepare_claim_reward", bytes.NewBuffer(reqBody))
@@ -1300,4 +1433,344 @@ func (test *VaultLaunchIntegrationTest) validateVaultClaimMQMessage(t *testing.T
 	t.Logf("   Success: %t", mqMessage.Success)
 	t.Logf("   ReceiverAddress: %s", mqMessage.ReceiverAddress)
 	t.Logf("   AssetTokenAmount: %s", mqMessage.AssetTokenAmount)
+}
+
+// callPrepareOffchainDeposit 调用 prepare_off_chain_deposit 接口
+func (test *VaultLaunchIntegrationTest) callPrepareOffchainDeposit(t *testing.T, req *client.RequestOffChainDepositReq) *PrepareTxResponse {
+	// 创建请求体
+	reqBody, err := json.Marshal(req)
+	require.NoError(t, err)
+
+	t.Logf("调用 /api/v2/primary/vault/prepare_off_chain_deposit")
+	t.Logf("请求体: %s", string(reqBody))
+
+	// 创建 HTTP 请求
+	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/primary/vault/prepare_off_chain_deposit", bytes.NewBuffer(reqBody))
+	require.NoError(t, err)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", appId)
+
+	// 执行请求
+	resp, err := test.httpClient.Do(httpReq)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// 解析响应
+	var apiResp APIResponse
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	require.NoError(t, err)
+	assert.Equal(t, 0, apiResp.Code)
+
+	t.Logf("prepare_off_chain_deposit 响应: %+v", apiResp)
+
+	// 解析数据
+	respData, err := json.Marshal(apiResp.Data)
+	require.NoError(t, err)
+
+	var prepareResp PrepareTxResponse
+	err = json.Unmarshal(respData, &prepareResp)
+	require.NoError(t, err)
+
+	return &prepareResp
+}
+
+// callPrepareTokenApprove 调用 prepare_transfer_approve 接口
+func (test *VaultLaunchIntegrationTest) callPrepareTokenApprove(t *testing.T, req *client.RequestApprovePrepareReq) *PrepareTxResponse {
+	// 创建请求体
+	reqBody, err := json.Marshal(req)
+	require.NoError(t, err)
+
+	// 创建 HTTP 请求
+	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/approve/prepare", bytes.NewBuffer(reqBody))
+	require.NoError(t, err)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", appId)
+
+	// 执行请求
+	resp, err := test.httpClient.Do(httpReq)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// 解析响应
+	var apiResp APIResponse
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	require.NoError(t, err)
+	assert.Equal(t, 0, apiResp.Code)
+
+	// 解析数据
+	respData, err := json.Marshal(apiResp.Data)
+	require.NoError(t, err)
+
+	var prepareResp PrepareTxResponse
+	err = json.Unmarshal(respData, &prepareResp)
+	require.NoError(t, err)
+
+	return &prepareResp
+}
+
+// callPrepareTokenTransfer 调用 prepare_transfer 接口
+func (test *VaultLaunchIntegrationTest) callPrepareTokenTransfer(t *testing.T, req *client.RequestTransferPrepareReq) *PrepareTxResponse {
+	// 创建请求体
+	reqBody, err := json.Marshal(req)
+	require.NoError(t, err)
+
+	t.Logf("调用 /api/v2/transfer/prepare")
+
+	// 创建 HTTP 请求
+	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/transfer/prepare", bytes.NewBuffer(reqBody))
+	require.NoError(t, err)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", appId)
+
+	// 执行请求
+	resp, err := test.httpClient.Do(httpReq)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// 解析响应
+	var apiResp APIResponse
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	require.NoError(t, err)
+	assert.Equal(t, 0, apiResp.Code)
+
+	// 解析数据
+	respData, err := json.Marshal(apiResp.Data)
+	require.NoError(t, err)
+
+	var prepareResp PrepareTxResponse
+	err = json.Unmarshal(respData, &prepareResp)
+	require.NoError(t, err)
+
+	return &prepareResp
+}
+
+// validateTokenApproveReceipt 验证 TokenApprove 消息
+func (test *VaultLaunchIntegrationTest) validateTokenApproveReceipt(t *testing.T, req *client.RequestApprovePrepareReq, txHash string) {
+	contractAddr := common.HexToAddress(req.TokenAddr)
+	from := common.HexToAddress(req.FromAddr)
+	spender := common.HexToAddress(req.SpenderAddr)
+
+	// 解析ERC20合约ABI
+	_, err := abi.JSON(strings.NewReader(erc20Abi))
+	if err != nil {
+		t.Fatalf("解析ERC20 ABI失败: %v", err)
+	}
+
+	// 解析交易哈希
+	txHashObj := common.HexToHash(txHash)
+
+	// 获取交易回执
+	receipt, err := test.ethClient.TransactionReceipt(context.Background(), txHashObj)
+	if err != nil {
+		t.Fatalf("获取交易回执失败: %v", err)
+	}
+
+	// 验证交易状态
+	if receipt.Status != types.ReceiptStatusSuccessful {
+		t.Fatalf("交易执行失败，状态码: %d", receipt.Status)
+	}
+
+	// 定义Approval事件的签名
+	approvalEventSignature := crypto.Keccak256Hash([]byte("Approval(address,address,uint256)"))
+
+	// 在回执日志中查找Approval事件
+	var approvalEvent *types.Log
+	for _, log := range receipt.Logs {
+		// 检查日志地址是否为代币合约地址
+		if log.Address == contractAddr {
+			// 检查日志主题是否为Approval事件签名
+			if len(log.Topics) >= 3 && log.Topics[0] == approvalEventSignature {
+				// 检查owner和spender是否匹配
+				logOwner := common.HexToAddress(log.Topics[1].Hex())
+				logSpender := common.HexToAddress(log.Topics[2].Hex())
+
+				if logOwner == from && logSpender == spender {
+					approvalEvent = log
+					break
+				}
+			}
+		}
+	}
+
+	if approvalEvent == nil {
+		t.Fatalf("未找到匹配的Approval事件")
+	}
+
+	// 解析事件数据获取授权金额
+	value := new(big.Int).SetBytes(approvalEvent.Data)
+
+	t.Logf("授权额度: %s", value.String())
+
+	// 验证授权额度是否符合预期
+	expectedAmount, ok := new(big.Int).SetString(req.Amount, 10)
+	if !ok {
+		t.Fatalf("解析预期授权额度失败")
+	}
+
+	if value.Cmp(expectedAmount) != 0 {
+		t.Errorf("授权额度不匹配，预期: %s, 实际: %s", expectedAmount.String(), value.String())
+	}
+}
+
+// validateTokenTransferReceipt 验证 TokenTransfer
+func (test *VaultLaunchIntegrationTest) validateTokenTransferReceipt(t *testing.T, req *client.RequestTransferPrepareReq, txHash string) {
+
+	contractAddr := common.HexToAddress(*req.TokenAddr)
+	from := common.HexToAddress(req.FromAddr)
+	spender := common.HexToAddress(req.ToAddr)
+
+	// 解析ERC20合约ABI
+	_, err := abi.JSON(strings.NewReader(erc20Abi))
+	if err != nil {
+		t.Fatalf("解析ERC20 ABI失败: %v", err)
+	}
+
+	// 解析交易哈希
+	txHashObj := common.HexToHash(txHash)
+
+	// 获取交易回执
+	receipt, err := test.ethClient.TransactionReceipt(context.Background(), txHashObj)
+	if err != nil {
+		t.Fatalf("获取交易回执失败: %v", err)
+	}
+
+	// 验证交易状态
+	if receipt.Status != types.ReceiptStatusSuccessful {
+		t.Fatalf("交易执行失败，状态码: %d", receipt.Status)
+	}
+
+	// 定义Transfer事件的签名
+	transferEventSignature := crypto.Keccak256Hash([]byte("Transfer(address,address,uint256)"))
+
+	// 在回执日志中查找Transfer事件
+	var transferEvent *types.Log
+	for _, log := range receipt.Logs {
+		// 检查日志地址是否为代币合约地址
+		if log.Address == contractAddr {
+			// 检查日志主题是否为Transfer事件签名
+			if len(log.Topics) >= 3 && log.Topics[0] == transferEventSignature {
+				// 检查from和to是否匹配
+				logFrom := common.HexToAddress(log.Topics[1].Hex())
+				logTo := common.HexToAddress(log.Topics[2].Hex())
+
+				if logFrom == from && logTo == spender {
+					transferEvent = log
+					break
+				}
+			}
+		}
+	}
+
+	if transferEvent == nil {
+		t.Fatalf("未找到匹配的Transfer事件")
+	}
+
+	// 解析事件数据获取转账金额
+	value := new(big.Int).SetBytes(transferEvent.Data)
+
+	t.Logf("转账金额: %s", value.String())
+
+	// 验证转账金额是否符合预期
+	expectedAmount, ok := new(big.Int).SetString(req.Amount, 10)
+	if !ok {
+		t.Fatalf("解析预期转账金额失败")
+	}
+
+	if value.Cmp(expectedAmount) != 0 {
+		t.Errorf("转账金额不匹配，预期: %s, 实际: %s", expectedAmount.String(), value.String())
+	}
+}
+
+// validateVaultOffChainInvestMQMessage 验证 VaultOffChainInvest MQ 消息
+func (test *VaultLaunchIntegrationTest) validateVaultOffChainInvestMQMessage(t *testing.T, mqMessage *client.VaultInvest, req *client.RequestOffChainDepositReq, txHash string) {
+	// 验证基础数据
+	assert.Equal(t, txHash, mqMessage.TxHash)
+	assert.True(t, mqMessage.Success)
+	assert.Empty(t, mqMessage.FailReason)
+	assert.Equal(t, req.Recipient, mqMessage.ReceiverAddress)
+
+	// 验证投资金额
+	assert.Equal(t, req.Amount, mqMessage.AssetTokenAmount)
+
+	// 验证时间戳
+	assert.Greater(t, mqMessage.Ts, int64(0))
+
+	t.Logf("VaultOffChainInvest MQ 消息验证通过:")
+	t.Logf("   CorrelationId: %s", mqMessage.CorrelationId)
+	t.Logf("   TxHash: %s", mqMessage.TxHash)
+	t.Logf("   Success: %t", mqMessage.Success)
+	t.Logf("   ReceiverAddress: %s", mqMessage.ReceiverAddress)
+	t.Logf("   AssetTokenAmount: %s", mqMessage.AssetTokenAmount)
+	t.Logf("   VaultTokenAmount: %s", mqMessage.VaultTokenAmount)
+}
+
+// callPrepareOffchainRedeem 调用 prepare_off_chain_redeem 接口
+func (test *VaultLaunchIntegrationTest) callPrepareOffchainRedeem(t *testing.T, req *client.RequestOffChainRedeemReq) *PrepareTxResponse {
+	// 创建请求体
+	reqBody, err := json.Marshal(req)
+	require.NoError(t, err)
+
+	t.Logf("调用 /api/v2/primary/vault/prepare_off_chain_redeem")
+	t.Logf("请求体: %s", string(reqBody))
+
+	// 创建 HTTP 请求
+	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/primary/vault/prepare_off_chain_redeem", bytes.NewBuffer(reqBody))
+	require.NoError(t, err)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", appId)
+
+	// 执行请求
+	resp, err := test.httpClient.Do(httpReq)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// 解析响应
+	var apiResp APIResponse
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	require.NoError(t, err)
+	assert.Equal(t, 0, apiResp.Code)
+
+	t.Logf("prepare_off_chain_redeem 响应: %+v", apiResp)
+
+	// 解析数据
+	respData, err := json.Marshal(apiResp.Data)
+	require.NoError(t, err)
+
+	var prepareResp PrepareTxResponse
+	err = json.Unmarshal(respData, &prepareResp)
+	require.NoError(t, err)
+
+	return &prepareResp
+}
+
+// validateVaultOffChainRedeemMQMessage 验证 VaultOffChainRedeem MQ 消息
+func (test *VaultLaunchIntegrationTest) validateVaultOffChainRedeemMQMessage(t *testing.T, mqMessage *client.VaultRedeem, req *client.RequestOffChainRedeemReq, txHash string) {
+	// 验证基础数据
+	assert.Equal(t, txHash, mqMessage.TxHash)
+	assert.True(t, mqMessage.Success)
+	assert.Empty(t, mqMessage.FailReason)
+	assert.Equal(t, req.Recipient, mqMessage.ReceiverAddress)
+
+	// 验证时间戳
+	assert.Greater(t, mqMessage.Ts, int64(0))
+
+	t.Logf("VaultOffChainRedeem MQ 消息验证通过:")
+	t.Logf("   CorrelationId: %s", mqMessage.CorrelationId)
+	t.Logf("   TxHash: %s", mqMessage.TxHash)
+	t.Logf("   Success: %t", mqMessage.Success)
+	t.Logf("   ReceiverAddress: %s", mqMessage.ReceiverAddress)
+	t.Logf("   AssetTokenAmount: %s", mqMessage.AssetTokenAmount)
+	t.Logf("   VaultTokenAmount: %s", mqMessage.VaultTokenAmount)
 }
