@@ -18,13 +18,14 @@ const (
 	MessageTypeVaultUnLockTransfer                    //vault 融资成功后解锁transfer功能
 	MessageTypeTokenTransfer                          //代币转账
 	// -- new --
-	MessageTypeVaultInvestApprove // vault 投资前授权
-	MessageTypeWithdrawManageFee  // vault manager fee 提款
-	MessageTypeUnpauseToken       // vault 解锁代币transfer
-	MessageTypeApproveDividend    // vault 管理员派息授权
-	MessageTypeApproveRedeem      // vault 投资者赎回授权
-	MessageTypeOffChainDeposit    // vault offchain deposit
-	MessageTypeOffChainRedeem     // vault offchain redeem
+	MessageTypeVaultInvestApprove   // vault 投资前授权
+	MessageTypeWithdrawManageFee    // vault manager fee 提款
+	MessageTypeUnpauseToken         // vault 解锁代币transfer
+	MessageTypeApproveDividend      // vault 管理员派息授权
+	MessageTypeApproveRedeem        // vault 投资者赎回授权
+	MessageTypeOffChainDeposit      // vault offchain deposit
+	MessageTypeOffChainRedeem       // vault offchain redeem
+	MessageTypeAddDeployerWhiteList // 合约owner添加发行人白名单
 )
 
 type Message struct {
