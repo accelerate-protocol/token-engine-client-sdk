@@ -13,8 +13,11 @@ address = "0xB2d25CDFb80bd385ba78cbaCAFf242678186EAE6"
 private_key = "b1d72ff8d8296cdd3935d096da7c07034488a3ee4a6b8580c49f3f45e3cd8563"
 address = "0xa2f28344131970356c4a112d1e634e51589aa57c"
 
-[contracts]
-mock_usdc = "0x91C936406aaF278fc9772dCB911659390C99755C"
-
 [blockchain]
-chain_id = "84532"
+#chain_id = "84532"
+#mock_usdc = "0x91C936406aaF278fc9772dCB911659390C99755C" # baseSepolia
+#decimal = 6 # mockUSDC decimal
+
+chain_id = "97" # bsc testnet
+mock_usdc = "0xc98a2Fb47fbC5a7a53521143341FC7E86b206511" # bsc testnet
+decimal = 18 # mockUSDC decimal

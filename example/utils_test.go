@@ -7,8 +7,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"math"
 	"math/big"
 	"net/http"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -49,12 +51,10 @@ type Config struct {
 	Admin Signer   `toml:"admin"`
 	Users []Signer `toml:"users"`
 
-	Contracts struct {
-		MockUSDC string `toml:"mock_usdc"`
-	} `toml:"contracts"`
-
 	Blockchain struct {
-		ChainID string `toml:"chain_id"`
+		ChainID  string `toml:"chain_id"`
+		MockUSDC string `toml:"mock_usdc"`
+		Decimal  int    `toml:"decimal"`
 	} `toml:"blockchain"`
 }
 
@@ -143,25 +143,6 @@ func (m *MQClient) Close() {
 	})
 }
 
-// VaultAddDeployerIntegrationTest VaultAddDeployer 集成测试
-type VaultAddDeployerIntegrationTest struct {
-	baseURL    string
-	httpClient *http.Client
-	ctx        context.Context
-	mq         *MQClient
-}
-
-// NewVaultLaunchIntegrationTest 创建集成测试实例
-func NewVaultAddDeployerIntegrationTest(baseURL string, t *testing.T) *VaultAddDeployerIntegrationTest {
-	m := setupTestMQ(t)
-	return &VaultAddDeployerIntegrationTest{
-		baseURL:    baseURL,
-		httpClient: &http.Client{Timeout: 30 * time.Second},
-		ctx:        context.Background(),
-		mq:         m,
-	}
-}
-
 // VaultLaunchIntegrationTest VaultLaunch 集成测试
 type VaultLaunchIntegrationTest struct {
 	baseURL    string
@@ -202,12 +183,7 @@ func setupTestMQ(t *testing.T) *MQClient {
 	return mqClient
 }
 
-func generateDrdsDividendSign(
-	vaultAddr string,
-	nonce *big.Int,
-	amount *big.Int,
-	managerPrivateKey *ecdsa.PrivateKey,
-) ([]byte, error) {
+func generateDrdsDividendSign(vaultAddr string, nonce *big.Int, amount *big.Int, managerPrivateKey *ecdsa.PrivateKey) ([]byte, error) {
 	msgHash := crypto.Keccak256Hash(
 		common.HexToAddress(vaultAddr).Bytes(),
 		common.LeftPadBytes(amount.Bytes(), 32),
@@ -231,10 +207,7 @@ func generateDrdsDividendSign(
 	return sign, nil
 }
 
-func generateAdminSign(
-	msgHash string,
-	managerPrivateKey *ecdsa.PrivateKey,
-) ([]byte, error) {
+func generateAdminSign(msgHash string, managerPrivateKey *ecdsa.PrivateKey) ([]byte, error) {
 	msgHashBytes, err := base64.StdEncoding.DecodeString(msgHash)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode msg hash: %w", err)
@@ -306,64 +279,27 @@ func signTransaction(t *testing.T, chainId string, privKey string, tx *types.Tra
 	return txBase64, nil
 }
 
-// VaultCreateRequest Vault 创建请求
-type VaultCreateRequest struct {
-	ChainId           string            `json:"chain_id"`
-	ManagementData    VaultManagement   `json:"management_data"`
-	TokenMetaData     TokenMeta         `json:"token_meta_data"`
-	FinancingRuleData FinancingRuleInfo `json:"financing_rule_data"`
+// 辅助函数：将字符串转换为指针
+func stringPtr(s string) *string {
+	return &s
 }
 
-// VaultAddDeployerRequest Vault 添加发行人请求
-type VaultAddDeployerRequest struct {
-	ChainId         string `json:"chain_id"`
-	DeployerAddress string `json:"deployer_address"`
-	OwnerAddress    string `json:"owner_address"`
+func intPtr(i int) *int {
+	return &i
 }
 
-// VaultManagement Vault 管理信息
-type VaultManagement struct {
-	Deployer        string `json:"deployer"`
-	Issuer          string `json:"issuer"`
-	Manager         string `json:"manager"`
-	Withdrawer      string `json:"withdrawer"`
-	DividendManager string `json:"dividend_manager"`
+// 辅助函数：将布尔值转换为指针
+func boolPtr(b bool) *bool {
+	return &b
 }
 
-// TokenMeta Token 元数据
-type TokenMeta struct {
-	TokenName     string `json:"token_name"`
-	TokenSymbol   string `json:"token_symbol"`
-	TokenDecimals uint8  `json:"token_decimals"`
-	TokenUri      string `json:"token_uri"`
-}
-
-// FinancingRuleInfo 融资规则信息
-type FinancingRuleInfo struct {
-	ProjectName                        string   `json:"project_name"`
-	FinancingCurrencyAddr              string   `json:"financing_currency_addr"`
-	TargetAmountBaseFinancingCurrency  string   `json:"target_amount_base_financing_currency"`
-	FinancingStartTime                 int64    `json:"financing_start_time"`
-	FinancingDeadline                  int64    `json:"financing_deadline"`
-	MinInvestmentBaseFinancingCurrency string   `json:"min_investment_base_financing_currency"`
-	ExcessFundraisingRatioBps          string   `json:"excess_fundraising_ratio_bps"`
-	SharePrice                         string   `json:"share_price"`
-	SoftCap                            string   `json:"soft_cap"`
-	ManageFeeBps                       string   `json:"manage_fee_bps"`
-	FundingReceiver                    string   `json:"funding_receiver"`
-	ManageFeeReceiver                  string   `json:"manage_fee_receiver"`
-	DecimalsMultiplier                 string   `json:"decimals_multiplier"`
-	EnableWhitelist                    bool     `json:"enable_whitelist"`
-	Whitelist                          []string `json:"whitelist"`
-	TokenMaxSupply                     string   `json:"token_max_supply"`
-}
-
-// SubmitTxRequest 提交交易请求
-type SubmitTxRequest struct {
-	ChainId      string `json:"chain_id"`
-	Sender       string `json:"sender"`
-	TxMsgBase64  string `json:"tx_msg_base64"`
-	SignTxBase64 string `json:"sign_tx_base64"`
+// parseUsd 根据decimal精度转换金额
+func parseUsd(amount float64) string {
+	decimal := config.Blockchain.Decimal
+	// 计算精度倍数
+	multiplier := math.Pow10(decimal)
+	// 转换金额并返回字符串
+	return strconv.FormatInt(int64(amount*multiplier), 10)
 }
 
 // VaultDepositRequest Vault 投资请求
@@ -428,7 +364,7 @@ type SubmitTxResponse struct {
 }
 
 // callPrepareCreateVault 调用 prepare_create 接口
-func (test *VaultLaunchIntegrationTest) callPrepareCreateVault(t *testing.T, req *VaultCreateRequest) *PrepareTxResponse {
+func (test *VaultLaunchIntegrationTest) callPrepareCreateVault(t *testing.T, req *client.RequestVaultCreateReq) *PrepareTxResponse {
 	// 创建请求体
 	reqBody, err := json.Marshal(req)
 	require.NoError(t, err)
@@ -565,7 +501,7 @@ func (test *VaultLaunchIntegrationTest) callTokenBalance(t *testing.T, req *clie
 }
 
 // callPrepareAddDeployer 调用 prepare_add_deployer 接口
-func (test *VaultLaunchIntegrationTest) callPrepareAddDeployer(t *testing.T, req *VaultAddDeployerRequest) *PrepareTxResponse {
+func (test *VaultLaunchIntegrationTest) callPrepareAddDeployer(t *testing.T, req *client.RequestAddVaultDeployerWhiteListReq) *PrepareTxResponse {
 	// 创建请求体
 	reqBody, err := json.Marshal(req)
 	require.NoError(t, err)
@@ -604,7 +540,7 @@ func (test *VaultLaunchIntegrationTest) callPrepareAddDeployer(t *testing.T, req
 }
 
 // callSubmitTx 调用 submit_tx 接口
-func (test *VaultLaunchIntegrationTest) callSubmitTx(t *testing.T, req *SubmitTxRequest) *SubmitTxResponse {
+func (test *VaultLaunchIntegrationTest) callSubmitTx(t *testing.T, req *client.RequestSubmitReq) *SubmitTxResponse {
 	// 创建请求体
 	reqBody, err := json.Marshal(req)
 	require.NoError(t, err)
@@ -962,7 +898,7 @@ func (test *VaultLaunchIntegrationTest) validateVaultInvestMQMessage(t *testing.
 }
 
 // validateVaultLaunchMQMessage 验证 VaultLaunch MQ 消息
-func (test *VaultLaunchIntegrationTest) validateVaultLaunchMQMessage(t *testing.T, mqMessage *client.VaultLaunch, req *VaultCreateRequest, txHash string) {
+func (test *VaultLaunchIntegrationTest) validateVaultLaunchMQMessage(t *testing.T, mqMessage *client.VaultLaunch, txHash string) {
 	// 验证基础数据
 	assert.Equal(t, txHash, mqMessage.TxHash)
 	assert.True(t, mqMessage.Success)

@@ -44,7 +44,7 @@ func init() {
 	chainId = config.Blockchain.ChainID
 	admin = config.Admin.Address
 	users = config.Users
-	mockUSDC = config.Contracts.MockUSDC
+	mockUSDC = config.Blockchain.MockUSDC
 }
 
 // 添加发行人白名单
@@ -52,8 +52,8 @@ func TestAddVaultDeployerIntegration(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
 	test := NewVaultLaunchIntegrationTest(serverUrl, t)
 	t.Logf("开始 AddDeployer 集成测试")
-	req := &VaultAddDeployerRequest{
-		ChainId:         chainId,
+	req := &client.RequestAddVaultDeployerWhiteListReq{
+		ChainId:         client.CommonChainID(chainId),
 		DeployerAddress: "0x318AC2c326700F9245BB2673B0885E4358dc2977",
 		OwnerAddress:    admin,
 	}
@@ -73,8 +73,8 @@ func TestAddVaultDeployerIntegration(t *testing.T) {
 
 	t.Logf("交易签名成功，准备提交交易")
 	// 4. 调用 /api/v1/common/submit_tx 接口提交交易
-	submitResp := test.callSubmitTx(t, &SubmitTxRequest{
-		ChainId:      req.ChainId,
+	submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      client.CommonChainID(req.ChainId),
 		Sender:       req.OwnerAddress,
 		TxMsgBase64:  prepareResp.TxMsgBase64,
 		SignTxBase64: signedTx,
@@ -93,12 +93,12 @@ func TestVaultSuccessIntegration(t *testing.T) {
 	t.Logf("===============阶段一：Launch Vault====================")
 	mqMessage := createVault(t, test, 24*time.Hour)
 	t.Logf("===============阶段二：User Invest ====================")
-	amount := "10000000000" // 10000 USDC
+	amount := parseUsd(10000) // 10000 USDC
 	deposit(t, test, mqMessage.VaultAddress, amount, users[0], users[0])
 	t.Logf("✅ User Invest 集成测试通过")
 
 	t.Logf("===============阶段三：Drds admin Dividend====================")
-	dividend(t, test, mqMessage.VaultAddress, "1000000000", 0) // 1000 USDC
+	dividend(t, test, mqMessage.VaultAddress, parseUsd(1000), 0) // 1000 USDC
 	t.Logf("✅ Drds admin Dividend 集成测试通过")
 	t.Logf("===============阶段四：User Claim ====================")
 	claim(t, test, mqMessage.VaultAddress, users[0])
@@ -120,13 +120,13 @@ func TestVaultDeposit(t *testing.T) {
 			name:     "单链支付，用户1质押给自己",
 			sender:   users[0],
 			receiver: users[0],
-			amount:   "1000000000", // 1000 USDC (6位精度)
+			amount:   parseUsd(1000), // 1000 USDC
 		},
 		{
 			name:     "多链支付,用户1(多链账户)质押给用户2",
 			sender:   users[0],
 			receiver: users[1],
-			amount:   "1000000000", // 1000 USDC (6位精度)
+			amount:   parseUsd(1000), // 1000 USDC
 		},
 	}
 
@@ -163,7 +163,7 @@ func TestVaultRedeem(t *testing.T) {
 		// 1. 创建 Vault, 只测试赎回功能，募集期设置为1分钟
 		vaultMsg := createVault(t, test, 1*time.Minute)
 		vaultAddr := vaultMsg.VaultAddress
-		amount := "100000000" // 100 USDC (6位精度)
+		amount := parseUsd(100) // 100 USDC (6位精度)
 		resp := deposit(t, test, vaultAddr, amount, tc.signer, tc.signer)
 		vltAmount := resp.VaultTokenAmount
 		depositAmount := resp.AssetTokenAmount
@@ -189,7 +189,7 @@ func TestVaultOffchainDeposit(t *testing.T) {
 		{
 			name:     "管理员质押给用户1",
 			receiver: users[0],
-			amount:   "1000000000", // 1000 USDC (6位精度)
+			amount:   parseUsd(1000), // 1000 USDC
 		},
 	}
 	for _, tc := range testCases {
@@ -211,7 +211,7 @@ func TestUnpauseToken(t *testing.T) {
 	vaultMsg := createVault(t, test, 24*time.Hour)
 	// 2. deposit
 	vaultAddr := vaultMsg.VaultAddress
-	amount := "10000000000" // 10000 USDC (6位精度)
+	amount := parseUsd(10000) // 10000 USDC (6位精度)
 	deposit(t, test, vaultAddr, amount, users[0], users[0])
 	// 3. pause token
 	unPauseToken(t, test, vaultMsg.VaultAddress)
@@ -225,7 +225,7 @@ func TestVaultDividend(t *testing.T) {
 	// 1. 创建 Vault
 	vaultMsg := createVault(t, test, 24*time.Hour)
 	vaultAddr := vaultMsg.VaultAddress
-	amount := "10000000000" // 10000 USDC (6位精度)，打满,确保融资成功
+	amount := parseUsd(10000) // 10000 USDC (6位精度)，打满,确保融资成功
 	deposit(t, test, vaultAddr, amount, users[0], users[0])
 
 	// 执行 dividend 测试
@@ -252,11 +252,11 @@ func TestVaultClaim(t *testing.T) {
 		// 1. 创建 Vault
 		vaultMsg := createVault(t, test, 24*time.Hour)
 		vaultAddr := vaultMsg.VaultAddress
-		amount := "10000000000" // 10000 USDC (6位精度)，打满,确保融资成功
+		amount := parseUsd(10000) // 10000 USDC (6位精度)，打满,确保融资成功
 		deposit(t, test, vaultAddr, amount, tc.signer, tc.signer)
 
 		// 2. 管理员派息
-		dividendAmount := "100000000" // 100 USDC
+		dividendAmount := parseUsd(100) // 100 USDC
 		dividend(t, test, vaultAddr, dividendAmount, 0)
 		// 4. 执行 claim 测试
 		claim(t, test, vaultAddr, tc.signer)
@@ -272,7 +272,7 @@ func TestErc20Approve(t *testing.T) {
 	// 1. 准备 approve 请求
 	approveReq := &client.RequestApprovePrepareReq{
 		ChainId:     client.RequestChainId(chainId),
-		Amount:      "1000000", // 1 USDC
+		Amount:      parseUsd(1), // 1 USDC
 		FromAddr:    admin,
 		TokenAddr:   mockUSDC,
 		SpenderAddr: users[1].Address,
@@ -292,8 +292,8 @@ func TestErc20Approve(t *testing.T) {
 	require.NoError(t, err)
 	t.Logf("交易签名成功，准备提交交易")
 	// 4. 调用 /api/v1/common/submit_tx 接口提交交易
-	submitResp := test.callSubmitTx(t, &SubmitTxRequest{
-		ChainId:      string(approveReq.ChainId),
+	submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      client.CommonChainID(approveReq.ChainId),
 		Sender:       approveReq.FromAddr,
 		TxMsgBase64:  approveResp.TxMsgBase64,
 		SignTxBase64: signedTx,
@@ -321,7 +321,7 @@ func TestErc20Transfer(t *testing.T) {
 				Address:    admin,
 				PrivateKey: adminPrivateKey,
 			},
-			amount:    "1000000", // 1 USDC
+			amount:    parseUsd(1), // 1 USDC
 			receiver:  users[1].Address,
 			TokenType: client.TokenTypeUSDC,
 		},
@@ -331,7 +331,7 @@ func TestErc20Transfer(t *testing.T) {
 				Address:    admin,
 				PrivateKey: adminPrivateKey,
 			},
-			amount:    "1000000", // 1 vlt
+			amount:    parseUsd(1), // 1 vlt
 			receiver:  users[1].Address,
 			TokenType: client.TokenTypeVaultToken,
 		},
@@ -349,7 +349,7 @@ func TestErc20Transfer(t *testing.T) {
 			// 先创建一个 vault
 			vaultMsg := createVault(t, test, 24*time.Hour)
 			// 给 admin 质押一些 vault token，确保融资完成
-			amount := "10000000000" // 10000 USDC (6位精度)
+			amount := parseUsd(10000) // 10000 USDC (6位精度)
 			deposit(t, test, vaultMsg.VaultAddress, amount, tc.sender, tc.sender)
 			unPauseToken(t, test, vaultMsg.VaultAddress)
 			tokenAddr = vaultMsg.VaultTokenAddress
@@ -380,8 +380,8 @@ func TestErc20Transfer(t *testing.T) {
 		require.NoError(t, err)
 		t.Logf("交易签名成功，准备提交交易")
 		// 4. 调用 /api/v1/common/submit_tx 接口提交交易
-		submitResp := test.callSubmitTx(t, &SubmitTxRequest{
-			ChainId:      string(transferReq.ChainId),
+		submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+			ChainId:      client.CommonChainID(transferReq.ChainId),
 			Sender:       transferReq.FromAddr,
 			TxMsgBase64:  transferResp.TxMsgBase64,
 			SignTxBase64: signedTx,
@@ -426,7 +426,7 @@ func TestErc20Balance(t *testing.T) {
 			// 先创建一个 vault
 			vaultMsg := createVault(t, test, 24*time.Hour)
 			// 给用户质押一些 vault token
-			amount := "100000000" // 100 USDC (6位精度)
+			amount := parseUsd(100) // 100 USDC (6位精度)
 			deposit(t, test, vaultMsg.VaultAddress, amount, tc.sender, tc.sender)
 			tokenAddr = vaultMsg.VaultTokenAddress
 		default:
@@ -453,38 +453,38 @@ func createVault(t *testing.T, test *VaultLaunchIntegrationTest, fundingDuration
 	deployerAddress := admin
 
 	// 创建请求
-	vaultCreateReq := &VaultCreateRequest{
-		ChainId: chainId,
-		ManagementData: VaultManagement{
+	vaultCreateReq := &client.RequestVaultCreateReq{
+		ChainId: client.CommonChainID(chainId),
+		ManagementData: client.RequestVaultManagement{
 			Deployer:        deployerAddress,
 			Issuer:          deployerAddress,
 			Manager:         deployerAddress,
 			Withdrawer:      deployerAddress,
 			DividendManager: deployerAddress,
 		},
-		TokenMetaData: TokenMeta{
+		TokenMetaData: client.RequestTokenMeta{
 			TokenName:     "Test Vault Token",
 			TokenSymbol:   "TVT",
-			TokenDecimals: 6,
+			TokenDecimals: config.Blockchain.Decimal,
 			TokenUri:      "https://example.com/token/1",
 		},
-		FinancingRuleData: FinancingRuleInfo{
+		FinancingRuleData: client.RequestFinancingRuleInfo{
 			ProjectName:                        fmt.Sprintf("test_%d", time.Now().Unix()),
-			FinancingCurrencyAddr:              mockUSDC,     // mockUSDC
-			TargetAmountBaseFinancingCurrency:  "1000000000", // 1000 U (6位精度)
-			TokenMaxSupply:                     "1000000000", // 1000 vlt
-			FinancingStartTime:                 time.Now().Unix(),
-			FinancingDeadline:                  time.Now().Add(fundingDuration).Unix(),
-			MinInvestmentBaseFinancingCurrency: "10000",     // 10 USDC
-			ExcessFundraisingRatioBps:          "500",       // 5%
-			SharePrice:                         "1000000",   // 1 U
-			SoftCap:                            "750000000", // 750 vlt
-			ManageFeeBps:                       "50",        // 0.5%
-			FundingReceiver:                    deployerAddress,
-			ManageFeeReceiver:                  deployerAddress,
-			DecimalsMultiplier:                 "1",
-			EnableWhitelist:                    false,
-			Whitelist:                          []string{},
+			FinancingCurrencyAddr:              mockUSDC,       // mockUSDC
+			TokenMaxSupply:                     parseUsd(1000), // 1000 vlt
+			FinancingStartTime:                 intPtr(int(time.Now().Unix())),
+			FinancingDeadline:                  intPtr(int(time.Now().Add(fundingDuration).Unix())),
+			MinInvestmentBaseFinancingCurrency: parseUsd(10),  // 10 USDC
+			SoftCap:                            parseUsd(750), // 750 vlt
+			// 将字符串常量转换为指针
+			ExcessFundraisingRatioBps: stringPtr("500"),       // 5%
+			SharePrice:                stringPtr(parseUsd(1)), // 1 U
+			ManageFeeBps:              stringPtr("50"),        // 0.5%
+			FundingReceiver:           stringPtr(deployerAddress),
+			ManageFeeReceiver:         stringPtr(deployerAddress),
+			DecimalsMultiplier:        stringPtr("1"),
+			EnableWhitelist:           boolPtr(false),
+			Whitelist:                 &[]string{},
 		},
 	}
 
@@ -500,12 +500,12 @@ func createVault(t *testing.T, test *VaultLaunchIntegrationTest, fundingDuration
 	err = tx.UnmarshalBinary(data)
 	require.NoError(t, err)
 	// 3. 签名交易
-	signedTx, err := signTransaction(t, vaultCreateReq.ChainId, adminPrivateKey, tx)
+	signedTx, err := signTransaction(t, string(vaultCreateReq.ChainId), adminPrivateKey, tx)
 	require.NoError(t, err)
 
 	t.Logf("交易签名成功，准备提交交易")
 	// 4. 调用 /api/v1/common/submit_tx 接口提交交易
-	submitResp := test.callSubmitTx(t, &SubmitTxRequest{
+	submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
 		ChainId:      vaultCreateReq.ChainId,
 		Sender:       vaultCreateReq.ManagementData.Deployer,
 		TxMsgBase64:  prepareResp.TxMsgBase64,
@@ -525,7 +525,7 @@ func createVault(t *testing.T, test *VaultLaunchIntegrationTest, fundingDuration
 	require.True(t, ok, "MQ 消息类型断言失败")
 
 	// 6. 验证 MQ 消息内容
-	test.validateVaultLaunchMQMessage(t, mqMessage, vaultCreateReq, submitResp.TxHash)
+	test.validateVaultLaunchMQMessage(t, mqMessage, submitResp.TxHash)
 
 	t.Logf("✅ VaultLaunch 集成测试通过")
 	t.Logf("   Vault 地址: %s", mqMessage.VaultAddress)
@@ -561,8 +561,8 @@ func redeem(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress string,
 	require.NoError(t, err)
 
 	// 1.3 提交 approve 交易
-	approveSubmitResp := test.callSubmitTx(t, &SubmitTxRequest{
-		ChainId:      approveReq.ChainId,
+	approveSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      client.CommonChainID(approveReq.ChainId),
 		Sender:       approveReq.Investor,
 		TxMsgBase64:  approveResp.TxMsgBase64,
 		SignTxBase64: signedApproveTx,
@@ -621,8 +621,8 @@ func redeem(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress string,
 	require.NoError(t, err)
 
 	// 7. 调用 /api/v1/common/submit_tx 接口提交 redeem 交易
-	redeemSubmitResp := test.callSubmitTx(t, &SubmitTxRequest{
-		ChainId:      string(redeemReq.ChainId),
+	redeemSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      redeemReq.ChainId,
 		Sender:       redeemReq.Investor,
 		TxMsgBase64:  redeemResp.TxMsgBase64,
 		SignTxBase64: signedRedeemTx,
@@ -677,8 +677,8 @@ func deposit(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress, amoun
 	require.NoError(t, err)
 
 	// 1.3 提交 approve 交易
-	approveSubmitResp := test.callSubmitTx(t, &SubmitTxRequest{
-		ChainId:      approveReq.ChainId,
+	approveSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      client.CommonChainID(approveReq.ChainId),
 		Sender:       approveReq.Sender,
 		TxMsgBase64:  approveResp.TxMsgBase64,
 		SignTxBase64: signedApproveTx,
@@ -730,8 +730,8 @@ func deposit(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress, amoun
 	require.NoError(t, err)
 
 	// 7. 调用 /api/v1/common/submit_tx 接口提交 deposit 交易
-	depositSubmitResp := test.callSubmitTx(t, &SubmitTxRequest{
-		ChainId:      depositReq.ChainId,
+	depositSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      client.CommonChainID(depositReq.ChainId),
 		Sender:       depositReq.Sender,
 		TxMsgBase64:  depositResp.TxMsgBase64,
 		SignTxBase64: signedDepositTx,
@@ -786,8 +786,8 @@ func offchainDeposit(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddres
 	require.NoError(t, err)
 
 	// 4. 调用 /api/v1/common/submit_tx 接口提交 offchain deposit 交易
-	depositSubmitResp := test.callSubmitTx(t, &SubmitTxRequest{
-		ChainId:      string(depositReq.ChainId),
+	depositSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      depositReq.ChainId,
 		Sender:       depositReq.Manager,
 		TxMsgBase64:  depositResp.TxMsgBase64,
 		SignTxBase64: signedDepositTx,
@@ -798,7 +798,7 @@ func offchainDeposit(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddres
 	t.Logf("Offchain Deposit 交易已提交，交易哈希: %s", depositSubmitResp.TxHash)
 
 	// 5. 等待 MQ 推送
-	mqMessageInterface := test.waitForMQMessage(t, depositSubmitResp.TxHash, client.MessageTypeVaultInvest)
+	mqMessageInterface := test.waitForMQMessage(t, depositSubmitResp.TxHash, client.MessageTypeOffChainDeposit)
 	require.NotNil(t, mqMessageInterface)
 
 	// 类型断言
@@ -838,8 +838,8 @@ func dividend(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress strin
 	require.NoError(t, err)
 
 	// 1.3 提交 approve 交易
-	approveSubmitResp := test.callSubmitTx(t, &SubmitTxRequest{
-		ChainId:      approveReq.ChainId,
+	approveSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      client.CommonChainID(approveReq.ChainId),
 		Sender:       approveReq.Manager,
 		TxMsgBase64:  approveResp.TxMsgBase64,
 		SignTxBase64: signedApproveTx,
@@ -896,8 +896,8 @@ func dividend(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress strin
 	require.NoError(t, err)
 
 	// 提交交易
-	submitResp := test.callSubmitTx(t, &SubmitTxRequest{
-		ChainId:      string(dividendReq.ChainId),
+	submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      dividendReq.ChainId,
 		Sender:       *dividendReq.UserAddr,
 		TxMsgBase64:  prepareResp.TxMsgBase64,
 		SignTxBase64: signedTx,
@@ -944,8 +944,8 @@ func claim(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress string, 
 	require.NoError(t, err)
 	signedTx, err := signTransaction(t, string(claimReq.ChainId), user.PrivateKey, tx)
 	require.NoError(t, err)
-	submitResp := test.callSubmitTx(t, &SubmitTxRequest{
-		ChainId:      string(claimReq.ChainId),
+	submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      claimReq.ChainId,
 		Sender:       claimReq.Investor,
 		TxMsgBase64:  claimResp.TxMsgBase64,
 		SignTxBase64: signedTx,
@@ -988,8 +988,8 @@ func unPauseToken(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress s
 	require.NoError(t, err)
 	t.Logf("交易签名成功，准备提交交易")
 	// 4. 调用 /api/v1/common/submit_tx 接口提交交易
-	submitResp := test.callSubmitTx(t, &SubmitTxRequest{
-		ChainId:      string(unPauseReq.ChainId),
+	submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      unPauseReq.ChainId,
 		Sender:       *unPauseReq.Manager,
 		TxMsgBase64:  unPauseResp.TxMsgBase64,
 		SignTxBase64: signedTx,
