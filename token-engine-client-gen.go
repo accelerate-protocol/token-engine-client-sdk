@@ -388,6 +388,12 @@ type GetApiV1CommonTxResultParams struct {
 // GetApiV1CommonTxResultParamsChainId defines parameters for GetApiV1CommonTxResult.
 type GetApiV1CommonTxResultParamsChainId string
 
+// GetApiV1DataTokenHoldersParams defines parameters for GetApiV1DataTokenHolders.
+type GetApiV1DataTokenHoldersParams struct {
+	// Mint Token mint 地址
+	Mint string `form:"mint" json:"mint"`
+}
+
 // GetApiV1SwapPriceParams defines parameters for GetApiV1SwapPrice.
 type GetApiV1SwapPriceParams struct {
 	Amount             string                          `form:"amount" json:"amount"`
@@ -407,12 +413,6 @@ type GetApiV1SwapPriceParamsChainId string
 
 // GetApiV1SwapPriceParamsPlatform defines parameters for GetApiV1SwapPrice.
 type GetApiV1SwapPriceParamsPlatform string
-
-// GetApiV2DataTokenHoldersParams defines parameters for GetApiV2DataTokenHolders.
-type GetApiV2DataTokenHoldersParams struct {
-	// Mint Token mint 地址
-	Mint string `form:"mint" json:"mint"`
-}
 
 // PostApiV1CommonSubmitTxJSONRequestBody defines body for PostApiV1CommonSubmitTx for application/json ContentType.
 type PostApiV1CommonSubmitTxJSONRequestBody = RequestSubmitReq
@@ -525,6 +525,9 @@ type ClientInterface interface {
 	// GetApiV1CommonTxResult request
 	GetApiV1CommonTxResult(ctx context.Context, params *GetApiV1CommonTxResultParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetApiV1DataTokenHolders request
+	GetApiV1DataTokenHolders(ctx context.Context, params *GetApiV1DataTokenHoldersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PostApiV1PrimaryCreatePoolWithBody request with any body
 	PostApiV1PrimaryCreatePoolWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -567,9 +570,6 @@ type ClientInterface interface {
 
 	// GetApiV1SwapPrice request
 	GetApiV1SwapPrice(ctx context.Context, params *GetApiV1SwapPriceParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetApiV2DataTokenHolders request
-	GetApiV2DataTokenHolders(ctx context.Context, params *GetApiV2DataTokenHoldersParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
 func (c *Client) GetApiV1CommonBalance(ctx context.Context, params *GetApiV1CommonBalanceParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -610,6 +610,18 @@ func (c *Client) PostApiV1CommonSubmitTx(ctx context.Context, body PostApiV1Comm
 
 func (c *Client) GetApiV1CommonTxResult(ctx context.Context, params *GetApiV1CommonTxResultParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetApiV1CommonTxResultRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetApiV1DataTokenHolders(ctx context.Context, params *GetApiV1DataTokenHoldersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiV1DataTokenHoldersRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -824,18 +836,6 @@ func (c *Client) GetApiV1SwapPrice(ctx context.Context, params *GetApiV1SwapPric
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiV2DataTokenHolders(ctx context.Context, params *GetApiV2DataTokenHoldersParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiV2DataTokenHoldersRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 // NewGetApiV1CommonBalanceRequest generates requests for GetApiV1CommonBalance
 func NewGetApiV1CommonBalanceRequest(server string, params *GetApiV1CommonBalanceParams) (*http.Request, error) {
 	var err error
@@ -984,6 +984,51 @@ func NewGetApiV1CommonTxResultRequest(server string, params *GetApiV1CommonTxRes
 		}
 
 		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "tx_hash", runtime.ParamLocationQuery, params.TxHash); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetApiV1DataTokenHoldersRequest generates requests for GetApiV1DataTokenHolders
+func NewGetApiV1DataTokenHoldersRequest(server string, params *GetApiV1DataTokenHoldersParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/data/token_holders")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "mint", runtime.ParamLocationQuery, params.Mint); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err
@@ -1463,51 +1508,6 @@ func NewGetApiV1SwapPriceRequest(server string, params *GetApiV1SwapPriceParams)
 	return req, nil
 }
 
-// NewGetApiV2DataTokenHoldersRequest generates requests for GetApiV2DataTokenHolders
-func NewGetApiV2DataTokenHoldersRequest(server string, params *GetApiV2DataTokenHoldersParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/data/token_holders")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "mint", runtime.ParamLocationQuery, params.Mint); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 func (c *Client) applyEditors(ctx context.Context, req *http.Request, additionalEditors []RequestEditorFn) error {
 	for _, r := range c.RequestEditors {
 		if err := r(ctx, req); err != nil {
@@ -1562,6 +1562,9 @@ type ClientWithResponsesInterface interface {
 	// GetApiV1CommonTxResultWithResponse request
 	GetApiV1CommonTxResultWithResponse(ctx context.Context, params *GetApiV1CommonTxResultParams, reqEditors ...RequestEditorFn) (*GetApiV1CommonTxResultResponse, error)
 
+	// GetApiV1DataTokenHoldersWithResponse request
+	GetApiV1DataTokenHoldersWithResponse(ctx context.Context, params *GetApiV1DataTokenHoldersParams, reqEditors ...RequestEditorFn) (*GetApiV1DataTokenHoldersResponse, error)
+
 	// PostApiV1PrimaryCreatePoolWithBodyWithResponse request with any body
 	PostApiV1PrimaryCreatePoolWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV1PrimaryCreatePoolResponse, error)
 
@@ -1604,9 +1607,6 @@ type ClientWithResponsesInterface interface {
 
 	// GetApiV1SwapPriceWithResponse request
 	GetApiV1SwapPriceWithResponse(ctx context.Context, params *GetApiV1SwapPriceParams, reqEditors ...RequestEditorFn) (*GetApiV1SwapPriceResponse, error)
-
-	// GetApiV2DataTokenHoldersWithResponse request
-	GetApiV2DataTokenHoldersWithResponse(ctx context.Context, params *GetApiV2DataTokenHoldersParams, reqEditors ...RequestEditorFn) (*GetApiV2DataTokenHoldersResponse, error)
 }
 
 type GetApiV1CommonBalanceResponse struct {
@@ -1696,6 +1696,37 @@ func (r GetApiV1CommonTxResultResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetApiV1CommonTxResultResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetApiV1DataTokenHoldersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                 `json:"code,omitempty"`
+		Data *[]EntityTokenHolder `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r GetApiV1DataTokenHoldersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetApiV1DataTokenHoldersResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -1981,37 +2012,6 @@ func (r GetApiV1SwapPriceResponse) StatusCode() int {
 	return 0
 }
 
-type GetApiV2DataTokenHoldersResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                 `json:"code,omitempty"`
-		Data *[]EntityTokenHolder `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r GetApiV2DataTokenHoldersResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetApiV2DataTokenHoldersResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 // GetApiV1CommonBalanceWithResponse request returning *GetApiV1CommonBalanceResponse
 func (c *ClientWithResponses) GetApiV1CommonBalanceWithResponse(ctx context.Context, params *GetApiV1CommonBalanceParams, reqEditors ...RequestEditorFn) (*GetApiV1CommonBalanceResponse, error) {
 	rsp, err := c.GetApiV1CommonBalance(ctx, params, reqEditors...)
@@ -2045,6 +2045,15 @@ func (c *ClientWithResponses) GetApiV1CommonTxResultWithResponse(ctx context.Con
 		return nil, err
 	}
 	return ParseGetApiV1CommonTxResultResponse(rsp)
+}
+
+// GetApiV1DataTokenHoldersWithResponse request returning *GetApiV1DataTokenHoldersResponse
+func (c *ClientWithResponses) GetApiV1DataTokenHoldersWithResponse(ctx context.Context, params *GetApiV1DataTokenHoldersParams, reqEditors ...RequestEditorFn) (*GetApiV1DataTokenHoldersResponse, error) {
+	rsp, err := c.GetApiV1DataTokenHolders(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetApiV1DataTokenHoldersResponse(rsp)
 }
 
 // PostApiV1PrimaryCreatePoolWithBodyWithResponse request with arbitrary body returning *PostApiV1PrimaryCreatePoolResponse
@@ -2192,15 +2201,6 @@ func (c *ClientWithResponses) GetApiV1SwapPriceWithResponse(ctx context.Context,
 	return ParseGetApiV1SwapPriceResponse(rsp)
 }
 
-// GetApiV2DataTokenHoldersWithResponse request returning *GetApiV2DataTokenHoldersResponse
-func (c *ClientWithResponses) GetApiV2DataTokenHoldersWithResponse(ctx context.Context, params *GetApiV2DataTokenHoldersParams, reqEditors ...RequestEditorFn) (*GetApiV2DataTokenHoldersResponse, error) {
-	rsp, err := c.GetApiV2DataTokenHolders(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetApiV2DataTokenHoldersResponse(rsp)
-}
-
 // ParseGetApiV1CommonBalanceResponse parses an HTTP response from a GetApiV1CommonBalanceWithResponse call
 func ParseGetApiV1CommonBalanceResponse(rsp *http.Response) (*GetApiV1CommonBalanceResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -2291,6 +2291,41 @@ func ParseGetApiV1CommonTxResultResponse(rsp *http.Response) (*GetApiV1CommonTxR
 			// @Description 响应状态码
 			Code *int                  `json:"code,omitempty"`
 			Data *ResponseTxResultResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetApiV1DataTokenHoldersResponse parses an HTTP response from a GetApiV1DataTokenHoldersWithResponse call
+func ParseGetApiV1DataTokenHoldersResponse(rsp *http.Response) (*GetApiV1DataTokenHoldersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetApiV1DataTokenHoldersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                 `json:"code,omitempty"`
+			Data *[]EntityTokenHolder `json:"data,omitempty"`
 
 			// Message Message is the response message
 			// @Description 响应消息
@@ -2621,97 +2656,62 @@ func ParseGetApiV1SwapPriceResponse(rsp *http.Response) (*GetApiV1SwapPriceRespo
 	return response, nil
 }
 
-// ParseGetApiV2DataTokenHoldersResponse parses an HTTP response from a GetApiV2DataTokenHoldersWithResponse call
-func ParseGetApiV2DataTokenHoldersResponse(rsp *http.Response) (*GetApiV2DataTokenHoldersResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetApiV2DataTokenHoldersResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                 `json:"code,omitempty"`
-			Data *[]EntityTokenHolder `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+RcW1MbR/b/Kqr5/x/sKlkS/C/r0lMwZHddaycUpHa3yktNNaNG6mRu7u7hsi6qRAKB",
-	"2GBgfcc4Bq8dp1I2tlO+EIGdL6MZiad8ha3pnpFGmp7RiIvjhDfQTJ9z+pxfnz436ZKkGJpp6FCnRMpf",
-	"kohSghpgfyqGphl6ps9EQ5CY7icFSBSMTIoMXcpLfYNnnY15e/5r+9qSXbnubOzau8tSWjKxYUJMEfSo",
-	"FGB4bb9RgClEUrQEUxgS09AJTLmv/kP/aKD5ZoqTrl1+7ZRnahszUlqCk0AzVSjle3K5XG9aolMmlPIS",
-	"0iksQixNp6UCoCDMcQBQEOLovirk6Nx47ixtudQ0SAgoCrZwnj8I0fQWiMm+XnBmngV3IUGMDZzC8KIF",
-	"CU2ZAAMNUoilxs4IxUgvStPTjU+M0c+hQl3hPBP1lwDSzw64MkLd0qT8Baknl+uRRtqJpKXJU+4bp8YB",
-	"1oHmWuiCNPzpub5P+qSR6bQEdYroVGbg47/LgyqgYwbWgkSHwFQBWZqU9v9K9Z87fz4hmwE42Vzf/Efm",
-	"JJrMPzO+gPqfDbUAscu7FU2jQAW6IrBGdeff9vZM9e2dvQf3Uifsp7dqT76rbv/IQfnL7uLezM/23FLt",
-	"x3d25bvq9gP74YuTYRWnpRLjK4NCAUNCwmycxRln/Zt6ec5ef27fK6dOnAEE/t/p2u7N2sZMbW22wfhk",
-	"MgN6ds+cMTA2JiD+G6KlAgYTQ/BiePNAMyydCoRaXrGXbzo3nu89uCeJToTi4kNGBXfpf2M4JuWl/8o2",
-	"z33WO/TZNjhNp6VxYKk0Wh3sMVeFSJsT3m64JUNCO0/eVSsVoaJcvSAMCy5wvG0HttEuVwunkRg192MI",
-	"KBw0DLVPL5xDFy1UQHRKqOxfR2dtW4/ccdwmB6BpEES7g9DlG/VXs3sP7p2o7jxirOrfLtVfzdZfPra3",
-	"Z+pbm9WdNycPGVtIH4eEGjhKmmqlEg2tQ1SyCF8N2bpR/B+RDnQF6cUhS4Vh3cNJBRIij1l6AQNEkF6U",
-	"MaDIkEdNwQ7qr+fsK/edZ9er7664L4h0P+YzlBULY6grU0xOAbGAMaN12iRXgKCgIp1tIo4toQBTmSIt",
-	"4k3N1SdTpQZ1Ko8CAuWw0AIArJft58sNUAo3b2KkwOQkw3gWUqUAFyGVOSaSU6/d3XI25jkPscBtoIsy",
-	"XWKddVJA0q3EAZp7SEDhUXvII/CCQ7AAofah3KO/O183DClVYXfqvfF8b375AwpQuo4zYhVijWoRl+7+",
-	"d0egXogInqqVh7GgIaioy3SSnfv//1+Bx3r6zl5ZqlYeOrevVd9eawSuKb6AR7QiwnRS1kgxkq79bo6T",
-	"9lKoLkIcb7ch2dt5xpphApiDGJoAdwdO++lte+5RO0Sbuz7I0TctKmsomivPXaJN6d4IhuV78jCVvTsr",
-	"9sJrfmfay8/suVVn6YE9X6mtzUZvyLBojFwBEp2kMwOJYpxmRLllC8Tfv99rKCCk41b9BDYZQGly38BS",
-	"2nPA0pXSITuI5oWOLRXKfukDqOqnY1L+Qjw5cdw6PZIWhk7VnzedmWcMj0AHRciik/0xZPo4z6gI2NW2",
-	"NmsrXzfZUfdtWYMUHIgdpEDAjBG3577i3spnGu2jRAoPayQsdEd4eOoIVzy8ykBUROssrNiX79srV93T",
-	"Hp1Tu/s2VWNKRMheXq1vLkYs41sTrOJmsldvdzx8jS0EhGgS7qwZyI3eqheu4AJUkAZU9okGJpFmaVK+",
-	"57QwsmcLdNCSqwSuNfaYTGmjhhrzgoVR54C1TbYW3m2cgnTFmuBlxcwZXvnyS7GRZbHYmyt8C0zoEc6X",
-	"ixUbo0cLG1VnEckeiic66DZBKOBJ4RVCGuHA++XO/X0sc0AI5FdMRN7OXkh5d1DIRHw5xRAQC0/FkvBf",
-	"EpEpqsYoUGXF0MdQMYKKPfe9/aK8N7dUe+s7yQOEhtEUmndq18VGb6lFS3HrU+4L0ctjbMGXR9mCL+9g",
-	"C04i2hYHAFszU3+/KB+CigqQ9iudMZ7k/0rMh1kg6Pnl/hLQRde3Digah7LnoGWl8Vrb0bh6v3b9frCJ",
-	"YS/fthdvCrNlj2bw7oumFryFIu7ETsKFxbIXbtU3v3djaAo10ilsbWiMXeetCmteIwBjMNXhXvGrDu/Z",
-	"0F5qL+I6BpAKCy4p4S3KkwWBhpNGsDFYCwezPJu3l1f3yjP18lzQYr/sLnpPH76ov3zk3Hpd3a7oSGVC",
-	"WorSesmPGoYKge759BIgpW4jgJY8/D2bi7FGUbFSaz4esljzcSDf7pQ9xz2PTtsfzNa3NoMJu3PvUSNn",
-	"P2G/+bFe/qp+ZxXzRqnzzZXaztP6y5/sfy06O6u1L38SdjBZVVgQra98Xd+qVLcvV7fL1e0f7KUb1bdL",
-	"tbVZtl17+Vl155EnxsM1+/kql9+VYe/OQ/fZymx9/gffl7hg2l7i0sWKpVvaKPc0REWmCYpQ3Oxw1p84",
-	"TzY5QLlaqpXHtev3XW0wmidGTXJSXFWPBoLA3URFztG+T+iMg1lVlBNO4HjFxZf4gkv8jieHILHUffqq",
-	"w3IDzO8pFkZ0ath1ZJx7n4n+Aqf63PArPEpi0ZKB0T8Bm5VgymEFGikvlSDg5RaeuUn+Q//WYFSl6Wl2",
-	"dMcMPnKiU6AwzUININVfdQrqRaTDj4ruhxnF0Nqoes9TfYNnU8OWaRrYDfUs7BIoUWrms9me3j9kcplc",
-	"pid/Onc6lyXeW9PtnvizEiIpRFIgRdigR4pAPA5xqoUP/ywjpSUVKVAnkAcMTKA+EyglmOrN5NpFmJiY",
-	"yAD2NGPgYtZbSrLnzvZ//Mnwx6d6M7lMiWrMs1OINfLp2DDE48wr+DTIBCgWIc4gI8teyboKRVQVqUJK",
-	"S+MQE76vnkyOuTcT6sBEUl76H1cdUloyAS0xM2eBibLjPV6tKhvITItQAPb61Tf28k3Gkx81iVFnjVH9",
-	"bEHKS3+CtM9Ef+3pZwS948w4eqMyhF2jDCwXLcjiak+JgbpN8y6h2IJpb86p88TMdIeRmdB+Xn7nLLxp",
-	"HF6RVDznjhMpdMIuCatWjEmaB3vsE+fWxt56uf7qil3ejWDemtbHMR1p+hVm2N5czj9ckLstYJoqUpil",
-	"sp8TV7BLAXrJIpy2ITN3q61Oyy/5JQqTgkUSgWMaYW5C5OBrO9ecb9cD5T9iaRrAUxEIpaDIcMCll0bc",
-	"FW3AJyxolOkk88MGodFdHPfWC8F+0CBB3PMY9LNJqVEcO2MUproySJJSabOLJVBVUN76szfOiy9DKJ7+",
-	"DYImEN4nxExQERw5bZhps2wCuNBJGbOru4OnbGEa7yr9YOAD8pVCj+RFFt04xN+ib2qJzZI6p4C1Y5xT",
-	"Gyji4GZi5C7NKqxCK5sGr3aLHVRt5w4vui3ctXcqzosN++mK/dNrF93v7jqvZuzL3zvlx9Gua5Aza1aD",
-	"j9h7RY/3Rer2d+THYoruSf3a+g+8QFtbm/UmA0SgSwwLH4ge6GQN4C8gFQPS5MUC2W8Wyf5IZzQ82xpg",
-	"vPvVEY1eVaJ94vaIoSka8D0OoAxXaA8Xi1EY2A/0CrxfFA246na5Vnlsb39pr1f43FZStHmtqCMGWWDy",
-	"9zhgS9DfO1xwCe29H2SprBcYDSyez7E2fFJE8fbiEQOqbXDlOIAq3LY9XEy1mnpfYPJ7fTGZ5fZcbetW",
-	"Yig1CB4tmlrGiY8Fllq6soeLo4aJ9wMhzG7lGPz4Q8n1V1ftu98mBRK/7I8YRc3B7uMRP4X664eMo5Cp",
-	"9wMowhqzcZnktS4cEm/zHnWpqzHBfhxwFOicH3YyeC25HyITwGxgJq40Wrt+31lYaRVhsVZ53KlYGmg7",
-	"H32ttHXU/FigqK2rvy8oNe0oBlQn0/tAc8EkhBfq2G+q7rxxNnYbY2jiKmpjjiBZAbUxOd5VX+eDKsWy",
-	"YYDzSKcDzd51SPpA7z2Gij84f2Bl8EmEAwvVOs5/YKkC3wfobKKkX5uf3tf35uPHJEXCt395+vddd28d",
-	"B0paeA86CGHJvdWDRPmk3qwra5Z3XfmPC5AOvslZnLe31lIs9U7V1mYbPzkQ7656BwAFgd9OIGGv1Tai",
-	"wBi4ByIVi5auj8wHBpJEI4qC355IMJkovOtYKbJlCIbtJTj+cmHEVVI7pDob3kcZ/0bJNOeBx3378jGR",
-	"bFY1FKCWDELzp3One10x/xMAAP//2C9xNuZFAAA=",
+	"H4sIAAAAAAAC/+RcbXMTR/L/Kqr9/19AlZBk7onSqxg7d0cdJC47dXdVnGtrvBpLk+wTM7N+OMpVdmLH",
+	"DtjYPp7BBJuDkEqBgRQPjmzIl9Gu5Ff5Clc7syutdmdXK2MTgt+Bdqe7p/s33T3dvT4vKYZmGjrUKZGK",
+	"5yWiVKAG2D8VQ9MMPddrokFITPeXEiQKRiZFhi4Vpd6BU876vD3/tX15ya5ecdZ37J1lKSuZ2DAhpgh6",
+	"VEowurbPKMEMIhlagRkMiWnoBGbcV/+lf9TfejPDSdcvvHSmZ+rrM1JWghNAM1UoFXsKhcLxrEQnTSgV",
+	"JaRTWIZYmspKJUBBlGM/oCDC0X1VyNG5+tRZ2nSpaZAQUBZs4Qx/EKHpLRCTfbngzDwJ7kKCGBs4g+E5",
+	"CxKaMQEGGqQQS82dEYqRXpamppq/GCOfQ4W6wnkm6qsApJ/qd2WEuqVJxbNST6HQIw2HiWSliWPuG8fG",
+	"ANaB5lrorDT06eneT3ql4amsBHWK6GSu/+N/ygMqoKMG1oJEB8FkCVmalPX/lek7feZMSjb9cKK1vvUf",
+	"mZNoMf/M+ALqfzXUEsQu73Y0jQAV6IrAGrXt/9pbM7XXN3fv3ckcsR9frz/6rrb1IwflLzuLuzM/23NL",
+	"9R/f2NXvalv37PvPjkZVnJUqjK8MSiUMCYmycRZnnLVvGtNz9tpT+8505shJQOAfTtR3rtXXZ+q3ZpuM",
+	"j6YzoGf33EkDY2Mc4n8gWilhMD4Iz0U3DzTD0qlAqOUVe/mac/Xp7r07kuhEKC4+ZFRyl/4/hqNSUfq/",
+	"fOvc571Dnw/BaSorjQFLpfHqYI+5KkTaHPd2wy0ZEdp59KZWrQoV5eoFYVhygeNtO7CNsFxtnIYT1NyH",
+	"IaBwwDDUXr10Gp2zUAnRSaGyfx2dhbYeu+OkTfZD0yCIdgehC1cbL2Z37905Utt+wFg1vl1qvJhtPH9o",
+	"b800Njdq26+O7jO2kD4GCTVwnDS1ajUeWvuoZBG+mrJ1o/g/Ix3oCtLLg5YKo7qHEwokRB619BIGiCC9",
+	"LGNAkSGPmIIdNF7O2RfvOk+u1N5cdF8Q6X7UZygrFsZQVyaZnAJiAWPG67RFrgRBSUU620QSW0IBpjJF",
+	"WsybmqtPpkoN6lQeAQTKUaEFAFibtp8uN0Ep3LyJkQLTk4ziWUiVAlyGVOaYSE+9fnvTWZ/nPMQCh0AX",
+	"Z7rUOuukgLRbSQI095CAwoP2kAfgBQdhCULtfYmjH5yvG4KUqrA79V59uju//B4lKF3nGYkKsUa0mKC7",
+	"990RqJdikqda9X4iaAgq6zKdYOf+j78XeKzHb+yVpVr1vnPjcu315WbimuELeEYrIkwnZI2UY+nab+Y4",
+	"ae8K1UWK4+02InuYZ6IZxoE5gKEJcHfgtB/fsOcehCHa2vXbHH3TorKG4rnyu0u8Kd2IYFi+J49S2b25",
+	"Yi+85DHTXn5iz606S/fs+Wr91mz8hgyLJsgVINFJOjNwUUzSjOhu2Qbxd+/3mgqI6LhdP4FNBlCa3jew",
+	"K+1pYOlKZZ8dRCugY0uFsl/6AKr66ahUPJtMTpy3Tg1nhalT7ecNZ+YJwyPQQRmy7GRvDJk+zjAqAnb1",
+	"zY36ytctdtR9W9YgBW/FDlIgYMaI23NfcW/lM433USKFRzUSFbojPDx1RCseXmUgLqN1FlbsC3ftlUvu",
+	"aY+/U7v7NlVjUkTIXl5tbCzGLONbE6ziZrJXb3Q8fM0tBIRoEe6sGciN3q4XruASVJAGVPaLBiaQZmlS",
+	"seeEMLNnC3TQdlcJhDX2mExqI4aa8IKFUeeENSRbG+8QpyBdsSZ4WTF3kle+/FJsbFksMXJFo8C4HuN8",
+	"uViJOXq8sHF1FpHskXyig25TpAKeFF4hpJkOvFvu3N8nMgeEQB5iYu7t7IWMF4MiJuLLKYaAWHgykYT/",
+	"kohMWTVGgCorhj6KyjFU7Lnv7WfTu3NL9de+k3yL1DCeQiumdl1s9JZatJK0PuO+EL88wRZ8eZwt+PIO",
+	"tuAk4m3xFmBr3dTfLcoHoaICpP1KZ4xf8n8l5kMsEfT8cl8F6KLwrQOKxqDsOWhZab4WOhqX7tav3A02",
+	"MezlG/biNeFt2aMZjH3x1IJRKCYmdhIuKpa9cL2x8b2bQ1OokU5pa1NjLJy3K6wVRgDGYLJDXPGrDu/Y",
+	"0N7VXsR1FCAVllxSwijKLwsCDafNYBOwFk1m+W3eXl7dnZ5pTM8FLfbLzqL39P6zxvMHzvWXta2qjlQm",
+	"pKUo7UF+xDBUCHTPp1cAqXSbAbTdw9+xuRhrFJcrtd/HIxZrPQ7ctzvdnpOex1/b7802NjeCF3bnzoPm",
+	"nf2I/erHxvRXjZurmDdKnW8u1rcfN57/ZP9n0dlerX/5k7CDyarCgmx95evGZrW2daG2NV3b+sFeulp7",
+	"vVS/Ncu2ay8/qW0/8MS4f8t+usrld2XYvXnffbYy25j/wfclLpi2lrh0iWLpljbCPQ1RkWmCMhQ3O5y1",
+	"R86jDQ5QrpZa9WH9yl1XG4zmkRGTHBVX1eOBIHA3cZlzvO8TOuPgrSrOCadwvOLiS3LBJXnHE4OQWOoe",
+	"fdV+uQHm9xQLIzo55Doyzr3XRH+Dk71u+hUdJbFoxcDo34DNSjDlsAKNVJQqEPByC7+5Sf5DP2owqtLU",
+	"FDu6owYfOdEpUJhmoQaQ6q86BvUy0uFHZffHnGJoIare80zvwKnMkGWaBnZTPQu7BCqUmsV8vuf4n3KF",
+	"XCHXUzxROFHIE++tqbAn/qyCSAaRDMgQNuiRIRCPQZxp48N/y0lZSUUK1AnkCQMTqNcESgVmjucKYRHG",
+	"x8dzgD3NGbic95aS/OlTfR9/MvTxseO5Qq5CNebZKcQa+XR0COIx5hV8GmQclMsQ55CRZ6/kXYUiqopU",
+	"IWWlMYgJ31dPrsDcmwl1YCKpKP3OVYeUlUxAK8zMeWCi/FiPV6vKB26mZSgAe+PSK3v5GuPJj5rEqLPG",
+	"qH6qJBWlv0Daa6K/9/Qxgt5xZhy9URnCwigDyzkLsrzaU2KgbtOKJRRbMOvNOXWemJnqMDIT2c/z75yF",
+	"V83DK5KK37mTRIqcsPPCqhVjkuXJHvvFub6+uzbdeHHRnt6JYd5+rU9iOtzyK8ywxwsF/3BB7raAaapI",
+	"YZbKf05cwc4H6KXLcEJDZu5W252WX/JLlSYFiyQCxzTM3ITIwde3LzvfrgXKf8TSNIAnYxBKQZnhgEsv",
+	"DbsrQsAnLGmU6QTzwwah8V0cN+pFYD9gkCDueQ762YTULI6dNEqTXRkkTam01cUSqCoob+PJK+fZlxEU",
+	"T/0GQRNI71NiJqgIjpwQZkKWTQEXOiFjFro7eMo2psmu0k8G3iNfKfRIXmbRjUP8LfqmttwsrXMKWDvB",
+	"OYVAkQQ3V+Q8DwJ81pF0AJyzOG9v3sqwXDrj5uP+BGSziCfGYD+gIDDKSaIoDGVMjIGbEWcSo6dXgPvN",
+	"YiVVxUQwCpuiUCJ0Vaw91JaTs70Es/Gzw66SwqDqbHgfZ7zBFUSZiZFLK6+wPoBsGrynIg6D9e2bvLS7",
+	"cNverjrP1u3HK/ZPL10f+ua282LGvvC9M/0wPkAOcGatnsMBx8j4IdLYE/wBRcuE1k5aSK79wNsA9Vuz",
+	"3vyJyLWlhoUPQw90sgbwF5CKAWnykpTstyRlf3A4Hp6hNivvsXZEo1f7Cs91HzA0RWPkhwGU0T7A/mIx",
+	"DgN7gV6JdyXjAVfbmq5XH9pbX9prVT4dmBZtXsPzgEEWmC8/DNgSdJH3F1xCe+8FWSrrOMcDi1cN2LBH",
+	"WkTxJvYBAyo0HnUYQBUdDthfTLWbek9g8jvKCfWLrbn65vXUUGoSPFg0tQ2tHwostfX+9xdHTRPvBUKY",
+	"ReUE/Pij740Xl+zb36YFEg/2B4yi1ucDhyN/ikxx7DOOIqbeC6AIa/8n3SQvd+GQ+DDBQRdUm99JHAYc",
+	"BeYz9vsyeDm9HyLjwGxiJqkAX79y11lYaRdhsV592KkkHxhuOPiKfPsHDYcCRaHZkT1BqWVHMaA6md4H",
+	"mgsmIbxQx65mbfuVs77ToU7anFZJV6Zvfp/QVffwvSr4s5GTM0in/a0JiYj0gQmPBCpy19XgGGp83uWt",
+	"hWr/aOStpQp8ddLZRGn/OMPUnv46Q/Iwrkj48Cf6H3Z3p33oLG17J+gghI2ddg8S9kmsqI/HfH/Bx0Ty",
+	"edVQgFoxCC2eKJw47rL+XwAAAP//gYWPXuZFAAA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
