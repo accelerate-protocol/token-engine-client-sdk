@@ -192,7 +192,7 @@ type OffChainDeposit struct {
 	ReceiverAddress  string `json:"receiver_address"`   //vault token 接收地址
 	VaultTokenAmount string `json:"vault_token_amount"` //获得的vault token数量
 	AssetTokenAmount string `json:"asset_token_amount"` //花费的U的数量
-	VaultAddress     string `json:"vault_address"`      //vault合约地址
+	VaultAddress     string `json:"vault_address"`      //vault合约地址，暂未使用
 }
 
 type OffChainRedeem struct {

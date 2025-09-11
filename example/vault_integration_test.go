@@ -74,7 +74,7 @@ func TestAddVaultDeployerIntegration(t *testing.T) {
 	t.Logf("交易签名成功，准备提交交易")
 	// 4. 调用 /api/v1/common/submit_tx 接口提交交易
 	submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
-		ChainId:      client.CommonChainID(req.ChainId),
+		ChainId:      req.ChainId,
 		Sender:       req.OwnerAddress,
 		TxMsgBase64:  prepareResp.TxMsgBase64,
 		SignTxBase64: signedTx,
@@ -802,7 +802,7 @@ func offchainDeposit(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddres
 	require.NotNil(t, mqMessageInterface)
 
 	// 类型断言
-	mqMessage, ok := mqMessageInterface.(*client.VaultInvest)
+	mqMessage, ok := mqMessageInterface.(*client.OffChainDeposit)
 	require.True(t, ok, "MQ 消息类型断言失败")
 
 	// 6. 验证 MQ 消息内容
