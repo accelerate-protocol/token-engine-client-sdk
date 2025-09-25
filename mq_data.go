@@ -6,7 +6,7 @@ import "encoding/json"
 type MessageType uint
 
 const (
-	MessageTypeVaultLaunch         MessageType = iota //vault 发行
+	MessageTypeRBFVaultLaunch      MessageType = iota //rbf模式的vault 发行
 	MessageTypeVaultInvest                            //vault 投资
 	MessageTypeVaultOffChainInvest                    //链下认购
 	MessageTypeVaultWithdraw                          //vault 融资成功后的提款
@@ -29,6 +29,8 @@ const (
 
 	MessageTypeOldVaultDividend //旧版vault派息
 	MessageTypeOldVaultClaim    //旧版vault 用户领取分红
+
+	MessageTypeFundVaultLaunch // fund 模式的vault发行
 )
 
 type Message struct {
@@ -195,7 +197,7 @@ type OffChainDeposit struct {
 	ReceiverAddress  string `json:"receiver_address"`   //vault token 接收地址
 	VaultTokenAmount string `json:"vault_token_amount"` //获得的vault token数量
 	AssetTokenAmount string `json:"asset_token_amount"` //花费的U的数量
-	VaultAddress     string `json:"vault_address"`      //vault合约地址
+	VaultAddress     string `json:"vault_address"`      //vault合约地址，暂未使用
 }
 
 type OffChainRedeem struct {

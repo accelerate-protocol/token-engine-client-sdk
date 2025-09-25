@@ -1627,7 +1627,7 @@ func (test *VaultLaunchIntegrationTest) validateTokenTransferReceipt(t *testing.
 }
 
 // validateVaultOffChainInvestMQMessage 验证 VaultOffChainInvest MQ 消息
-func (test *VaultLaunchIntegrationTest) validateVaultOffChainInvestMQMessage(t *testing.T, mqMessage *client.VaultInvest, req *client.RequestOffChainDepositReq, txHash string) {
+func (test *VaultLaunchIntegrationTest) validateVaultOffChainInvestMQMessage(t *testing.T, mqMessage *client.OffChainDeposit, req *client.RequestOffChainDepositReq, txHash string) {
 	// 验证基础数据
 	assert.Equal(t, txHash, mqMessage.TxHash)
 	assert.True(t, mqMessage.Success)
