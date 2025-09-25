@@ -6,7 +6,7 @@ import "encoding/json"
 type MessageType uint
 
 const (
-	MessageTypeRBFVaultLaunch      MessageType = iota //rbf模式的vault 发行
+	MessageTypeVaultLaunch         MessageType = iota //vault 发行
 	MessageTypeVaultInvest                            //vault 投资
 	MessageTypeVaultOffChainInvest                    //链下认购
 	MessageTypeVaultWithdraw                          //vault 融资成功后的提款
@@ -29,8 +29,7 @@ const (
 
 	MessageTypeOldVaultDividend //旧版vault派息
 	MessageTypeOldVaultClaim    //旧版vault 用户领取分红
-
-	MessageTypeFundVaultLaunch // fund 模式的vault发行
+	MessageTypeFundVaultLaunch  //fund发行
 )
 
 type Message struct {
