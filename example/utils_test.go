@@ -589,7 +589,7 @@ func (test *VaultLaunchIntegrationTest) waitForMQMessage(t *testing.T, txHash st
 
 		// 根据消息类型处理
 		switch msg.Type {
-		case uint(client.MessageTypeVaultLaunch):
+		case uint(client.MessageTypeRBFVaultLaunch):
 			// 解析 VaultLaunch 消息
 			var vaultLaunch client.VaultLaunch
 			if err := msg.DecodeData(&vaultLaunch); err != nil {
@@ -598,7 +598,7 @@ func (test *VaultLaunchIntegrationTest) waitForMQMessage(t *testing.T, txHash st
 			}
 
 			// 检查是否是我们要等待的交易
-			if vaultLaunch.TxHash == txHash && uint(messageType) == uint(client.MessageTypeVaultLaunch) {
+			if vaultLaunch.TxHash == txHash && uint(messageType) == uint(client.MessageTypeRBFVaultLaunch) {
 				t.Logf("找到匹配的 VaultLaunch 交易消息: %s", txHash)
 				select {
 				case messageChan <- &vaultLaunch:
@@ -726,7 +726,7 @@ func (test *VaultLaunchIntegrationTest) waitForMQMessage(t *testing.T, txHash st
 		t.Logf("等待 MQ 消息超时")
 		// 返回模拟消息用于测试
 		switch messageType {
-		case client.MessageTypeVaultLaunch:
+		case client.MessageTypeRBFVaultLaunch:
 			return &client.VaultLaunch{
 				BaseData: client.BaseData{
 					CorrelationId: "test-correlation-id",

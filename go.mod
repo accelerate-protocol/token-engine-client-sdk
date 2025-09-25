@@ -5,7 +5,7 @@ go 1.24.4
 require (
 	github.com/ethereum/go-ethereum v1.16.2
 	github.com/gagliardetto/binary v0.8.0
-	github.com/gagliardetto/solana-go v1.13.0
+	github.com/gagliardetto/solana-go v1.12.0
 	github.com/getkin/kin-openapi v0.132.0
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/oapi-codegen/runtime v1.1.1

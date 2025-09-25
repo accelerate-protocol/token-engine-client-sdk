@@ -111,33 +111,52 @@ func TestVaultDeposit(t *testing.T) {
 	test := NewVaultLaunchIntegrationTest(serverUrl, t)
 
 	testCases := []struct {
-		name     string
-		sender   Signer
-		receiver Signer
-		amount   string
+		name      string
+		vaultType client.CommonVaultType
+		sender    Signer
+		receiver  Signer
+		amount    string
 	}{
 		{
-			name:     "单链支付，用户1质押给自己",
+			name:     "RBF模式下，单链支付，用户1质押给自己",
 			sender:   users[0],
 			receiver: users[0],
 			amount:   parseUsd(1000), // 1000 USDC
 		},
 		{
-			name:     "多链支付,用户1(多链账户)质押给用户2",
+			name:     "RBF模式下，多链支付,用户1(多链账户)质押给用户2",
 			sender:   users[0],
 			receiver: users[1],
 			amount:   parseUsd(1000), // 1000 USDC
+		},
+		{
+			name:      "Fund模式下，单链支付，用户1质押给自己",
+			sender:    users[0],
+			receiver:  users[0],
+			amount:    parseUsd(1000), // 1000 USDC
+			vaultType: client.VaultTypeFund,
+		},
+		{
+			name:      "Fund模式下，多链支付,用户1(多链账户)质押给用户2",
+			sender:    users[0],
+			receiver:  users[1],
+			amount:    parseUsd(1000), // 1000 USDC
+			vaultType: client.VaultTypeFund,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Logf("开始执行测试用例: %s", tc.name)
 		// 1. 创建 Vault, 只测试质押功能，募集期设置为24小时
-		vaultMsg := createVault(t, test, 24*time.Hour)
+		var vaultMsg *client.VaultLaunch
+		switch tc.vaultType {
+		case client.VaultTypeFund:
+			vaultMsg = createVault(t, test, 24*time.Hour, withVaultType(client.VaultTypeFund))
+		default:
+			vaultMsg = createVault(t, test, 24*time.Hour)
+		}
 		vaultAddr := vaultMsg.VaultAddress
 		deposit(t, test, vaultAddr, tc.amount, tc.sender, tc.receiver)
-
-		t.Logf("✅ VaultDeposit 集成测试完成")
 	}
 }
 
@@ -446,7 +465,22 @@ func TestErc20Balance(t *testing.T) {
 	}
 }
 
-func createVault(t *testing.T, test *VaultLaunchIntegrationTest, fundingDuration time.Duration) *client.VaultLaunch {
+// vaultLaunchOption 定义vault
+type vaultLaunchOption func(*vaultLaunchOptions)
+
+// vaultLaunchOptions 定义vault配置选项
+type vaultLaunchOptions struct {
+	vaultType client.CommonVaultType
+}
+
+// withVaultType 设置vault类型
+func withVaultType(vaultType client.CommonVaultType) vaultLaunchOption {
+	return func(opts *vaultLaunchOptions) {
+		opts.vaultType = vaultType
+	}
+}
+
+func createVault(t *testing.T, test *VaultLaunchIntegrationTest, fundingDuration time.Duration, options ...vaultLaunchOption) *client.VaultLaunch {
 	t.Logf("开始 VaultLaunch 集成测试")
 
 	// 1. 准备 VaultLaunch 请求
@@ -488,6 +522,20 @@ func createVault(t *testing.T, test *VaultLaunchIntegrationTest, fundingDuration
 		},
 	}
 
+	opts := &vaultLaunchOptions{}
+	for _, option := range options {
+		option(opts)
+	}
+	vaultType := opts.vaultType
+	vaultCreateReq.VaultType = &vaultType
+	if vaultType == client.VaultTypeFund {
+		minAmount := parseUsd(10)
+		vaultCreateReq.FundExtraData = &client.RequestFundExtraData{
+			StartTime:           intPtr(int(time.Now().Add(fundingDuration).Unix())),
+			MinRedemptionAmount: &minAmount,
+		}
+	}
+
 	// 2. 调用 /api/v2/primary/vault/prepare_create 接口
 	prepareResp := test.callPrepareCreateVault(t, vaultCreateReq)
 	require.NotNil(t, prepareResp)
@@ -517,7 +565,7 @@ func createVault(t *testing.T, test *VaultLaunchIntegrationTest, fundingDuration
 	t.Logf("交易提交成功，TxHash: %s", submitResp.TxHash)
 
 	// 5. 等待 MQ 推送
-	mqMessageInterface := test.waitForMQMessage(t, submitResp.TxHash, client.MessageTypeVaultLaunch)
+	mqMessageInterface := test.waitForMQMessage(t, submitResp.TxHash, client.MessageTypeRBFVaultLaunch)
 	require.NotNil(t, mqMessageInterface)
 
 	// 类型断言
