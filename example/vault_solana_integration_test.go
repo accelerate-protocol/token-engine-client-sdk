@@ -535,6 +535,7 @@ func (test *SolanaVaultIntegrationTest) generateSolanaTestVaultRequest(t *testin
 	// 使用当前时间戳生成唯一的项目名称
 	timestamp := time.Now().Unix()
 	projectName := fmt.Sprintf("SolanaTestVault_%d", timestamp)
+	t.Logf("项目名称: %s", projectName)
 
 	return &client.RequestVaultCreateReq{
 		ChainId: client.SOLANA, // 使用 Solana 链 ID
@@ -552,8 +553,8 @@ func (test *SolanaVaultIntegrationTest) generateSolanaTestVaultRequest(t *testin
 			ProjectName:                        projectName,
 			FinancingCurrencyAddr:              test.config.Solana.Tokens.USDC,                          // 使用新的配置路径
 			MinInvestmentBaseFinancingCurrency: "100000000",                                             // 100 USDC (6 decimals)
-			SoftCap:                            "10000000000",                                           // 10,000 USDC 软顶
-			TokenMaxSupply:                     "1000000000000",                                         // 1M vault tokens
+			SoftCap:                            "500000000",                                             // 10,000 USDC 软顶
+			TokenMaxSupply:                     "1000000000",                                            // 1M vault tokens
 			SharePrice:                         stringPtr("1000000"),                                    // 1 USDC per share
 			ManageFeeBps:                       stringPtr("100"),                                        // 1% 管理费
 			ExcessFundraisingRatioBps:          stringPtr("1000"),                                       // 10% 超募比例
@@ -758,7 +759,7 @@ func TestSolanaVaultCreate(t *testing.T) {
 			SignTxBase64: "",
 		}
 
-		signedTxBase64, err := partialSignTx(t, test.creator, txs[0])
+		signedTxBase64, err := signTx(t, test.creator, txs[0])
 		require.NoError(t, err)
 		submitReq.Sender = solanaConfig.Solana.Creator.PublicKey
 		submitReq.SignTxBase64 = signedTxBase64
@@ -895,8 +896,8 @@ func TestSolanaVaultCommonInfo(t *testing.T) {
 		commonInfoReq := &VaultCommonInfoReq{
 			ChainId:      client.SOLANA,
 			VaultAddress: "11111111111111111111111111111111",             // 示例地址，实际应该使用真实的Vault地址
-			InfoType:     "vault_state",                                  // 可选参数
-			InfoId:       "8yg4q5czuZBwffCrbrh1xiRTPYEjmd3MJ7XDU3FbJSoz", // 可选参数
+			InfoType:     "crowdsale_state",                              // 可选参数
+			InfoId:       "6WkutgiSMr4ngcNjirjVRa7ZL7W6DsNgB15K1DEWuofE", // 可选参数
 		}
 
 		t.Logf("生成 Solana Vault 基本信息查询请求:")

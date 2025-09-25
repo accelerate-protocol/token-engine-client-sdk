@@ -92,14 +92,9 @@ const (
 	GetApiV2DividendGetParamsChainIdN1001 GetApiV2DividendGetParamsChainId = "1001"
 )
 
-// Defines values for GetApiV2DividendGetOldParamsChainId.
-const (
-	GetApiV2DividendGetOldParamsChainIdN1001 GetApiV2DividendGetOldParamsChainId = "1001"
-)
-
 // Defines values for GetApiV2PrimaryVaultCommonInfoParamsChainId.
 const (
-	N1001 GetApiV2PrimaryVaultCommonInfoParamsChainId = "1001"
+	GetApiV2PrimaryVaultCommonInfoParamsChainIdN1001 GetApiV2PrimaryVaultCommonInfoParamsChainId = "1001"
 )
 
 // CommonApiResp API标准响应格式
@@ -157,7 +152,8 @@ type RequestAddVaultDeployerWhiteListReq struct {
 	DeployerAddress string `json:"deployer_address"`
 
 	// OwnerAddress creation合约owner
-	OwnerAddress string `json:"owner_address"`
+	OwnerAddress string  `json:"owner_address"`
+	VaultId      *string `json:"vault_id,omitempty"`
 }
 
 // RequestApprovePrepareReq defines model for request.ApprovePrepareReq.
@@ -345,7 +341,8 @@ type RequestOffChainDepositReq struct {
 	Recipient string `json:"recipient"`
 
 	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
+	VaultAddress string  `json:"vault_address"`
+	VaultId      *string `json:"vault_id,omitempty"`
 }
 
 // RequestOffChainRedeemReq defines model for request.OffChainRedeemReq.
@@ -359,32 +356,8 @@ type RequestOffChainRedeemReq struct {
 	Recipient string `json:"recipient"`
 
 	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
-}
-
-// RequestOldVaultClaimRewardReq defines model for request.OldVaultClaimRewardReq.
-type RequestOldVaultClaimRewardReq struct {
-	// Amount 提取数额 uint64
-	Amount  string        `json:"amount"`
-	ChainId CommonChainID `json:"chain_id"`
-
-	// Investor 投资人地址
-	Investor string `json:"investor"`
-
-	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
-}
-
-// RequestOldVaultDistributeDividendReq defines model for request.OldVaultDistributeDividendReq.
-type RequestOldVaultDistributeDividendReq struct {
-	ChainId CommonChainID `json:"chain_id"`
-
-	// RbfAddr Rbf合约地址
-	RbfAddr string `json:"rbf_addr"`
-
-	// UserAddr 管理员地址
-	UserAddr  string `json:"user_addr"`
-	VaultAddr string `json:"vault_addr"`
+	VaultAddress string  `json:"vault_address"`
+	VaultId      *string `json:"vault_id,omitempty"`
 }
 
 // RequestProcessTxReq defines model for request.ProcessTxReq.
@@ -594,7 +567,8 @@ type RequestVaultClaimRewardReq struct {
 	Investor string `json:"investor"`
 
 	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
+	VaultAddress string  `json:"vault_address"`
+	VaultId      *string `json:"vault_id,omitempty"`
 }
 
 // RequestVaultCreateReq defines model for request.VaultCreateReq.
@@ -625,7 +599,8 @@ type RequestVaultDepositReq struct {
 	Signature *string `json:"signature,omitempty"`
 
 	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
+	VaultAddress string  `json:"vault_address"`
+	VaultId      *string `json:"vault_id,omitempty"`
 }
 
 // RequestVaultDistributeDividendReq defines model for request.VaultDistributeDividendReq.
@@ -645,6 +620,7 @@ type RequestVaultDistributeDividendReq struct {
 
 	// VaultAddr Vault地址
 	VaultAddr *string `json:"vault_addr,omitempty"`
+	VaultId   *string `json:"vault_id,omitempty"`
 }
 
 // RequestVaultInitReq defines model for request.VaultInitReq.
@@ -695,7 +671,8 @@ type RequestVaultRedeemReq struct {
 	Signature *string `json:"signature,omitempty"`
 
 	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
+	VaultAddress string  `json:"vault_address"`
+	VaultId      *string `json:"vault_id,omitempty"`
 }
 
 // RequestVaultUnPauseTokenReq defines model for request.VaultUnPauseTokenReq.
@@ -706,7 +683,8 @@ type RequestVaultUnPauseTokenReq struct {
 	Manager *string `json:"manager,omitempty"`
 
 	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
+	VaultAddress string  `json:"vault_address"`
+	VaultId      *string `json:"vault_id,omitempty"`
 }
 
 // RequestVaultWithdrawAssetReq defines model for request.VaultWithdrawAssetReq.
@@ -714,7 +692,8 @@ type RequestVaultWithdrawAssetReq struct {
 	ChainId CommonChainID `json:"chain_id"`
 
 	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
+	VaultAddress string  `json:"vault_address"`
+	VaultId      *string `json:"vault_id,omitempty"`
 
 	// Withdrawer 提款人
 	Withdrawer string `json:"withdrawer"`
@@ -725,7 +704,8 @@ type RequestVaultWithdrawManagerFeeReq struct {
 	ChainId CommonChainID `json:"chain_id"`
 
 	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
+	VaultAddress string  `json:"vault_address"`
+	VaultId      *string `json:"vault_id,omitempty"`
 
 	// Withdrawer 投资人地址
 	Withdrawer string `json:"withdrawer"`
@@ -1136,21 +1116,6 @@ type GetApiV2DividendGetParams struct {
 // GetApiV2DividendGetParamsChainId defines parameters for GetApiV2DividendGet.
 type GetApiV2DividendGetParamsChainId string
 
-// GetApiV2DividendGetOldParams defines parameters for GetApiV2DividendGetOld.
-type GetApiV2DividendGetOldParams struct {
-	// ChainId 链ID
-	ChainId GetApiV2DividendGetOldParamsChainId `form:"chain_id" json:"chain_id"`
-
-	// UserAddr 用户地址
-	UserAddr string `form:"user_addr" json:"user_addr"`
-
-	// Vault Vault
-	Vault string `form:"vault" json:"vault"`
-}
-
-// GetApiV2DividendGetOldParamsChainId defines parameters for GetApiV2DividendGetOld.
-type GetApiV2DividendGetOldParamsChainId string
-
 // GetApiV2PrimaryVaultCommonInfoParams defines parameters for GetApiV2PrimaryVaultCommonInfo.
 type GetApiV2PrimaryVaultCommonInfoParams struct {
 	ChainId  GetApiV2PrimaryVaultCommonInfoParamsChainId `form:"chain_id" json:"chain_id"`
@@ -1272,12 +1237,6 @@ type PostApiV2PrimaryVaultPrepareOffChainDepositJSONRequestBody = RequestOffChai
 
 // PostApiV2PrimaryVaultPrepareOffChainRedeemJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareOffChainRedeem for application/json ContentType.
 type PostApiV2PrimaryVaultPrepareOffChainRedeemJSONRequestBody = RequestOffChainRedeemReq
-
-// PostApiV2PrimaryVaultPrepareOldClaimRewardJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareOldClaimReward for application/json ContentType.
-type PostApiV2PrimaryVaultPrepareOldClaimRewardJSONRequestBody = RequestOldVaultClaimRewardReq
-
-// PostApiV2PrimaryVaultPrepareOldDistributeDividendJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareOldDistributeDividend for application/json ContentType.
-type PostApiV2PrimaryVaultPrepareOldDistributeDividendJSONRequestBody = RequestOldVaultDistributeDividendReq
 
 // PostApiV2PrimaryVaultPrepareRedeemJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareRedeem for application/json ContentType.
 type PostApiV2PrimaryVaultPrepareRedeemJSONRequestBody = RequestVaultRedeemReq
@@ -1460,9 +1419,6 @@ type ClientInterface interface {
 	// GetApiV2DividendGet request
 	GetApiV2DividendGet(ctx context.Context, params *GetApiV2DividendGetParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiV2DividendGetOld request
-	GetApiV2DividendGetOld(ctx context.Context, params *GetApiV2DividendGetOldParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// GetApiV2PrimaryVaultCommonInfo request
 	GetApiV2PrimaryVaultCommonInfo(ctx context.Context, params *GetApiV2PrimaryVaultCommonInfoParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1535,16 +1491,6 @@ type ClientInterface interface {
 	PostApiV2PrimaryVaultPrepareOffChainRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostApiV2PrimaryVaultPrepareOffChainRedeem(ctx context.Context, body PostApiV2PrimaryVaultPrepareOffChainRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostApiV2PrimaryVaultPrepareOldClaimRewardWithBody request with any body
-	PostApiV2PrimaryVaultPrepareOldClaimRewardWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostApiV2PrimaryVaultPrepareOldClaimReward(ctx context.Context, body PostApiV2PrimaryVaultPrepareOldClaimRewardJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostApiV2PrimaryVaultPrepareOldDistributeDividendWithBody request with any body
-	PostApiV2PrimaryVaultPrepareOldDistributeDividendWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostApiV2PrimaryVaultPrepareOldDistributeDividend(ctx context.Context, body PostApiV2PrimaryVaultPrepareOldDistributeDividendJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiV2PrimaryVaultPrepareRedeemWithBody request with any body
 	PostApiV2PrimaryVaultPrepareRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1966,18 +1912,6 @@ func (c *Client) GetApiV2DividendGet(ctx context.Context, params *GetApiV2Divide
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiV2DividendGetOld(ctx context.Context, params *GetApiV2DividendGetOldParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiV2DividendGetOldRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 func (c *Client) GetApiV2PrimaryVaultCommonInfo(ctx context.Context, params *GetApiV2PrimaryVaultCommonInfoParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetApiV2PrimaryVaultCommonInfoRequest(c.Server, params)
 	if err != nil {
@@ -2316,54 +2250,6 @@ func (c *Client) PostApiV2PrimaryVaultPrepareOffChainRedeemWithBody(ctx context.
 
 func (c *Client) PostApiV2PrimaryVaultPrepareOffChainRedeem(ctx context.Context, body PostApiV2PrimaryVaultPrepareOffChainRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiV2PrimaryVaultPrepareOffChainRedeemRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2PrimaryVaultPrepareOldClaimRewardWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2PrimaryVaultPrepareOldClaimRewardRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2PrimaryVaultPrepareOldClaimReward(ctx context.Context, body PostApiV2PrimaryVaultPrepareOldClaimRewardJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2PrimaryVaultPrepareOldClaimRewardRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2PrimaryVaultPrepareOldDistributeDividendWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2PrimaryVaultPrepareOldDistributeDividendRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2PrimaryVaultPrepareOldDistributeDividend(ctx context.Context, body PostApiV2PrimaryVaultPrepareOldDistributeDividendJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2PrimaryVaultPrepareOldDistributeDividendRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3628,75 +3514,6 @@ func NewGetApiV2DividendGetRequest(server string, params *GetApiV2DividendGetPar
 	return req, nil
 }
 
-// NewGetApiV2DividendGetOldRequest generates requests for GetApiV2DividendGetOld
-func NewGetApiV2DividendGetOldRequest(server string, params *GetApiV2DividendGetOldParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/dividend/get-old")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "chain_id", runtime.ParamLocationQuery, params.ChainId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "user_addr", runtime.ParamLocationQuery, params.UserAddr); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "vault", runtime.ParamLocationQuery, params.Vault); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewGetApiV2PrimaryVaultCommonInfoRequest generates requests for GetApiV2PrimaryVaultCommonInfo
 func NewGetApiV2PrimaryVaultCommonInfoRequest(server string, params *GetApiV2PrimaryVaultCommonInfoParams) (*http.Request, error) {
 	var err error
@@ -4327,86 +4144,6 @@ func NewPostApiV2PrimaryVaultPrepareOffChainRedeemRequestWithBody(server string,
 	}
 
 	operationPath := fmt.Sprintf("/api/v2/primary/vault/prepare_off_chain_redeem")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewPostApiV2PrimaryVaultPrepareOldClaimRewardRequest calls the generic PostApiV2PrimaryVaultPrepareOldClaimReward builder with application/json body
-func NewPostApiV2PrimaryVaultPrepareOldClaimRewardRequest(server string, body PostApiV2PrimaryVaultPrepareOldClaimRewardJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostApiV2PrimaryVaultPrepareOldClaimRewardRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostApiV2PrimaryVaultPrepareOldClaimRewardRequestWithBody generates requests for PostApiV2PrimaryVaultPrepareOldClaimReward with any type of body
-func NewPostApiV2PrimaryVaultPrepareOldClaimRewardRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/primary/vault/prepare_old_claim_reward")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewPostApiV2PrimaryVaultPrepareOldDistributeDividendRequest calls the generic PostApiV2PrimaryVaultPrepareOldDistributeDividend builder with application/json body
-func NewPostApiV2PrimaryVaultPrepareOldDistributeDividendRequest(server string, body PostApiV2PrimaryVaultPrepareOldDistributeDividendJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostApiV2PrimaryVaultPrepareOldDistributeDividendRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostApiV2PrimaryVaultPrepareOldDistributeDividendRequestWithBody generates requests for PostApiV2PrimaryVaultPrepareOldDistributeDividend with any type of body
-func NewPostApiV2PrimaryVaultPrepareOldDistributeDividendRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/primary/vault/prepare_old_distribute_dividend")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -5170,9 +4907,6 @@ type ClientWithResponsesInterface interface {
 	// GetApiV2DividendGetWithResponse request
 	GetApiV2DividendGetWithResponse(ctx context.Context, params *GetApiV2DividendGetParams, reqEditors ...RequestEditorFn) (*GetApiV2DividendGetResponse, error)
 
-	// GetApiV2DividendGetOldWithResponse request
-	GetApiV2DividendGetOldWithResponse(ctx context.Context, params *GetApiV2DividendGetOldParams, reqEditors ...RequestEditorFn) (*GetApiV2DividendGetOldResponse, error)
-
 	// GetApiV2PrimaryVaultCommonInfoWithResponse request
 	GetApiV2PrimaryVaultCommonInfoWithResponse(ctx context.Context, params *GetApiV2PrimaryVaultCommonInfoParams, reqEditors ...RequestEditorFn) (*GetApiV2PrimaryVaultCommonInfoResponse, error)
 
@@ -5245,16 +4979,6 @@ type ClientWithResponsesInterface interface {
 	PostApiV2PrimaryVaultPrepareOffChainRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareOffChainRedeemResponse, error)
 
 	PostApiV2PrimaryVaultPrepareOffChainRedeemWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareOffChainRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareOffChainRedeemResponse, error)
-
-	// PostApiV2PrimaryVaultPrepareOldClaimRewardWithBodyWithResponse request with any body
-	PostApiV2PrimaryVaultPrepareOldClaimRewardWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareOldClaimRewardResponse, error)
-
-	PostApiV2PrimaryVaultPrepareOldClaimRewardWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareOldClaimRewardJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareOldClaimRewardResponse, error)
-
-	// PostApiV2PrimaryVaultPrepareOldDistributeDividendWithBodyWithResponse request with any body
-	PostApiV2PrimaryVaultPrepareOldDistributeDividendWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareOldDistributeDividendResponse, error)
-
-	PostApiV2PrimaryVaultPrepareOldDistributeDividendWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareOldDistributeDividendJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareOldDistributeDividendResponse, error)
 
 	// PostApiV2PrimaryVaultPrepareRedeemWithBodyWithResponse request with any body
 	PostApiV2PrimaryVaultPrepareRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareRedeemResponse, error)
@@ -5874,37 +5598,6 @@ func (r GetApiV2DividendGetResponse) StatusCode() int {
 	return 0
 }
 
-type GetApiV2DividendGetOldResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                      `json:"code,omitempty"`
-		Data *ResponseUserDividendResp `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r GetApiV2DividendGetOldResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetApiV2DividendGetOldResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type GetApiV2PrimaryVaultCommonInfoResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -6364,68 +6057,6 @@ func (r PostApiV2PrimaryVaultPrepareOffChainRedeemResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PostApiV2PrimaryVaultPrepareOffChainRedeemResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostApiV2PrimaryVaultPrepareOldClaimRewardResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                     `json:"code,omitempty"`
-		Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r PostApiV2PrimaryVaultPrepareOldClaimRewardResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostApiV2PrimaryVaultPrepareOldClaimRewardResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostApiV2PrimaryVaultPrepareOldDistributeDividendResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                     `json:"code,omitempty"`
-		Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r PostApiV2PrimaryVaultPrepareOldDistributeDividendResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostApiV2PrimaryVaultPrepareOldDistributeDividendResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7093,15 +6724,6 @@ func (c *ClientWithResponses) GetApiV2DividendGetWithResponse(ctx context.Contex
 	return ParseGetApiV2DividendGetResponse(rsp)
 }
 
-// GetApiV2DividendGetOldWithResponse request returning *GetApiV2DividendGetOldResponse
-func (c *ClientWithResponses) GetApiV2DividendGetOldWithResponse(ctx context.Context, params *GetApiV2DividendGetOldParams, reqEditors ...RequestEditorFn) (*GetApiV2DividendGetOldResponse, error) {
-	rsp, err := c.GetApiV2DividendGetOld(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetApiV2DividendGetOldResponse(rsp)
-}
-
 // GetApiV2PrimaryVaultCommonInfoWithResponse request returning *GetApiV2PrimaryVaultCommonInfoResponse
 func (c *ClientWithResponses) GetApiV2PrimaryVaultCommonInfoWithResponse(ctx context.Context, params *GetApiV2PrimaryVaultCommonInfoParams, reqEditors ...RequestEditorFn) (*GetApiV2PrimaryVaultCommonInfoResponse, error) {
 	rsp, err := c.GetApiV2PrimaryVaultCommonInfo(ctx, params, reqEditors...)
@@ -7347,40 +6969,6 @@ func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareOffChainRedeemWithResp
 		return nil, err
 	}
 	return ParsePostApiV2PrimaryVaultPrepareOffChainRedeemResponse(rsp)
-}
-
-// PostApiV2PrimaryVaultPrepareOldClaimRewardWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareOldClaimRewardResponse
-func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareOldClaimRewardWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareOldClaimRewardResponse, error) {
-	rsp, err := c.PostApiV2PrimaryVaultPrepareOldClaimRewardWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2PrimaryVaultPrepareOldClaimRewardResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareOldClaimRewardWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareOldClaimRewardJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareOldClaimRewardResponse, error) {
-	rsp, err := c.PostApiV2PrimaryVaultPrepareOldClaimReward(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2PrimaryVaultPrepareOldClaimRewardResponse(rsp)
-}
-
-// PostApiV2PrimaryVaultPrepareOldDistributeDividendWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareOldDistributeDividendResponse
-func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareOldDistributeDividendWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareOldDistributeDividendResponse, error) {
-	rsp, err := c.PostApiV2PrimaryVaultPrepareOldDistributeDividendWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2PrimaryVaultPrepareOldDistributeDividendResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareOldDistributeDividendWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareOldDistributeDividendJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareOldDistributeDividendResponse, error) {
-	rsp, err := c.PostApiV2PrimaryVaultPrepareOldDistributeDividend(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2PrimaryVaultPrepareOldDistributeDividendResponse(rsp)
 }
 
 // PostApiV2PrimaryVaultPrepareRedeemWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareRedeemResponse
@@ -8210,41 +7798,6 @@ func ParseGetApiV2DividendGetResponse(rsp *http.Response) (*GetApiV2DividendGetR
 	return response, nil
 }
 
-// ParseGetApiV2DividendGetOldResponse parses an HTTP response from a GetApiV2DividendGetOldWithResponse call
-func ParseGetApiV2DividendGetOldResponse(rsp *http.Response) (*GetApiV2DividendGetOldResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetApiV2DividendGetOldResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                      `json:"code,omitempty"`
-			Data *ResponseUserDividendResp `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParseGetApiV2PrimaryVaultCommonInfoResponse parses an HTTP response from a GetApiV2PrimaryVaultCommonInfoWithResponse call
 func ParseGetApiV2PrimaryVaultCommonInfoResponse(rsp *http.Response) (*GetApiV2PrimaryVaultCommonInfoResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -8744,76 +8297,6 @@ func ParsePostApiV2PrimaryVaultPrepareOffChainRedeemResponse(rsp *http.Response)
 	}
 
 	response := &PostApiV2PrimaryVaultPrepareOffChainRedeemResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                     `json:"code,omitempty"`
-			Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostApiV2PrimaryVaultPrepareOldClaimRewardResponse parses an HTTP response from a PostApiV2PrimaryVaultPrepareOldClaimRewardWithResponse call
-func ParsePostApiV2PrimaryVaultPrepareOldClaimRewardResponse(rsp *http.Response) (*PostApiV2PrimaryVaultPrepareOldClaimRewardResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostApiV2PrimaryVaultPrepareOldClaimRewardResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                     `json:"code,omitempty"`
-			Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostApiV2PrimaryVaultPrepareOldDistributeDividendResponse parses an HTTP response from a PostApiV2PrimaryVaultPrepareOldDistributeDividendWithResponse call
-func ParsePostApiV2PrimaryVaultPrepareOldDistributeDividendResponse(rsp *http.Response) (*PostApiV2PrimaryVaultPrepareOldDistributeDividendResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostApiV2PrimaryVaultPrepareOldDistributeDividendResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

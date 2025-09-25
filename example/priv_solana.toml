@@ -5,7 +5,7 @@ url = "http://localhost:8082"
 [solana]
 chain_id = "1001"                 # Solana chain ID
 cluster = "devnet"                # devnet, testnet, mainnet-beta
-rpc_url = "http://127.0.0.1:8899" # Local Solana RPC URL for testing
+rpc_url = "https://devnet.helius-rpc.com/?api-key=39eae673-f350-4ed8-9e8c-a511ae4f19cf" # Local Solana RPC URL for testing
 ws_url = "ws://127.0.0.1:8900"    # Local Solana WebSocket URL for testing
 
 # Solana admin account (deployer/manager)
@@ -17,8 +17,8 @@ public_key = "4rtDRTkYLMUCoCbGyudoLqFm5VovGijLKktT25tgesNm"
 
 # Solana test users
 [solana.deployer]
-private_key = "4SLgbtj99NG3zYQ3yrntCAVgJkD4jzSjm41qYRzXsRT1eir9cdJynybcWNDE44CUCGTn82Q6MmwAdBXwbuuXtbjB"
-public_key = "CMRoQSvKgtSDYaAovdm2VoQR5JDfY7Wqyb3ektiDZa7F"
+private_key = "23qTr7wk1ag7HYvnSReKYug5mdnJVn4Qyn7a1QYCagJBRYipRjyDfsc9z1jCbvzKZ4GvwBWDENkuYr1NrGzFuHBx"
+public_key = "8uGYtsUgU3RnD5mABbbKnnqz8hsq13UjAsboGx3pxBEz"
 
 [solana.creator]
 private_key = "55pxM858gTbmdFbkdzD67xsafXk8NFrb6NC5cJcDqWRNsqTef4A2NJx9tEbVDeAAgCQQpCoxEjbn1cM3TxS7VPvd"
@@ -35,7 +35,7 @@ public_key = "5AXbixRhHhTaaV32zge3U6NVEX2F9LBm3AxV2tspLHXn"
 # Solana token addresses (for testing)
 [solana.tokens]
 # USDC on Solana devnet
-usdc = "BLhoZsP8QKq1Ekk1XELAkQ1p4dYc2PmAQkD6sP34jweG"
+usdc = "FFr2L8N6ugjCcViBD7JRECkJvDZPBWj768nF7q7DkFNh"
 
 # Native SOL (wrapped)
 wsol = "So11111111111111111111111111111111111111112"
