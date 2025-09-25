@@ -35,7 +35,7 @@ public_key = "5AXbixRhHhTaaV32zge3U6NVEX2F9LBm3AxV2tspLHXn"
 # Solana token addresses (for testing)
 [solana.tokens]
 # USDC on Solana devnet
-usdc = "FFr2L8N6ugjCcViBD7JRECkJvDZPBWj768nF7q7DkFNh"
+usdc = "BRDKroAM7iefCqWGP41Y8DWHq32tDLuq9xXiSCs5STQd"
 
 # Native SOL (wrapped)
 wsol = "So11111111111111111111111111111111111111112"

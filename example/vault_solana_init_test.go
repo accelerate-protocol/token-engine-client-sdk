@@ -25,7 +25,7 @@ import (
 
 var env *SolanaVaultIntegrationTest
 
-var MAX_SUPPLY = uint64(1000000000)
+var MAX_SUPPLY = uint64(1000000000000)
 
 func Test_VaultSolanaInit(t *testing.T) {
 	// 加载配置
@@ -199,17 +199,75 @@ func Sign(tx *solana.Transaction, privKey *solana.PrivateKey) ([]solana.Signatur
 	if err != nil {
 		return nil, fmt.Errorf("unable to encode message for signing: %w", err)
 	}
-	if len(tx.Signatures) == 0 {
-		// Initialize the Signatures slice to the correct length if it's empty
-		tx.Signatures = make([]solana.Signature, 0)
+	// 获取需要签名的账户数量
+	numRequiredSignatures := int(tx.Message.Header.NumRequiredSignatures)
+	// 如果签名数组为空或长度不正确，初始化为正确长度
+	if len(tx.Signatures) != numRequiredSignatures {
+		tx.Signatures = make([]solana.Signature, numRequiredSignatures)
+	}
+	// 找到当前私钥对应的公钥在账户列表中的位置
+	publicKey := privKey.PublicKey()
+	signerIndex := -1
+	// 在需要签名的账户中查找当前公钥的位置
+	for i := 0; i < numRequiredSignatures; i++ {
+		if i < len(tx.Message.AccountKeys) && tx.Message.AccountKeys[i].Equals(publicKey) {
+			signerIndex = i
+			break
+		}
+	}
+	if signerIndex == -1 {
+		return nil, fmt.Errorf("public key %s not found in required signers", publicKey.String())
+	}
+	// 生成签名
+	signature, err := privKey.Sign(messageContent)
+	if err != nil {
+		return nil, fmt.Errorf("failed to sign with key %q: %w", publicKey, err)
+	}
+	// 将签名放在正确的位置上
+	tx.Signatures[signerIndex] = signature
+	return tx.Signatures, nil
+}
+
+// SignMultiple 为交易添加多个签名，确保签名按正确顺序排列
+func SignMultiple(tx *solana.Transaction, privateKeys []*solana.PrivateKey) ([]solana.Signature, error) {
+	messageContent, err := tx.Message.MarshalBinary()
+	if err != nil {
+		return nil, fmt.Errorf("unable to encode message for signing: %w", err)
 	}
 
-	s, err := privKey.Sign(messageContent)
-	if err != nil {
-		return nil, fmt.Errorf("failed to signed with key %q: %w", privKey.PublicKey(), err)
+	// 获取需要签名的账户数量
+	numRequiredSignatures := int(tx.Message.Header.NumRequiredSignatures)
+
+	// 初始化签名数组为正确长度
+	tx.Signatures = make([]solana.Signature, numRequiredSignatures)
+
+	// 为每个私钥生成签名并放在正确位置
+	for _, privKey := range privateKeys {
+		publicKey := privKey.PublicKey()
+		signerIndex := -1
+
+		// 在需要签名的账户中查找当前公钥的位置
+		for i := 0; i < numRequiredSignatures; i++ {
+			if i < len(tx.Message.AccountKeys) && tx.Message.AccountKeys[i].Equals(publicKey) {
+				signerIndex = i
+				break
+			}
+		}
+
+		if signerIndex == -1 {
+			return nil, fmt.Errorf("public key %s not found in required signers", publicKey.String())
+		}
+
+		// 生成签名
+		signature, err := privKey.Sign(messageContent)
+		if err != nil {
+			return nil, fmt.Errorf("failed to sign with key %q: %w", publicKey, err)
+		}
+
+		// 将签名放在正确的位置上
+		tx.Signatures[signerIndex] = signature
 	}
-	// Directly assign the signature to the corresponding position in the transaction's signature slice
-	tx.Signatures = append(tx.Signatures, s)
+
 	return tx.Signatures, nil
 }
 
@@ -819,10 +877,10 @@ func TestSolanaVaultDeposit(t *testing.T) {
 			ChainId:      client.SOLANA,
 			Investor:     solanaConfig.Solana.User.PublicKey,
 			Sender:       solanaConfig.Solana.User.PublicKey,
-			VaultAddress: "7SMGj38LM2DN1fan3SUzF2JtA7BMXg3aQVZbWRCw444R", // 示例地址，实际应该使用真实的Vault地址
+			VaultAddress: "GzTyAkvV8Q1yetRRvm4BqwJC8JGdsrfkMQ9e1LdMQEvz", // 示例地址，实际应该使用真实的Vault地址
 			Amount:       "500000000",                                    // 1 USDC (6 decimals)
 			Signature:    stringPtr(""),                                  // 管理员签名，prepare deposit阶段必填
-			VaultId:      stringPtr("1970925166242299904"),               // 示例Vault ID，实际应该使用真实的Vault ID
+			VaultId:      stringPtr("791019057648791960"),                // 示例Vault ID，实际应该使用真实的Vault ID
 		}
 
 		t.Logf("生成 Solana Vault 投资请求:")
@@ -843,19 +901,19 @@ func TestSolanaVaultDeposit(t *testing.T) {
 		t.Logf("  TxMsgBase64 长度: %d", len(*prepareResp.TxMsgBase64))
 
 		// 3. 模拟签名过程
-		signedTxBase64, err := signTx(t, test.user, *prepareResp.TxMsgBase64)
+		signedTx, err := signTx(t, test.admin, *prepareResp.TxMsgBase64)
 		require.NoError(t, err)
 
 		// 3. 模拟签名过程
-		signedTx, err := signTx(t, test.admin, signedTxBase64)
+		signedTxBase64, err := signTx(t, test.user, signedTx)
 		require.NoError(t, err)
 
 		// 4. 准备提交请求
 		submitReq := &client.RequestSubmitReq{
 			ChainId:      client.SOLANA,
 			Sender:       solanaConfig.Solana.User.PublicKey,
-			TxMsgBase64:  *prepareResp.TxMsgBase64,
-			SignTxBase64: signedTx,
+			TxMsgBase64:  signedTxBase64,
+			SignTxBase64: signedTxBase64,
 		}
 
 		t.Logf("准备提交 Solana Vault 投资交易:")

@@ -194,40 +194,6 @@ type SolanaVaultIntegrationTest struct {
 	user          *SolanaUser
 }
 
-// NewSolanaVaultIntegrationTest 创建 Solana 集成测试实例
-func NewSolanaVaultIntegrationTest(config *SolanaConfig, t *testing.T) *SolanaVaultIntegrationTest {
-	client := rpc.New(config.Solana.RPCURL)
-	require.NotNil(t, client, "无法创建 Solana RPC 客户端")
-	GetAllSolanaUsers(config) // 预加载所有用户
-
-	admin := GetUserByRole(config, "admin")
-	require.NotNil(t, admin, "无法获取 Admin 用户")
-
-	deployer := GetUserByRole(config, "deployer")
-	require.NotNil(t, deployer, "无法获取 Deployer 用户")
-
-	creator := GetUserByRole(config, "creator")
-	require.NotNil(t, creator, "无法获取 Creator 用户")
-
-	drdsvalidator := GetUserByRole(config, "drds_validator")
-	require.NotNil(t, drdsvalidator, "无法获取 DrdsValidator 用户")
-
-	user := GetUserByRole(config, "user")
-	require.NotNil(t, user, "无法获取 User 用户")
-	return &SolanaVaultIntegrationTest{
-		baseURL:       config.Server.URL,
-		httpClient:    &http.Client{Timeout: 30 * time.Second},
-		ctx:           context.Background(),
-		config:        config,
-		client:        client,
-		admin:         admin,
-		deployer:      deployer,
-		creator:       creator,
-		drdsvalidator: drdsvalidator,
-		user:          user,
-	}
-}
-
 // TestSolanaInitializeConfig 测试 Solana 初始化配置
 func TestSolanaInitializeConfig(t *testing.T) {
 	// 加载配置
@@ -301,6 +267,139 @@ func TestSolanaInitializeConfig(t *testing.T) {
 
 			t.Logf("✅ Solana 初始化配置成功!")
 			t.Logf("   交易哈希: %s", *submitResp.TxHash)
+
+			// 记录余额变化
+			if submitResp.SenderBalanceChange != nil {
+				t.Logf("   发送者余额变化:")
+				if submitResp.SenderBalanceChange.NativeBalanceChange != nil {
+					t.Logf("     Native Token: %d", *submitResp.SenderBalanceChange.NativeBalanceChange)
+				}
+				if submitResp.SenderBalanceChange.TokenBalanceChange != nil {
+					for _, change := range *submitResp.SenderBalanceChange.TokenBalanceChange {
+						if change.TokenMint != nil && change.BalanceChange != nil {
+							t.Logf("     Token %s: %s", *change.TokenMint, *change.BalanceChange)
+						}
+					}
+				}
+			}
+		} else {
+			// 如果是测试环境或模拟环境，可能会失败，这是正常的
+			t.Logf("⚠️  交易提交失败 (可能是模拟环境)")
+			if submitResp.FailedMsg != nil {
+				t.Logf("   失败原因: %s", *submitResp.FailedMsg)
+			}
+		}
+	})
+}
+
+// NewSolanaVaultIntegrationTest 创建 Solana 集成测试实例
+func NewSolanaVaultIntegrationTest(config *SolanaConfig, t *testing.T) *SolanaVaultIntegrationTest {
+	client := rpc.New(config.Solana.RPCURL)
+	require.NotNil(t, client, "无法创建 Solana RPC 客户端")
+	GetAllSolanaUsers(config) // 预加载所有用户
+
+	admin := GetUserByRole(config, "admin")
+	require.NotNil(t, admin, "无法获取 Admin 用户")
+
+	deployer := GetUserByRole(config, "deployer")
+	require.NotNil(t, deployer, "无法获取 Deployer 用户")
+
+	creator := GetUserByRole(config, "creator")
+	require.NotNil(t, creator, "无法获取 Creator 用户")
+
+	drdsvalidator := GetUserByRole(config, "drds_validator")
+	require.NotNil(t, drdsvalidator, "无法获取 DrdsValidator 用户")
+
+	user := GetUserByRole(config, "user")
+	require.NotNil(t, user, "无法获取 User 用户")
+	return &SolanaVaultIntegrationTest{
+		baseURL:       config.Server.URL,
+		httpClient:    &http.Client{Timeout: 30 * time.Second},
+		ctx:           context.Background(),
+		config:        config,
+		client:        client,
+		admin:         admin,
+		deployer:      deployer,
+		creator:       creator,
+		drdsvalidator: drdsvalidator,
+		user:          user,
+	}
+}
+
+// TestSolanaCreateAuth 测试 Solana 创建授权
+func TestSolanaCreateAuth(t *testing.T) {
+	// 加载配置
+	loadSolanaConfig(t)
+
+	// 创建测试实例
+	test := NewSolanaVaultIntegrationTest(&solanaConfig, t)
+
+	t.Run("CreateAuth", func(t *testing.T) {
+		// 1. 准备创建授权请求
+		createAuthReq := &CreateAuthReq{
+			ChainId: client.SOLANA,
+			Admin:   solanaConfig.Solana.Admin.PublicKey,
+			Creator: solanaConfig.Solana.Creator.PublicKey,
+		}
+
+		t.Logf("生成 Solana 创建授权请求:")
+		t.Logf("  Chain ID: %s", string(createAuthReq.ChainId))
+		t.Logf("  Admin: %s", createAuthReq.Admin)
+		t.Logf("  Creator: %s", createAuthReq.Creator)
+
+		// 2. 调用 prepare_creator_auth 接口
+		prepareResp := test.callPrepareCreateAuthSolana(t, createAuthReq)
+		require.NotNil(t, prepareResp)
+		require.NotEmpty(t, prepareResp.TxMsgBase64)
+		require.NotEmpty(t, prepareResp.CorrelationId)
+
+		t.Logf("获得待签名交易数据:")
+		t.Logf("  Correlation ID: %s", *prepareResp.CorrelationId)
+		t.Logf("  TxMsgBase64 长度: %d", len(*prepareResp.TxMsgBase64))
+
+		// 3. 模拟签名过程
+		signedTxBase64 := *prepareResp.TxMsgBase64
+
+		// 4. 准备提交请求
+		submitReq := &client.RequestSubmitReq{
+			ChainId:      client.SOLANA,
+			Sender:       solanaConfig.Solana.Admin.PublicKey,
+			TxMsgBase64:  *prepareResp.TxMsgBase64,
+			SignTxBase64: signedTxBase64,
+		}
+
+		signedTxBase64, err := signTx(t, test.admin, signedTxBase64)
+		require.NoError(t, err)
+		submitReq.SignTxBase64 = signedTxBase64
+
+		t.Logf("准备提交 Solana 创建授权交易:")
+		t.Logf("  发送者: %s", submitReq.Sender)
+		t.Logf("  Chain ID: %s", string(submitReq.ChainId))
+
+		// 5. 提交交易
+		submitResp := test.callSubmitTxSolana(t, submitReq)
+		require.NotNil(t, submitResp)
+
+		t.Logf("创建授权交易提交结果:")
+		if submitResp.Success != nil {
+			t.Logf("  成功: %t", *submitResp.Success)
+		}
+		if submitResp.TxHash != nil {
+			t.Logf("  交易哈希: %s", *submitResp.TxHash)
+		}
+		if submitResp.FailedMsg != nil {
+			t.Logf("  失败信息: %s", *submitResp.FailedMsg)
+		}
+
+		// 6. 验证结果
+		if submitResp.Success != nil && *submitResp.Success {
+			require.NotNil(t, submitResp.TxHash)
+			require.NotEmpty(t, *submitResp.TxHash)
+
+			t.Logf("✅ Solana 创建授权成功!")
+			t.Logf("   交易哈希: %s", *submitResp.TxHash)
+			t.Logf("   Admin: %s", createAuthReq.Admin)
+			t.Logf("   Creator: %s", createAuthReq.Creator)
 
 			// 记录余额变化
 			if submitResp.SenderBalanceChange != nil {
@@ -553,8 +652,8 @@ func (test *SolanaVaultIntegrationTest) generateSolanaTestVaultRequest(t *testin
 			ProjectName:                        projectName,
 			FinancingCurrencyAddr:              test.config.Solana.Tokens.USDC,                          // 使用新的配置路径
 			MinInvestmentBaseFinancingCurrency: "100000000",                                             // 100 USDC (6 decimals)
-			SoftCap:                            "500000000",                                             // 10,000 USDC 软顶
-			TokenMaxSupply:                     "1000000000",                                            // 1M vault tokens
+			SoftCap:                            "3000000000",                                            // 10,000 USDC 软顶
+			TokenMaxSupply:                     "10000000000",                                           // 1M vault tokens
 			SharePrice:                         stringPtr("1000000"),                                    // 1 USDC per share
 			ManageFeeBps:                       stringPtr("100"),                                        // 1% 管理费
 			ExcessFundraisingRatioBps:          stringPtr("1000"),                                       // 10% 超募比例
@@ -614,105 +713,6 @@ func TestSolanaConfigValidation(t *testing.T) {
 		assert.NotEmpty(t, solanaConfig.Solana.WSURL, "WebSocket URL 不能为空")
 
 		t.Log("✅ Solana 配置验证通过")
-	})
-}
-
-// TestSolanaCreateAuth 测试 Solana 创建授权
-func TestSolanaCreateAuth(t *testing.T) {
-	// 加载配置
-	loadSolanaConfig(t)
-
-	// 创建测试实例
-	test := NewSolanaVaultIntegrationTest(&solanaConfig, t)
-
-	t.Run("CreateAuth", func(t *testing.T) {
-		// 1. 准备创建授权请求
-		createAuthReq := &CreateAuthReq{
-			ChainId: client.SOLANA,
-			Admin:   solanaConfig.Solana.Admin.PublicKey,
-			Creator: solanaConfig.Solana.Creator.PublicKey,
-		}
-
-		t.Logf("生成 Solana 创建授权请求:")
-		t.Logf("  Chain ID: %s", string(createAuthReq.ChainId))
-		t.Logf("  Admin: %s", createAuthReq.Admin)
-		t.Logf("  Creator: %s", createAuthReq.Creator)
-
-		// 2. 调用 prepare_creator_auth 接口
-		prepareResp := test.callPrepareCreateAuthSolana(t, createAuthReq)
-		require.NotNil(t, prepareResp)
-		require.NotEmpty(t, prepareResp.TxMsgBase64)
-		require.NotEmpty(t, prepareResp.CorrelationId)
-
-		t.Logf("获得待签名交易数据:")
-		t.Logf("  Correlation ID: %s", *prepareResp.CorrelationId)
-		t.Logf("  TxMsgBase64 长度: %d", len(*prepareResp.TxMsgBase64))
-
-		// 3. 模拟签名过程
-		signedTxBase64 := *prepareResp.TxMsgBase64
-
-		// 4. 准备提交请求
-		submitReq := &client.RequestSubmitReq{
-			ChainId:      client.SOLANA,
-			Sender:       solanaConfig.Solana.Admin.PublicKey,
-			TxMsgBase64:  *prepareResp.TxMsgBase64,
-			SignTxBase64: signedTxBase64,
-		}
-
-		signedTxBase64, err := signTx(t, test.admin, signedTxBase64)
-		require.NoError(t, err)
-		submitReq.SignTxBase64 = signedTxBase64
-
-		t.Logf("准备提交 Solana 创建授权交易:")
-		t.Logf("  发送者: %s", submitReq.Sender)
-		t.Logf("  Chain ID: %s", string(submitReq.ChainId))
-
-		// 5. 提交交易
-		submitResp := test.callSubmitTxSolana(t, submitReq)
-		require.NotNil(t, submitResp)
-
-		t.Logf("创建授权交易提交结果:")
-		if submitResp.Success != nil {
-			t.Logf("  成功: %t", *submitResp.Success)
-		}
-		if submitResp.TxHash != nil {
-			t.Logf("  交易哈希: %s", *submitResp.TxHash)
-		}
-		if submitResp.FailedMsg != nil {
-			t.Logf("  失败信息: %s", *submitResp.FailedMsg)
-		}
-
-		// 6. 验证结果
-		if submitResp.Success != nil && *submitResp.Success {
-			require.NotNil(t, submitResp.TxHash)
-			require.NotEmpty(t, *submitResp.TxHash)
-
-			t.Logf("✅ Solana 创建授权成功!")
-			t.Logf("   交易哈希: %s", *submitResp.TxHash)
-			t.Logf("   Admin: %s", createAuthReq.Admin)
-			t.Logf("   Creator: %s", createAuthReq.Creator)
-
-			// 记录余额变化
-			if submitResp.SenderBalanceChange != nil {
-				t.Logf("   发送者余额变化:")
-				if submitResp.SenderBalanceChange.NativeBalanceChange != nil {
-					t.Logf("     Native Token: %d", *submitResp.SenderBalanceChange.NativeBalanceChange)
-				}
-				if submitResp.SenderBalanceChange.TokenBalanceChange != nil {
-					for _, change := range *submitResp.SenderBalanceChange.TokenBalanceChange {
-						if change.TokenMint != nil && change.BalanceChange != nil {
-							t.Logf("     Token %s: %s", *change.TokenMint, *change.BalanceChange)
-						}
-					}
-				}
-			}
-		} else {
-			// 如果是测试环境或模拟环境，可能会失败，这是正常的
-			t.Logf("⚠️  交易提交失败 (可能是模拟环境)")
-			if submitResp.FailedMsg != nil {
-				t.Logf("   失败原因: %s", *submitResp.FailedMsg)
-			}
-		}
 	})
 }
 
@@ -799,6 +799,8 @@ func TestSolanaVaultCreate(t *testing.T) {
 			}
 		}
 
+		time.Sleep(10 * time.Second) // 等待几秒钟，确保交易被处理
+
 		signedTxBase64, err = signTx(t, test.creator, txs[1])
 		require.NoError(t, err)
 		submitReq.Sender = solanaConfig.Solana.Creator.PublicKey
@@ -848,6 +850,8 @@ func TestSolanaVaultCreate(t *testing.T) {
 		t.Logf("  发送者: %s", submitReq.Sender)
 		t.Logf("  Chain ID: %s", string(submitReq.ChainId))
 
+		time.Sleep(10 * time.Second) // 等待几秒钟，确保交易被处理
+
 		// 5. 提交交易
 		submitResp = test.callSubmitTxSolana(t, submitReq)
 		require.NotNil(t, submitResp)
@@ -896,8 +900,8 @@ func TestSolanaVaultCommonInfo(t *testing.T) {
 		commonInfoReq := &VaultCommonInfoReq{
 			ChainId:      client.SOLANA,
 			VaultAddress: "11111111111111111111111111111111",             // 示例地址，实际应该使用真实的Vault地址
-			InfoType:     "crowdsale_state",                              // 可选参数
-			InfoId:       "6WkutgiSMr4ngcNjirjVRa7ZL7W6DsNgB15K1DEWuofE", // 可选参数
+			InfoType:     "vault_state",                              // 可选参数
+			InfoId:       "GzTyAkvV8Q1yetRRvm4BqwJC8JGdsrfkMQ9e1LdMQEvz", // 可选参数
 		}
 
 		t.Logf("生成 Solana Vault 基本信息查询请求:")
