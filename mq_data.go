@@ -26,6 +26,9 @@ const (
 	MessageTypeOffChainDeposit      // vault offchain deposit
 	MessageTypeOffChainRedeem       // vault offchain redeem
 	MessageTypeAddDeployerWhiteList // 合约owner添加发行人白名单
+
+	MessageTypeOldVaultDividend //旧版vault派息
+	MessageTypeOldVaultClaim    //旧版vault 用户领取分红
 )
 
 type Message struct {
