@@ -8,9 +8,9 @@ type MessageType uint
 const (
 	MessageTypeVaultLaunch         MessageType = iota //vault 发行
 	MessageTypeVaultInvest                            //vault 投资
-	MessageTypeVaultOffChainInvest                    //链下认购
+	MessageTypeVaultOffChainInvest                    //(弃用，请使用MessageTypeOffChainDeposit)链下认购
 	MessageTypeVaultWithdraw                          //vault 融资成功后的提款
-	MessageTypeVaultWithdrawFee                       //vault 融资成功后的提取管理费
+	MessageTypeVaultWithdrawFee                       //(弃用，请使用MessageTypeWithdrawManageFee)vault 融资成功后的提取管理费
 	MessageTypeVaultDividend                          //vault 管理员派息分红
 	MessageTypeVaultClaim                             //vault 投资者领取分红
 	MessageTypeVaultRedeem                            //vault 融资失败后的投资者赎回
@@ -173,12 +173,13 @@ type ManagerApproveRedeem struct {
 	VaultAddress string `json:"vault_address"` //vault合约地址
 }
 
-type WithdrawManageFee struct {
-	BaseData
-	Withdrawer   string `json:"withdrawer"`    //提款接收地址
-	Amount       string `json:"amount"`        //提款的U的数量
-	VaultAddress string `json:"vault_address"` //vault合约地址
-}
+//
+//type WithdrawManageFee struct {
+//	BaseData
+//	Withdrawer   string `json:"withdrawer"`    //提款接收地址
+//	Amount       string `json:"amount"`        //提款的U的数量
+//	VaultAddress string `json:"vault_address"` //vault合约地址
+//}
 
 type UnpauseToken struct {
 	BaseData
