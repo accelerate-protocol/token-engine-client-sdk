@@ -94,6 +94,7 @@ func TestVaultSuccessIntegration(t *testing.T) {
 	mqMessage := createVault(t, test, 24*time.Hour)
 	t.Logf("===============阶段二：User Invest ====================")
 	amount := parseUsd(10000) // 10000 USDC
+
 	deposit(t, test, mqMessage.VaultAddress, amount, users[0], users[0])
 	t.Logf("✅ User Invest 集成测试通过")
 
@@ -111,33 +112,52 @@ func TestVaultDeposit(t *testing.T) {
 	test := NewVaultLaunchIntegrationTest(serverUrl, t)
 
 	testCases := []struct {
-		name     string
-		sender   Signer
-		receiver Signer
-		amount   string
+		name      string
+		vaultType client.CommonVaultType
+		sender    Signer
+		receiver  Signer
+		amount    string
 	}{
 		{
-			name:     "单链支付，用户1质押给自己",
+			name:     "RBF模式下，单链支付，用户1质押给自己",
 			sender:   users[0],
 			receiver: users[0],
 			amount:   parseUsd(1000), // 1000 USDC
 		},
 		{
-			name:     "多链支付,用户1(多链账户)质押给用户2",
+			name:     "RBF模式下，多链支付,用户1(多链账户)质押给用户2",
 			sender:   users[0],
 			receiver: users[1],
 			amount:   parseUsd(1000), // 1000 USDC
+		},
+		{
+			name:      "Fund模式下，单链支付，用户1质押给自己",
+			sender:    users[0],
+			receiver:  users[0],
+			amount:    parseUsd(1000), // 1000 USDC
+			vaultType: client.VaultTypeFund,
+		},
+		{
+			name:      "Fund模式下，多链支付,用户1(多链账户)质押给用户2",
+			sender:    users[0],
+			receiver:  users[1],
+			amount:    parseUsd(1000), // 1000 USDC
+			vaultType: client.VaultTypeFund,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Logf("开始执行测试用例: %s", tc.name)
 		// 1. 创建 Vault, 只测试质押功能，募集期设置为24小时
-		vaultMsg := createVault(t, test, 24*time.Hour)
+		var vaultMsg *client.VaultLaunch
+		switch tc.vaultType {
+		case client.VaultTypeFund:
+			vaultMsg = createVault(t, test, 24*time.Hour, withVaultType(client.VaultTypeFund))
+		default:
+			vaultMsg = createVault(t, test, 24*time.Hour)
+		}
 		vaultAddr := vaultMsg.VaultAddress
 		deposit(t, test, vaultAddr, tc.amount, tc.sender, tc.receiver)
-
-		t.Logf("✅ VaultDeposit 集成测试完成")
 	}
 }
 
@@ -201,6 +221,39 @@ func TestVaultOffchainDeposit(t *testing.T) {
 
 		t.Logf("✅ VaultOffchainDeposit 集成测试完成")
 	}
+}
+
+func TestVaultWithdrawManageFee(t *testing.T) {
+	// 创建测试实例，连接本地 token-engine 服务
+	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+
+	t.Logf("开始执行测试用例: VaultWithdrawManageFee")
+	// 1. 创建 Vault
+	vaultMsg := createVault(t, test, 24*time.Hour)
+	vaultAddr := vaultMsg.VaultAddress
+	amount := parseUsd(10000) // 10000 USDC (6位精度)，打满,确保融资成功
+	t.Logf("amount: %s", amount)
+	deposit(t, test, vaultAddr, amount, users[0], users[0])
+
+	// 3. 管理员提取管理费
+	withdrawManageFee(t, test, vaultAddr)
+	t.Logf("✅ VaultWithdrawManageFee 集成测试完成")
+}
+
+func TestVaultWithdraw(t *testing.T) {
+	// 创建测试实例，连接本地 token-engine 服务
+	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+
+	t.Logf("开始执行测试用例: VaultWithdraw")
+	// 1. 创建 Vault
+	vaultMsg := createVault(t, test, 24*time.Hour)
+	vaultAddr := vaultMsg.VaultAddress
+	amount := parseUsd(10000) // 10000 USDC (6位精度)，打满,确保融资成功
+	deposit(t, test, vaultAddr, amount, users[0], users[0])
+
+	// 3. 管理员提取资产
+	withdraw(t, test, vaultAddr)
+	t.Logf("✅ VaultWithdraw 集成测试完成")
 }
 
 func TestUnpauseToken(t *testing.T) {
@@ -446,7 +499,22 @@ func TestErc20Balance(t *testing.T) {
 	}
 }
 
-func createVault(t *testing.T, test *VaultLaunchIntegrationTest, fundingDuration time.Duration) *client.VaultLaunch {
+// vaultLaunchOption 定义vault
+type vaultLaunchOption func(*vaultLaunchOptions)
+
+// vaultLaunchOptions 定义vault配置选项
+type vaultLaunchOptions struct {
+	vaultType client.CommonVaultType
+}
+
+// withVaultType 设置vault类型
+func withVaultType(vaultType client.CommonVaultType) vaultLaunchOption {
+	return func(opts *vaultLaunchOptions) {
+		opts.vaultType = vaultType
+	}
+}
+
+func createVault(t *testing.T, test *VaultLaunchIntegrationTest, fundingDuration time.Duration, options ...vaultLaunchOption) *client.VaultLaunch {
 	t.Logf("开始 VaultLaunch 集成测试")
 
 	// 1. 准备 VaultLaunch 请求
@@ -465,7 +533,7 @@ func createVault(t *testing.T, test *VaultLaunchIntegrationTest, fundingDuration
 		TokenMetaData: client.RequestTokenMeta{
 			TokenName:     "Test Vault Token",
 			TokenSymbol:   "TVT",
-			TokenDecimals: config.Blockchain.Decimal,
+			TokenDecimals: int(config.Blockchain.Decimal),
 			TokenUri:      "https://example.com/token/1",
 		},
 		FinancingRuleData: client.RequestFinancingRuleInfo{
@@ -486,6 +554,20 @@ func createVault(t *testing.T, test *VaultLaunchIntegrationTest, fundingDuration
 			EnableWhitelist:           boolPtr(false),
 			Whitelist:                 &[]string{},
 		},
+	}
+
+	opts := &vaultLaunchOptions{}
+	for _, option := range options {
+		option(opts)
+	}
+	vaultType := opts.vaultType
+	vaultCreateReq.VaultType = &vaultType
+	if vaultType == client.VaultTypeFund {
+		minAmount := parseUsd(10)
+		vaultCreateReq.FundExtraData = &client.RequestFundExtraData{
+			StartTime:           intPtr(int(time.Now().Add(fundingDuration).Unix())),
+			MinRedemptionAmount: &minAmount,
+		}
 	}
 
 	// 2. 调用 /api/v2/primary/vault/prepare_create 接口
@@ -1000,4 +1082,90 @@ func unPauseToken(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress s
 	// 5. 等待并验证 MQ 消息内容
 	test.validateVaultUnPauseTokenReceipt(t, submitResp.TxHash)
 	t.Logf("✅ UnPauseToken 集成测试通过")
+}
+
+func withdrawManageFee(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress string) {
+	t.Logf("开始执行 withdrawManageFee 测试")
+	// 1. 准备 withdrawManageFee 请求
+	withdrawReq := &client.RequestVaultWithdrawManagerFeeReq{
+		ChainId:      client.CommonChainID(chainId),
+		Withdrawer:   admin,
+		VaultAddress: vaultAddress,
+	}
+	// 2. 调用 /api/v2/primary/vault/prepare_withdraw_fee 接口
+	withdrawResp := test.callPrepareWithdrawManageFee(t, withdrawReq)
+	require.NotNil(t, withdrawResp)
+	require.NotEmpty(t, withdrawResp.TxMsgBase64)
+	t.Logf("准备交易成功，CorrelationId: %s", withdrawResp.CorrelationId)
+	tx := &types.Transaction{}
+	data, err := base64.StdEncoding.DecodeString(withdrawResp.TxMsgBase64)
+	require.NoError(t, err)
+	err = tx.UnmarshalBinary(data)
+	require.NoError(t, err)
+	// 3. 签名交易
+	signedTx, err := signTransaction(t, string(withdrawReq.ChainId), adminPrivateKey, tx)
+	require.NoError(t, err)
+	t.Logf("交易签名成功，准备提交交易")
+	// 4. 调用 /api/v1/common/submit_tx 接口提交交易
+	submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      withdrawReq.ChainId,
+		Sender:       withdrawReq.Withdrawer,
+		TxMsgBase64:  withdrawResp.TxMsgBase64,
+		SignTxBase64: signedTx,
+	})
+	require.NotNil(t, submitResp)
+	require.NotEmpty(t, submitResp.TxHash)
+	t.Logf("交易提交成功，TxHash: %s", submitResp.TxHash)
+
+	// 5. 等待并验证 MQ 消息内容
+	mqMessageInterface := test.waitForMQMessage(t, submitResp.TxHash, client.MessageTypeWithdrawManageFee)
+	require.NotNil(t, mqMessageInterface)
+	// 类型断言
+	mqMessage, ok := mqMessageInterface.(*client.VaultWithdrawFee)
+	require.True(t, ok, "MQ 消息类型断言失败")
+	test.validateVaultWithdrawManageFeeMQMessage(t, mqMessage, withdrawReq, submitResp.TxHash)
+	t.Logf("✅ WithdrawManageFee 集成测试通过")
+}
+
+func withdraw(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress string) {
+	t.Logf("开始执行 withdraw 测试")
+	// 1. 准备 withdraw 请求
+	withdrawReq := &client.RequestVaultWithdrawAssetReq{
+		ChainId:      client.CommonChainID(chainId),
+		Withdrawer:   admin,
+		VaultAddress: vaultAddress,
+	}
+	// 2. 调用 /api/v2/primary/vault/prepare_withdraw 接口
+	withdrawResp := test.callPrepareWithdraw(t, withdrawReq)
+	require.NotNil(t, withdrawResp)
+	require.NotEmpty(t, withdrawResp.TxMsgBase64)
+	t.Logf("准备交易成功，CorrelationId: %s", withdrawResp.CorrelationId)
+	tx := &types.Transaction{}
+	data, err := base64.StdEncoding.DecodeString(withdrawResp.TxMsgBase64)
+	require.NoError(t, err)
+	err = tx.UnmarshalBinary(data)
+	require.NoError(t, err)
+	// 3. 签名交易
+	signedTx, err := signTransaction(t, string(withdrawReq.ChainId), adminPrivateKey, tx)
+	require.NoError(t, err)
+	t.Logf("交易签名成功，准备提交交易")
+	// 4. 调用 /api/v1/common/submit_tx 接口提交交易
+	submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      withdrawReq.ChainId,
+		Sender:       withdrawReq.Withdrawer,
+		TxMsgBase64:  withdrawResp.TxMsgBase64,
+		SignTxBase64: signedTx,
+	})
+	require.NotNil(t, submitResp)
+	require.NotEmpty(t, submitResp.TxHash)
+	t.Logf("交易提交成功，TxHash: %s", submitResp.TxHash)
+
+	// 5. 等待并验证 MQ 消息内容
+	mqMessageInterface := test.waitForMQMessage(t, submitResp.TxHash, client.MessageTypeVaultWithdraw)
+	require.NotNil(t, mqMessageInterface)
+	// 类型断言
+	mqMessage, ok := mqMessageInterface.(*client.VaultWithdraw)
+	require.True(t, ok, "MQ 消息类型断言失败")
+	test.validateVaultWithdrawMQMessage(t, mqMessage, withdrawReq, submitResp.TxHash)
+	t.Logf("✅ Withdraw 集成测试通过")
 }
