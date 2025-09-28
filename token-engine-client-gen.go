@@ -29,12 +29,6 @@ const (
 	SOLANA CommonChainID = "1001"
 )
 
-// Defines values for CommonVaultType.
-const (
-	VaultTypeFund CommonVaultType = 1
-	VaultTypeRBF  CommonVaultType = 0
-)
-
 // Defines values for EntityDEXPlatform.
 const (
 	DexRaydium     EntityDEXPlatform = "Raydium"
@@ -93,12 +87,6 @@ const (
 	RaydiumCLMM GetApiV1SwapPriceParamsPlatform = "Raydium CLMM"
 )
 
-// Defines values for GetApiV1SwapPriceParamsSwapDirection.
-const (
-	N0 GetApiV1SwapPriceParamsSwapDirection = 0
-	N1 GetApiV1SwapPriceParamsSwapDirection = 1
-)
-
 // Defines values for GetApiV2DividendGetParamsChainId.
 const (
 	GetApiV2DividendGetParamsChainIdN1001 GetApiV2DividendGetParamsChainId = "1001"
@@ -126,9 +114,6 @@ type CommonApiResp struct {
 
 // CommonChainID defines model for common.ChainID.
 type CommonChainID string
-
-// CommonVaultType defines model for common.VaultType.
-type CommonVaultType int
 
 // EntityDEXPlatform defines model for entity.DEX_Platform.
 type EntityDEXPlatform string
@@ -167,7 +152,8 @@ type RequestAddVaultDeployerWhiteListReq struct {
 	DeployerAddress string `json:"deployer_address"`
 
 	// OwnerAddress creation合约owner
-	OwnerAddress string `json:"owner_address"`
+	OwnerAddress string  `json:"owner_address"`
+	VaultId      *string `json:"vault_id,omitempty"`
 }
 
 // RequestApprovePrepareReq defines model for request.ApprovePrepareReq.
@@ -218,6 +204,14 @@ type RequestBorrowerWithdrawReq struct {
 
 // RequestChainId defines model for request.ChainId.
 type RequestChainId string
+
+// RequestCreateAuthReq defines model for request.CreateAuthReq.
+type RequestCreateAuthReq struct {
+	// Admin vault地址
+	Admin   string        `json:"admin"`
+	ChainId CommonChainID `json:"chain_id"`
+	Creator string        `json:"creator"`
+}
 
 // RequestCreatePoolAndLiquidityReq defines model for request.CreatePoolAndLiquidityReq.
 type RequestCreatePoolAndLiquidityReq struct {
@@ -320,15 +314,6 @@ type RequestFinancingRuleInfo struct {
 	Whitelist *[]string `json:"whitelist,omitempty"`
 }
 
-// RequestFundExtraData defines model for request.FundExtraData.
-type RequestFundExtraData struct {
-	// MinRedemptionAmount 代币最小赎回数量
-	MinRedemptionAmount *string `json:"min_redemption_amount,omitempty"`
-
-	// StartTime 代币锁定的开始时间
-	StartTime *int `json:"start_time,omitempty"`
-}
-
 // RequestFundingOverviewReq defines model for request.FundingOverviewReq.
 type RequestFundingOverviewReq struct {
 	ChainId CommonChainID `json:"chain_id"`
@@ -356,7 +341,8 @@ type RequestOffChainDepositReq struct {
 	Recipient string `json:"recipient"`
 
 	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
+	VaultAddress string  `json:"vault_address"`
+	VaultId      *string `json:"vault_id,omitempty"`
 }
 
 // RequestOffChainRedeemReq defines model for request.OffChainRedeemReq.
@@ -370,7 +356,8 @@ type RequestOffChainRedeemReq struct {
 	Recipient string `json:"recipient"`
 
 	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
+	VaultAddress string  `json:"vault_address"`
+	VaultId      *string `json:"vault_id,omitempty"`
 }
 
 // RequestProcessTxReq defines model for request.ProcessTxReq.
@@ -439,18 +426,15 @@ type RequestSubmitReq struct {
 
 // RequestSwapPrepareReq defines model for request.SwapPrepareReq.
 type RequestSwapPrepareReq struct {
-	// Amount 存入数量/兑换出的数量
+	// Amount 存入数量
 	Amount  string        `json:"amount"`
 	ChainId CommonChainID `json:"chain_id"`
 
 	// InputMint 存入代币地址
 	InputMint string `json:"input_mint"`
 
-	// MaxInAmount 限制最大存入的数量， 和MinOutAmount 二选一， 默认先读取MinOutAmount
-	MaxInAmount *string `json:"max_in_amount,omitempty"`
-
 	// MinOutAmount 限制最小可兑换出的数量
-	MinOutAmount *string `json:"min_out_amount,omitempty"`
+	MinOutAmount string `json:"min_out_amount"`
 
 	// OutputMint 兑换出的代币地址
 	OutputMint string            `json:"output_mint"`
@@ -583,7 +567,8 @@ type RequestVaultClaimRewardReq struct {
 	Investor string `json:"investor"`
 
 	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
+	VaultAddress string  `json:"vault_address"`
+	VaultId      *string `json:"vault_id,omitempty"`
 }
 
 // RequestVaultCreateReq defines model for request.VaultCreateReq.
@@ -593,15 +578,11 @@ type RequestVaultCreateReq struct {
 	// FinancingRuleData 融资信息
 	FinancingRuleData RequestFinancingRuleInfo `json:"financing_rule_data"`
 
-	// FundExtraData fund模式下的额外信息
-	FundExtraData *RequestFundExtraData `json:"fund_extra_data,omitempty"`
-
 	// ManagementData 管理信息
 	ManagementData RequestVaultManagement `json:"management_data"`
 
 	// TokenMetaData token元数据信息
 	TokenMetaData RequestTokenMeta `json:"token_meta_data"`
-	VaultType     *CommonVaultType `json:"vault_type,omitempty"`
 }
 
 // RequestVaultDepositReq defines model for request.VaultDepositReq.
@@ -618,7 +599,8 @@ type RequestVaultDepositReq struct {
 	Signature *string `json:"signature,omitempty"`
 
 	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
+	VaultAddress string  `json:"vault_address"`
+	VaultId      *string `json:"vault_id,omitempty"`
 }
 
 // RequestVaultDistributeDividendReq defines model for request.VaultDistributeDividendReq.
@@ -638,6 +620,16 @@ type RequestVaultDistributeDividendReq struct {
 
 	// VaultAddr Vault地址
 	VaultAddr *string `json:"vault_addr,omitempty"`
+	VaultId   *string `json:"vault_id,omitempty"`
+}
+
+// RequestVaultInitReq defines model for request.VaultInitReq.
+type RequestVaultInitReq struct {
+	// Admin vault地址
+	Admin   string        `json:"admin"`
+	ChainId CommonChainID `json:"chain_id"`
+	Manager string        `json:"manager"`
+	Signer  *string       `json:"signer,omitempty"`
 }
 
 // RequestVaultManagement defines model for request.VaultManagement.
@@ -680,7 +672,8 @@ type RequestVaultRedeemReq struct {
 	Signature *string `json:"signature,omitempty"`
 
 	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
+	VaultAddress string  `json:"vault_address"`
+	VaultId      *string `json:"vault_id,omitempty"`
 }
 
 // RequestVaultUnPauseTokenReq defines model for request.VaultUnPauseTokenReq.
@@ -691,7 +684,8 @@ type RequestVaultUnPauseTokenReq struct {
 	Manager *string `json:"manager,omitempty"`
 
 	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
+	VaultAddress string  `json:"vault_address"`
+	VaultId      *string `json:"vault_id,omitempty"`
 }
 
 // RequestVaultWithdrawAssetReq defines model for request.VaultWithdrawAssetReq.
@@ -699,7 +693,8 @@ type RequestVaultWithdrawAssetReq struct {
 	ChainId CommonChainID `json:"chain_id"`
 
 	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
+	VaultAddress string  `json:"vault_address"`
+	VaultId      *string `json:"vault_id,omitempty"`
 
 	// Withdrawer 提款人
 	Withdrawer string `json:"withdrawer"`
@@ -710,7 +705,8 @@ type RequestVaultWithdrawManagerFeeReq struct {
 	ChainId CommonChainID `json:"chain_id"`
 
 	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
+	VaultAddress string  `json:"vault_address"`
+	VaultId      *string `json:"vault_id,omitempty"`
 
 	// Withdrawer 投资人地址
 	Withdrawer string `json:"withdrawer"`
@@ -821,7 +817,6 @@ type ResponseFoundingOverviewResp struct {
 
 	// TotalMintedAmount 已铸造的vault token的数量
 	TotalMintedAmount *string `json:"total_minted_amount,omitempty"`
-	VaultType         *string `json:"vault_type,omitempty"`
 }
 
 // ResponseGetHolderInfoResp defines model for response.GetHolderInfoResp.
@@ -1029,7 +1024,10 @@ type ResponseUserDividendResp struct {
 type ResponseVaultCommonInfoResp struct {
 	ChainId     *string `json:"chain_id,omitempty"`
 	FundingAddr *string `json:"funding_addr,omitempty"`
-	YieldAddr   *string `json:"yield_addr,omitempty"`
+
+	// Info 具体信息
+	Info      *string `json:"info,omitempty"`
+	YieldAddr *string `json:"yield_addr,omitempty"`
 }
 
 // GetApiV1CommonBalanceParams defines parameters for GetApiV1CommonBalance.
@@ -1083,14 +1081,13 @@ type GetApiV1DataTokenHoldersParams struct {
 
 // GetApiV1SwapPriceParams defines parameters for GetApiV1SwapPrice.
 type GetApiV1SwapPriceParams struct {
-	Amount             string                                `form:"amount" json:"amount"`
-	ChainId            GetApiV1SwapPriceParamsChainId        `form:"chain_id" json:"chain_id"`
-	InputMintDecimals  *int                                  `form:"inputMintDecimals,omitempty" json:"inputMintDecimals,omitempty"`
-	InputMint          string                                `form:"input_mint" json:"input_mint"`
-	OutputMintDecimals *int                                  `form:"outputMintDecimals,omitempty" json:"outputMintDecimals,omitempty"`
-	OutputMint         string                                `form:"output_mint" json:"output_mint"`
-	Platform           GetApiV1SwapPriceParamsPlatform       `form:"platform" json:"platform"`
-	SwapDirection      *GetApiV1SwapPriceParamsSwapDirection `form:"swap_direction,omitempty" json:"swap_direction,omitempty"`
+	Amount             string                          `form:"amount" json:"amount"`
+	ChainId            GetApiV1SwapPriceParamsChainId  `form:"chain_id" json:"chain_id"`
+	InputMintDecimals  *int                            `form:"inputMintDecimals,omitempty" json:"inputMintDecimals,omitempty"`
+	InputMint          string                          `form:"input_mint" json:"input_mint"`
+	OutputMintDecimals *int                            `form:"outputMintDecimals,omitempty" json:"outputMintDecimals,omitempty"`
+	OutputMint         string                          `form:"output_mint" json:"output_mint"`
+	Platform           GetApiV1SwapPriceParamsPlatform `form:"platform" json:"platform"`
 
 	// VaultAddress vault地址
 	VaultAddress string `form:"vault_address" json:"vault_address"`
@@ -1101,9 +1098,6 @@ type GetApiV1SwapPriceParamsChainId string
 
 // GetApiV1SwapPriceParamsPlatform defines parameters for GetApiV1SwapPrice.
 type GetApiV1SwapPriceParamsPlatform string
-
-// GetApiV1SwapPriceParamsSwapDirection defines parameters for GetApiV1SwapPrice.
-type GetApiV1SwapPriceParamsSwapDirection int
 
 // GetApiV2DividendGetParams defines parameters for GetApiV2DividendGet.
 type GetApiV2DividendGetParams struct {
@@ -1126,6 +1120,7 @@ type GetApiV2DividendGetParamsChainId string
 // GetApiV2PrimaryVaultCommonInfoParams defines parameters for GetApiV2PrimaryVaultCommonInfo.
 type GetApiV2PrimaryVaultCommonInfoParams struct {
 	ChainId  GetApiV2PrimaryVaultCommonInfoParamsChainId `form:"chain_id" json:"chain_id"`
+	InfoId   *string                                     `form:"info_id,omitempty" json:"info_id,omitempty"`
 	InfoType *string                                     `form:"info_type,omitempty" json:"info_type,omitempty"`
 
 	// VaultAddress vault地址
@@ -1220,6 +1215,9 @@ type PostApiV2PrimaryVaultPrepareClaimRewardJSONRequestBody = RequestVaultClaimR
 // PostApiV2PrimaryVaultPrepareCreateJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareCreate for application/json ContentType.
 type PostApiV2PrimaryVaultPrepareCreateJSONRequestBody = RequestVaultCreateReq
 
+// PostApiV2PrimaryVaultPrepareCreatorAuthJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareCreatorAuth for application/json ContentType.
+type PostApiV2PrimaryVaultPrepareCreatorAuthJSONRequestBody = RequestCreateAuthReq
+
 // PostApiV2PrimaryVaultPrepareDepositJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareDeposit for application/json ContentType.
 type PostApiV2PrimaryVaultPrepareDepositJSONRequestBody = RequestVaultDepositReq
 
@@ -1231,6 +1229,9 @@ type PostApiV2PrimaryVaultPrepareDistributeDividendJSONRequestBody = RequestVaul
 
 // PostApiV2PrimaryVaultPrepareDistributeDividendApproveJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareDistributeDividendApprove for application/json ContentType.
 type PostApiV2PrimaryVaultPrepareDistributeDividendApproveJSONRequestBody = RequestVaultApproveDividendReq
+
+// PostApiV2PrimaryVaultPrepareInitializeConfigJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareInitializeConfig for application/json ContentType.
+type PostApiV2PrimaryVaultPrepareInitializeConfigJSONRequestBody = RequestVaultInitReq
 
 // PostApiV2PrimaryVaultPrepareOffChainDepositJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareOffChainDeposit for application/json ContentType.
 type PostApiV2PrimaryVaultPrepareOffChainDepositJSONRequestBody = RequestOffChainDepositReq
@@ -1258,6 +1259,9 @@ type PostApiV2TokenTxsProcessJSONRequestBody = RequestProcessTxReq
 
 // PostApiV2TokenTxsSyncJSONRequestBody defines body for PostApiV2TokenTxsSync for application/json ContentType.
 type PostApiV2TokenTxsSyncJSONRequestBody = RequestSyncTxTaskReq
+
+// PostApiV2TransactionSubmitJSONRequestBody defines body for PostApiV2TransactionSubmit for application/json ContentType.
+type PostApiV2TransactionSubmitJSONRequestBody = RequestSubmitReq
 
 // PostApiV2TransferPrepareJSONRequestBody defines body for PostApiV2TransferPrepare for application/json ContentType.
 type PostApiV2TransferPrepareJSONRequestBody = RequestTransferPrepareReq
@@ -1449,6 +1453,11 @@ type ClientInterface interface {
 
 	PostApiV2PrimaryVaultPrepareCreate(ctx context.Context, body PostApiV2PrimaryVaultPrepareCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PostApiV2PrimaryVaultPrepareCreatorAuthWithBody request with any body
+	PostApiV2PrimaryVaultPrepareCreatorAuthWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2PrimaryVaultPrepareCreatorAuth(ctx context.Context, body PostApiV2PrimaryVaultPrepareCreatorAuthJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PostApiV2PrimaryVaultPrepareDepositWithBody request with any body
 	PostApiV2PrimaryVaultPrepareDepositWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1468,6 +1477,11 @@ type ClientInterface interface {
 	PostApiV2PrimaryVaultPrepareDistributeDividendApproveWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostApiV2PrimaryVaultPrepareDistributeDividendApprove(ctx context.Context, body PostApiV2PrimaryVaultPrepareDistributeDividendApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV2PrimaryVaultPrepareInitializeConfigWithBody request with any body
+	PostApiV2PrimaryVaultPrepareInitializeConfigWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2PrimaryVaultPrepareInitializeConfig(ctx context.Context, body PostApiV2PrimaryVaultPrepareInitializeConfigJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiV2PrimaryVaultPrepareOffChainDepositWithBody request with any body
 	PostApiV2PrimaryVaultPrepareOffChainDepositWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1522,6 +1536,11 @@ type ClientInterface interface {
 
 	// GetApiV2TokenTxsTaskInfo request
 	GetApiV2TokenTxsTaskInfo(ctx context.Context, params *GetApiV2TokenTxsTaskInfoParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV2TransactionSubmitWithBody request with any body
+	PostApiV2TransactionSubmitWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2TransactionSubmit(ctx context.Context, body PostApiV2TransactionSubmitJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiV2TransferPrepareWithBody request with any body
 	PostApiV2TransferPrepareWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2050,6 +2069,30 @@ func (c *Client) PostApiV2PrimaryVaultPrepareCreate(ctx context.Context, body Po
 	return c.Client.Do(req)
 }
 
+func (c *Client) PostApiV2PrimaryVaultPrepareCreatorAuthWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareCreatorAuthRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2PrimaryVaultPrepareCreatorAuth(ctx context.Context, body PostApiV2PrimaryVaultPrepareCreatorAuthJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareCreatorAuthRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) PostApiV2PrimaryVaultPrepareDepositWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiV2PrimaryVaultPrepareDepositRequestWithBody(c.Server, contentType, body)
 	if err != nil {
@@ -2136,6 +2179,30 @@ func (c *Client) PostApiV2PrimaryVaultPrepareDistributeDividendApproveWithBody(c
 
 func (c *Client) PostApiV2PrimaryVaultPrepareDistributeDividendApprove(ctx context.Context, body PostApiV2PrimaryVaultPrepareDistributeDividendApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiV2PrimaryVaultPrepareDistributeDividendApproveRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2PrimaryVaultPrepareInitializeConfigWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareInitializeConfigRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2PrimaryVaultPrepareInitializeConfig(ctx context.Context, body PostApiV2PrimaryVaultPrepareInitializeConfigJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareInitializeConfigRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -2388,6 +2455,30 @@ func (c *Client) PostApiV2TokenTxsSync(ctx context.Context, body PostApiV2TokenT
 
 func (c *Client) GetApiV2TokenTxsTaskInfo(ctx context.Context, params *GetApiV2TokenTxsTaskInfoParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetApiV2TokenTxsTaskInfoRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2TransactionSubmitWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2TransactionSubmitRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2TransactionSubmit(ctx context.Context, body PostApiV2TransactionSubmitJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2TransactionSubmitRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -3200,22 +3291,6 @@ func NewGetApiV1SwapPriceRequest(server string, params *GetApiV1SwapPriceParams)
 			}
 		}
 
-		if params.SwapDirection != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "swap_direction", runtime.ParamLocationQuery, *params.SwapDirection); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
 		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "vault_address", runtime.ParamLocationQuery, params.VaultAddress); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
@@ -3472,6 +3547,22 @@ func NewGetApiV2PrimaryVaultCommonInfoRequest(server string, params *GetApiV2Pri
 					queryValues.Add(k, v2)
 				}
 			}
+		}
+
+		if params.InfoId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "info_id", runtime.ParamLocationQuery, *params.InfoId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
 		}
 
 		if params.InfoType != nil {
@@ -3753,6 +3844,46 @@ func NewPostApiV2PrimaryVaultPrepareCreateRequestWithBody(server string, content
 	return req, nil
 }
 
+// NewPostApiV2PrimaryVaultPrepareCreatorAuthRequest calls the generic PostApiV2PrimaryVaultPrepareCreatorAuth builder with application/json body
+func NewPostApiV2PrimaryVaultPrepareCreatorAuthRequest(server string, body PostApiV2PrimaryVaultPrepareCreatorAuthJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2PrimaryVaultPrepareCreatorAuthRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2PrimaryVaultPrepareCreatorAuthRequestWithBody generates requests for PostApiV2PrimaryVaultPrepareCreatorAuth with any type of body
+func NewPostApiV2PrimaryVaultPrepareCreatorAuthRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/primary/vault/prepare_creator_auth")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewPostApiV2PrimaryVaultPrepareDepositRequest calls the generic PostApiV2PrimaryVaultPrepareDeposit builder with application/json body
 func NewPostApiV2PrimaryVaultPrepareDepositRequest(server string, body PostApiV2PrimaryVaultPrepareDepositJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -3894,6 +4025,46 @@ func NewPostApiV2PrimaryVaultPrepareDistributeDividendApproveRequestWithBody(ser
 	}
 
 	operationPath := fmt.Sprintf("/api/v2/primary/vault/prepare_distribute_dividend_approve")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiV2PrimaryVaultPrepareInitializeConfigRequest calls the generic PostApiV2PrimaryVaultPrepareInitializeConfig builder with application/json body
+func NewPostApiV2PrimaryVaultPrepareInitializeConfigRequest(server string, body PostApiV2PrimaryVaultPrepareInitializeConfigJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2PrimaryVaultPrepareInitializeConfigRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2PrimaryVaultPrepareInitializeConfigRequestWithBody generates requests for PostApiV2PrimaryVaultPrepareInitializeConfig with any type of body
+func NewPostApiV2PrimaryVaultPrepareInitializeConfigRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/primary/vault/prepare_initialize_config")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -4496,6 +4667,46 @@ func NewGetApiV2TokenTxsTaskInfoRequest(server string, params *GetApiV2TokenTxsT
 	return req, nil
 }
 
+// NewPostApiV2TransactionSubmitRequest calls the generic PostApiV2TransactionSubmit builder with application/json body
+func NewPostApiV2TransactionSubmitRequest(server string, body PostApiV2TransactionSubmitJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2TransactionSubmitRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2TransactionSubmitRequestWithBody generates requests for PostApiV2TransactionSubmit with any type of body
+func NewPostApiV2TransactionSubmitRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/transaction/submit")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewPostApiV2TransferPrepareRequest calls the generic PostApiV2TransferPrepare builder with application/json body
 func NewPostApiV2TransferPrepareRequest(server string, body PostApiV2TransferPrepareJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -4730,6 +4941,11 @@ type ClientWithResponsesInterface interface {
 
 	PostApiV2PrimaryVaultPrepareCreateWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareCreateJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareCreateResponse, error)
 
+	// PostApiV2PrimaryVaultPrepareCreatorAuthWithBodyWithResponse request with any body
+	PostApiV2PrimaryVaultPrepareCreatorAuthWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareCreatorAuthResponse, error)
+
+	PostApiV2PrimaryVaultPrepareCreatorAuthWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareCreatorAuthJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareCreatorAuthResponse, error)
+
 	// PostApiV2PrimaryVaultPrepareDepositWithBodyWithResponse request with any body
 	PostApiV2PrimaryVaultPrepareDepositWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareDepositResponse, error)
 
@@ -4749,6 +4965,11 @@ type ClientWithResponsesInterface interface {
 	PostApiV2PrimaryVaultPrepareDistributeDividendApproveWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse, error)
 
 	PostApiV2PrimaryVaultPrepareDistributeDividendApproveWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareDistributeDividendApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse, error)
+
+	// PostApiV2PrimaryVaultPrepareInitializeConfigWithBodyWithResponse request with any body
+	PostApiV2PrimaryVaultPrepareInitializeConfigWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareInitializeConfigResponse, error)
+
+	PostApiV2PrimaryVaultPrepareInitializeConfigWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareInitializeConfigJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareInitializeConfigResponse, error)
 
 	// PostApiV2PrimaryVaultPrepareOffChainDepositWithBodyWithResponse request with any body
 	PostApiV2PrimaryVaultPrepareOffChainDepositWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareOffChainDepositResponse, error)
@@ -4803,6 +5024,11 @@ type ClientWithResponsesInterface interface {
 
 	// GetApiV2TokenTxsTaskInfoWithResponse request
 	GetApiV2TokenTxsTaskInfoWithResponse(ctx context.Context, params *GetApiV2TokenTxsTaskInfoParams, reqEditors ...RequestEditorFn) (*GetApiV2TokenTxsTaskInfoResponse, error)
+
+	// PostApiV2TransactionSubmitWithBodyWithResponse request with any body
+	PostApiV2TransactionSubmitWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2TransactionSubmitResponse, error)
+
+	PostApiV2TransactionSubmitWithResponse(ctx context.Context, body PostApiV2TransactionSubmitJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2TransactionSubmitResponse, error)
 
 	// PostApiV2TransferPrepareWithBodyWithResponse request with any body
 	PostApiV2TransferPrepareWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2TransferPrepareResponse, error)
@@ -5590,6 +5816,37 @@ func (r PostApiV2PrimaryVaultPrepareCreateResponse) StatusCode() int {
 	return 0
 }
 
+type PostApiV2PrimaryVaultPrepareCreatorAuthResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2PrimaryVaultPrepareCreatorAuthResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2PrimaryVaultPrepareCreatorAuthResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type PostApiV2PrimaryVaultPrepareDepositResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -5708,6 +5965,37 @@ func (r PostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse) Status() 
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiV2PrimaryVaultPrepareInitializeConfigResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2PrimaryVaultPrepareInitializeConfigResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2PrimaryVaultPrepareInitializeConfigResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6080,6 +6368,37 @@ func (r GetApiV2TokenTxsTaskInfoResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetApiV2TokenTxsTaskInfoResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiV2TransactionSubmitResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                `json:"code,omitempty"`
+		Data *ResponseSubmitResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2TransactionSubmitResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2TransactionSubmitResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -6517,6 +6836,23 @@ func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareCreateWithResponse(ctx
 	return ParsePostApiV2PrimaryVaultPrepareCreateResponse(rsp)
 }
 
+// PostApiV2PrimaryVaultPrepareCreatorAuthWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareCreatorAuthResponse
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareCreatorAuthWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareCreatorAuthResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareCreatorAuthWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrepareCreatorAuthResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareCreatorAuthWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareCreatorAuthJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareCreatorAuthResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareCreatorAuth(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrepareCreatorAuthResponse(rsp)
+}
+
 // PostApiV2PrimaryVaultPrepareDepositWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareDepositResponse
 func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareDepositWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareDepositResponse, error) {
 	rsp, err := c.PostApiV2PrimaryVaultPrepareDepositWithBody(ctx, contentType, body, reqEditors...)
@@ -6583,6 +6919,23 @@ func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareDistributeDividendAppr
 		return nil, err
 	}
 	return ParsePostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse(rsp)
+}
+
+// PostApiV2PrimaryVaultPrepareInitializeConfigWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareInitializeConfigResponse
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareInitializeConfigWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareInitializeConfigResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareInitializeConfigWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrepareInitializeConfigResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareInitializeConfigWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareInitializeConfigJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareInitializeConfigResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareInitializeConfig(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrepareInitializeConfigResponse(rsp)
 }
 
 // PostApiV2PrimaryVaultPrepareOffChainDepositWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareOffChainDepositResponse
@@ -6763,6 +7116,23 @@ func (c *ClientWithResponses) GetApiV2TokenTxsTaskInfoWithResponse(ctx context.C
 		return nil, err
 	}
 	return ParseGetApiV2TokenTxsTaskInfoResponse(rsp)
+}
+
+// PostApiV2TransactionSubmitWithBodyWithResponse request with arbitrary body returning *PostApiV2TransactionSubmitResponse
+func (c *ClientWithResponses) PostApiV2TransactionSubmitWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2TransactionSubmitResponse, error) {
+	rsp, err := c.PostApiV2TransactionSubmitWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2TransactionSubmitResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2TransactionSubmitWithResponse(ctx context.Context, body PostApiV2TransactionSubmitJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2TransactionSubmitResponse, error) {
+	rsp, err := c.PostApiV2TransactionSubmit(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2TransactionSubmitResponse(rsp)
 }
 
 // PostApiV2TransferPrepareWithBodyWithResponse request with arbitrary body returning *PostApiV2TransferPrepareResponse
@@ -7674,6 +8044,41 @@ func ParsePostApiV2PrimaryVaultPrepareCreateResponse(rsp *http.Response) (*PostA
 	return response, nil
 }
 
+// ParsePostApiV2PrimaryVaultPrepareCreatorAuthResponse parses an HTTP response from a PostApiV2PrimaryVaultPrepareCreatorAuthWithResponse call
+func ParsePostApiV2PrimaryVaultPrepareCreatorAuthResponse(rsp *http.Response) (*PostApiV2PrimaryVaultPrepareCreatorAuthResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2PrimaryVaultPrepareCreatorAuthResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParsePostApiV2PrimaryVaultPrepareDepositResponse parses an HTTP response from a PostApiV2PrimaryVaultPrepareDepositWithResponse call
 func ParsePostApiV2PrimaryVaultPrepareDepositResponse(rsp *http.Response) (*PostApiV2PrimaryVaultPrepareDepositResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -7788,6 +8193,41 @@ func ParsePostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse(rsp *htt
 	}
 
 	response := &PostApiV2PrimaryVaultPrepareDistributeDividendApproveResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV2PrimaryVaultPrepareInitializeConfigResponse parses an HTTP response from a PostApiV2PrimaryVaultPrepareInitializeConfigWithResponse call
+func ParsePostApiV2PrimaryVaultPrepareInitializeConfigResponse(rsp *http.Response) (*PostApiV2PrimaryVaultPrepareInitializeConfigResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2PrimaryVaultPrepareInitializeConfigResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -8234,6 +8674,41 @@ func ParseGetApiV2TokenTxsTaskInfoResponse(rsp *http.Response) (*GetApiV2TokenTx
 	return response, nil
 }
 
+// ParsePostApiV2TransactionSubmitResponse parses an HTTP response from a PostApiV2TransactionSubmitWithResponse call
+func ParsePostApiV2TransactionSubmitResponse(rsp *http.Response) (*PostApiV2TransactionSubmitResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2TransactionSubmitResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                `json:"code,omitempty"`
+			Data *ResponseSubmitResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParsePostApiV2TransferPrepareResponse parses an HTTP response from a PostApiV2TransferPrepareWithResponse call
 func ParsePostApiV2TransferPrepareResponse(rsp *http.Response) (*PostApiV2TransferPrepareResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -8307,135 +8782,135 @@ func ParsePostApiV2TransferSubmitResponse(rsp *http.Response) (*PostApiV2Transfe
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
