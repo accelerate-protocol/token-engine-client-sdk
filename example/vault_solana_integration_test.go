@@ -187,6 +187,7 @@ type TaskInfoResp struct {
 type VaultInitReq struct {
 	ChainId client.CommonChainID `json:"chain_id"`
 	Admin   string               `json:"admin"`
+	Manager string               `json:"manager"`
 	Signer  string               `json:"signer,omitempty"`
 }
 
@@ -278,8 +279,9 @@ func TestSolanaInitializeConfig(t *testing.T) {
 		// 1. 准备初始化配置请求
 		initReq := &VaultInitReq{
 			ChainId: client.SOLANA,
-			Admin:   solanaConfig.Solana.Admin.PublicKey,
-			Signer:  solanaConfig.Solana.Admin.PublicKey, // 可选字段，这里设置为admin地址
+			Admin:   solanaConfig.Solana.Deployer.PublicKey,
+			Manager: solanaConfig.Solana.Admin.PublicKey,
+			Signer:  solanaConfig.Solana.Deployer.PublicKey, // 可选字段，这里设置为admin地址
 		}
 
 		t.Logf("生成 Solana 初始化配置请求:")
@@ -303,7 +305,7 @@ func TestSolanaInitializeConfig(t *testing.T) {
 		// 4. 准备提交请求
 		submitReq := &client.RequestSubmitReq{
 			ChainId:      client.SOLANA,
-			Sender:       solanaConfig.Solana.Admin.PublicKey,
+			Sender:       solanaConfig.Solana.Deployer.PublicKey,
 			TxMsgBase64:  *prepareResp.TxMsgBase64,
 			SignTxBase64: signedTxBase64,
 		}
@@ -312,7 +314,8 @@ func TestSolanaInitializeConfig(t *testing.T) {
 		t.Logf("  发送者: %s", submitReq.Sender)
 		t.Logf("  Chain ID: %s", string(submitReq.ChainId))
 
-		signedTx, err := signTx(t, test.admin, signedTxBase64)
+		// deployer 签名
+		signedTx, err := signTx(t, test.deployer, signedTxBase64)
 		require.NoError(t, err)
 		submitReq.SignTxBase64 = signedTx
 
@@ -363,40 +366,6 @@ func TestSolanaInitializeConfig(t *testing.T) {
 	})
 }
 
-// NewSolanaVaultIntegrationTest 创建 Solana 集成测试实例
-func NewSolanaVaultIntegrationTest(config *SolanaConfig, t *testing.T) *SolanaVaultIntegrationTest {
-	client := rpc.New(config.Solana.RPCURL)
-	require.NotNil(t, client, "无法创建 Solana RPC 客户端")
-	GetAllSolanaUsers(config) // 预加载所有用户
-
-	admin := GetUserByRole(config, "admin")
-	require.NotNil(t, admin, "无法获取 Admin 用户")
-
-	deployer := GetUserByRole(config, "deployer")
-	require.NotNil(t, deployer, "无法获取 Deployer 用户")
-
-	creator := GetUserByRole(config, "creator")
-	require.NotNil(t, creator, "无法获取 Creator 用户")
-
-	drdsvalidator := GetUserByRole(config, "drds_validator")
-	require.NotNil(t, drdsvalidator, "无法获取 DrdsValidator 用户")
-
-	user := GetUserByRole(config, "user")
-	require.NotNil(t, user, "无法获取 User 用户")
-	return &SolanaVaultIntegrationTest{
-		baseURL:       config.Server.URL,
-		httpClient:    &http.Client{Timeout: 30 * time.Second},
-		ctx:           context.Background(),
-		config:        config,
-		client:        client,
-		admin:         admin,
-		deployer:      deployer,
-		creator:       creator,
-		drdsvalidator: drdsvalidator,
-		user:          user,
-	}
-}
-
 // TestSolanaCreateAuth 测试 Solana 创建授权
 func TestSolanaCreateAuth(t *testing.T) {
 	// 加载配置
@@ -410,7 +379,7 @@ func TestSolanaCreateAuth(t *testing.T) {
 		createAuthReq := &CreateAuthReq{
 			ChainId: client.SOLANA,
 			Admin:   solanaConfig.Solana.Admin.PublicKey,
-			Creator: solanaConfig.Solana.Creator.PublicKey,
+			Creator: solanaConfig.Solana.User.PublicKey,
 		}
 
 		t.Logf("生成 Solana 创建授权请求:")
@@ -1187,8 +1156,8 @@ func TestSolanaSyncTxTask(t *testing.T) {
 	t.Run("SyncTxTask", func(t *testing.T) {
 		// 1. 准备同步请求 - 使用示例数据
 		syncReq := &SyncTxTaskReq{
-			Vault: "6AnTH5Z2MVa5tfUADQ6XcScEVHqqLBr6Hn29kJNN7Jsr", // 示例vault ID
-			Mint:  "8qTwdgepKvdX8Dzx12NxSdLfGy8wEJREPY4ruqnKSV1Q", // SOL的mint地址作为示例
+			Vault: "DxsiCWJosfaW8hac1nteyLUrAJo1MJMgeYwRwHtPVBd3", // 示例vault ID
+			Mint:  "Gaz37WvNbHGugixuY9DeMVrrE96GHi1Z35FcVDJicvgZ", // SOL的mint地址作为示例
 			// LaunchTxHash: "5VfJHKLSBFyKw4mhfYrJrSvwWWYFhWTdTwWfQhyFjgpnYzgKfUGQRKmtjz4k4Ah1k8Kj9zL5WfG", // 示例交易哈希
 			// StartSlot:    260000000,                                                                     // 示例起始slot
 		}
@@ -1234,9 +1203,9 @@ func TestSolanaProcessTx(t *testing.T) {
 	t.Run("ProcessTx", func(t *testing.T) {
 		// 1. 准备处理请求 - 使用示例数据
 		processReq := &ProcessTxReq{
-			Vault:  "6AnTH5Z2MVa5tfUADQ6XcScEVHqqLBr6Hn29kJNN7Jsr", // 示例vault ID
-			TaskID: "1972103737698680832",                          // 示例任务ID
-			Mint:   "8qTwdgepKvdX8Dzx12NxSdLfGy8wEJREPY4ruqnKSV1Q", // SOL的mint地址作为示例
+			Vault:  "DxsiCWJosfaW8hac1nteyLUrAJo1MJMgeYwRwHtPVBd3", // 示例vault ID
+			TaskID: "1972182655126470656",                          // 示例任务ID
+			Mint:   "Gaz37WvNbHGugixuY9DeMVrrE96GHi1Z35FcVDJicvgZ", // SOL的mint地址作为示例
 			// StartSlot: 260000000,                                      // 示例起始slot
 			// EndSlot:   260001000,                                      // 示例结束slot
 		}
@@ -1511,4 +1480,38 @@ func TestSolanaTokenTxsCompleteWorkflow(t *testing.T) {
 		t.Logf("   持有者总数: %d", holderResp.Total)
 		t.Logf("   最终任务状态: %d", taskInfoResp2.Status)
 	})
+}
+
+// NewSolanaVaultIntegrationTest 创建 Solana 集成测试实例
+func NewSolanaVaultIntegrationTest(config *SolanaConfig, t *testing.T) *SolanaVaultIntegrationTest {
+	client := rpc.New(config.Solana.RPCURL)
+	require.NotNil(t, client, "无法创建 Solana RPC 客户端")
+	GetAllSolanaUsers(config) // 预加载所有用户
+
+	admin := GetUserByRole(config, "admin")
+	require.NotNil(t, admin, "无法获取 Admin 用户")
+
+	deployer := GetUserByRole(config, "deployer")
+	require.NotNil(t, deployer, "无法获取 Deployer 用户")
+
+	creator := GetUserByRole(config, "creator")
+	require.NotNil(t, creator, "无法获取 Creator 用户")
+
+	drdsvalidator := GetUserByRole(config, "drds_validator")
+	require.NotNil(t, drdsvalidator, "无法获取 DrdsValidator 用户")
+
+	user := GetUserByRole(config, "user")
+	require.NotNil(t, user, "无法获取 User 用户")
+	return &SolanaVaultIntegrationTest{
+		baseURL:       config.Server.URL,
+		httpClient:    &http.Client{Timeout: 30 * time.Second},
+		ctx:           context.Background(),
+		config:        config,
+		client:        client,
+		admin:         admin,
+		deployer:      deployer,
+		creator:       creator,
+		drdsvalidator: drdsvalidator,
+		user:          user,
+	}
 }

@@ -73,6 +73,10 @@ func Test_VaultSolanaInit(t *testing.T) {
 		t.Logf("Classic SPL Token Mint created: %s", classicMint)
 	})
 
+	t.Run("MintToken", func(t *testing.T) {
+		TestMintToken(t)
+	})
+
 	t.Run("PrepareAsset", func(t *testing.T) {
 		// mint asset to user and manager accounts
 		assetUserAta, err := getAssociatedTokenAddressSync(
@@ -875,12 +879,12 @@ func TestSolanaVaultDeposit(t *testing.T) {
 		// 1. 准备投资请求
 		depositReq := &client.RequestVaultDepositReq{
 			ChainId:      client.SOLANA,
-			Investor:     solanaConfig.Solana.Admin.PublicKey,
-			Sender:       solanaConfig.Solana.Admin.PublicKey,
-			VaultAddress: "6AnTH5Z2MVa5tfUADQ6XcScEVHqqLBr6Hn29kJNN7Jsr", // 示例地址，实际应该使用真实的Vault地址
+			Investor:     solanaConfig.Solana.Creator.PublicKey,
+			Sender:       solanaConfig.Solana.Creator.PublicKey,
+			VaultAddress: "DxsiCWJosfaW8hac1nteyLUrAJo1MJMgeYwRwHtPVBd3", // 示例地址，实际应该使用真实的Vault地址
 			Amount:       "500000000",                                    // 1 USDC (6 decimals)
 			Signature:    stringPtr(""),                                  // 管理员签名，prepare deposit阶段必填
-			VaultId:      stringPtr("4765353"),                           // 示例Vault ID，实际应该使用真实的Vault ID
+			VaultId:      stringPtr("9760427"),                           // 示例Vault ID，实际应该使用真实的Vault ID
 		}
 
 		t.Logf("生成 Solana Vault 投资请求:")
@@ -905,7 +909,7 @@ func TestSolanaVaultDeposit(t *testing.T) {
 		require.NoError(t, err)
 
 		// 3. 模拟签名过程
-		signedTxBase64, err := signTx(t, test.admin, signedTx)
+		signedTxBase64, err := signTx(t, test.creator, signedTx)
 		require.NoError(t, err)
 
 		// 4. 准备提交请求
@@ -1525,4 +1529,208 @@ func TestSolanaVaultRedeem(t *testing.T) {
 		}
 	})
 
+}
+
+// TestMintToken 测试单独的Mint代币功能
+// 接受用户公钥和mint地址作为参数，可以给指定用户铸造代币
+func TestMintToken(t *testing.T) {
+	// 加载配置
+	loadSolanaConfig(t)
+
+	// 创建测试实例
+	test := NewSolanaVaultIntegrationTest(&solanaConfig, t)
+	env = test
+
+	t.Run("MintTokenToUser", func(t *testing.T) {
+		// 测试参数：用户公钥和铸币地址
+		userPublicKey := env.creator.SolPublicKey
+		mintAddress := solana.MustPublicKeyFromBase58(env.config.Solana.Tokens.USDC)
+		mintAmount := uint64(500000000) // 500 USDC (假设6位小数)
+
+		t.Logf("🪙 开始为用户铸造代币:")
+		t.Logf("  用户公钥: %s", userPublicKey.String())
+		t.Logf("  铸币地址: %s", mintAddress.String())
+		t.Logf("  铸币数量: %d", mintAmount)
+
+		// 1. 获取或创建用户的ATA (Associated Token Account)
+		userAta, err := getAssociatedTokenAddressSync(
+			mintAddress,           // 代币铸币地址
+			userPublicKey,         // 用户公钥（ATA所有者）
+			false,                 // allowOwnerOffCurve: 不允许PDA作为所有者
+			solana.TokenProgramID, // 使用经典SPL Token程序
+			solana.SPLAssociatedTokenAccountProgramID, // ATA程序
+		)
+		require.NoError(t, err)
+		t.Logf("  用户ATA地址: %s", userAta.String())
+
+		// 2. 检查ATA是否存在，如果不存在则创建
+		ataInfo, err := env.client.GetAccountInfo(env.ctx, userAta)
+		if err != nil || ataInfo.Value == nil {
+			t.Logf("  ATA不存在，正在创建...")
+			createAtaIx := createAtaIdempotentInstruction(
+				test.deployer.SolPublicKey, // payer
+				userAta,                    // associatedToken
+				userPublicKey,              // owner
+				mintAddress,                // mint
+				solana.TokenProgramID,      // programId
+				solana.SPLAssociatedTokenAccountProgramID, // associatedTokenProgramId
+			)
+			err = sendTransaction(t, []solana.Instruction{createAtaIx}, []solana.PrivateKey{env.deployer.SolPrivateKey})
+			require.NoError(t, err)
+			t.Logf("  ✅ ATA创建成功")
+		} else {
+			t.Logf("  ✅ ATA已存在")
+		}
+
+		time.Sleep(2 * time.Second) // 等待网络稳定
+
+		// 3. 验证ATA创建成功
+		var ataAccountInfo *rpc.GetAccountInfoResult
+		for i := 0; i < 10; i++ {
+			ataAccountInfo, err = env.client.GetAccountInfo(env.ctx, userAta)
+			if err == nil && ataAccountInfo.Value != nil {
+				t.Logf("  ATA %s owner: %s", userAta.String(), ataAccountInfo.Value.Owner.String())
+				// 解码并记录账户数据
+				jsonStr, derr := decodeAnchorAccount(ataAccountInfo.Value.Data, func() *token.Account { return &token.Account{} })
+				if derr != nil {
+					t.Logf("  ATA %s data decode failed: %v", userAta.String(), derr)
+				} else {
+					t.Logf("  ATA账户详情 (decoded):\n%s", jsonStr)
+				}
+				break
+			} else {
+				t.Logf("  Retrying to get ATA info: %v", err)
+				time.Sleep(3 * time.Second)
+			}
+		}
+		require.NoError(t, err)
+		require.NotNil(t, ataAccountInfo.Value)
+
+		// 4. 铸造代币到用户ATA
+		t.Logf("  🪙 正在铸造 %d 个代币到用户ATA...", mintAmount)
+		mintTokens(t, mintAddress, userAta, mintAmount, env.deployer.SolPrivateKey, solana.TokenProgramID)
+
+		// 5. 验证铸造结果
+		finalAtaInfo, err := env.client.GetAccountInfo(env.ctx, userAta)
+		require.NoError(t, err)
+		require.NotNil(t, finalAtaInfo.Value)
+
+		// 解码最终账户状态
+		finalJsonStr, derr := decodeAnchorAccount(finalAtaInfo.Value.Data, func() *token.Account { return &token.Account{} })
+		if derr == nil {
+			t.Logf("  ✅ 铸造完成! 最终ATA账户状态:\n%s", finalJsonStr)
+		} else {
+			t.Logf("  ⚠️ 无法解码最终账户状态: %v", derr)
+		}
+
+		t.Logf("🎉 代币铸造测试完成!")
+		t.Logf("  用户: %s", userPublicKey.String())
+		t.Logf("  铸币地址: %s", mintAddress.String())
+		t.Logf("  ATA地址: %s", userAta.String())
+		t.Logf("  铸造数量: %d", mintAmount)
+	})
+
+	t.Run("MintTokenToMultipleUsers", func(t *testing.T) {
+		// 测试给多个用户铸造代币
+		users := GetAllSolanaUsers(env.config)
+		mintAddress := solana.MustPublicKeyFromBase58(env.config.Solana.Tokens.USDC)
+		mintAmount := uint64(100000000) // 100 USDC
+
+		t.Logf("🪙 开始为多个用户铸造代币:")
+		t.Logf("  铸币地址: %s", mintAddress.String())
+		t.Logf("  每用户铸币数量: %d", mintAmount)
+		t.Logf("  用户数量: %d", len(users))
+
+		for role, user := range users {
+			t.Logf("  正在为 %s (%s) 铸造代币...", role, user.SolPublicKey.String())
+
+			// 获取用户ATA
+			userAta, err := getAssociatedTokenAddressSync(
+				mintAddress,
+				user.SolPublicKey,
+				false,
+				solana.TokenProgramID,
+				solana.SPLAssociatedTokenAccountProgramID,
+			)
+			require.NoError(t, err)
+
+			// 检查并创建ATA（如果需要）
+			ataInfo, err := env.client.GetAccountInfo(env.ctx, userAta)
+			if err != nil || ataInfo.Value == nil {
+				createAtaIx := createAtaIdempotentInstruction(
+					user.SolPublicKey,
+					userAta,
+					user.SolPublicKey,
+					mintAddress,
+					solana.TokenProgramID,
+					solana.SPLAssociatedTokenAccountProgramID,
+				)
+				err = sendTransaction(t, []solana.Instruction{createAtaIx}, []solana.PrivateKey{user.SolPrivateKey})
+				require.NoError(t, err)
+			}
+
+			// 铸造代币
+			mintTokens(t, mintAddress, userAta, mintAmount, env.deployer.SolPrivateKey, solana.TokenProgramID)
+			t.Logf("  ✅ %s 铸造完成", role)
+		}
+
+		t.Logf("🎉 多用户代币铸造测试完成!")
+	})
+}
+
+// MintTokenToUser 提供一个通用的函数来给指定用户铸造代币
+// Parameters:
+// - t: testing.T instance
+// - userPublicKey: 接收代币的用户公钥
+// - mintAddress: 代币的铸币地址
+// - amount: 要铸造的代币数量
+// - authority: 铸币权限私钥
+// - programId: 代币程序ID (通常是 solana.TokenProgramID)
+func MintTokenToUser(t *testing.T, userPublicKey solana.PublicKey, mintAddress solana.PublicKey, amount uint64, authority solana.PrivateKey, programId solana.PublicKey) {
+	t.Logf("🪙 MintTokenToUser: 开始为用户 %s 铸造 %d 个代币", userPublicKey.String(), amount)
+
+	// 1. 获取用户的ATA
+	userAta, err := getAssociatedTokenAddressSync(
+		mintAddress,
+		userPublicKey,
+		false,
+		programId,
+		solana.SPLAssociatedTokenAccountProgramID,
+	)
+	require.NoError(t, err)
+	t.Logf("  用户ATA: %s", userAta.String())
+
+	// 2. 检查ATA是否存在，如果不存在则创建
+	ataInfo, err := env.client.GetAccountInfo(env.ctx, userAta)
+	if err != nil || ataInfo.Value == nil {
+		t.Logf("  创建ATA...")
+		createAtaIx := createAtaIdempotentInstruction(
+			authority.PublicKey(), // 使用权限账户作为payer
+			userAta,
+			userPublicKey,
+			mintAddress,
+			programId,
+			solana.SPLAssociatedTokenAccountProgramID,
+		)
+		err = sendTransaction(t, []solana.Instruction{createAtaIx}, []solana.PrivateKey{authority})
+		require.NoError(t, err)
+		t.Logf("  ✅ ATA创建完成")
+	}
+
+	// 3. 等待ATA创建确认
+	for i := 0; i < 10; i++ {
+		ataInfo, err = env.client.GetAccountInfo(env.ctx, userAta)
+		if err == nil && ataInfo.Value != nil {
+			break
+		}
+		time.Sleep(3 * time.Second)
+	}
+	require.NoError(t, err)
+	require.NotNil(t, ataInfo.Value)
+
+	// 4. 铸造代币
+	t.Logf("  铸造代币...")
+	mintTokens(t, mintAddress, userAta, amount, authority, programId)
+
+	t.Logf("✅ MintTokenToUser: 代币铸造完成! 用户: %s, 数量: %d", userPublicKey.String(), amount)
 }
