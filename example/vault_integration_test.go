@@ -599,7 +599,7 @@ func createVault(t *testing.T, test *VaultLaunchIntegrationTest, fundingDuration
 	t.Logf("交易提交成功，TxHash: %s", submitResp.TxHash)
 
 	// 5. 等待 MQ 推送
-	mqMessageInterface := test.waitForMQMessage(t, submitResp.TxHash, client.MessageTypeRBFVaultLaunch)
+	mqMessageInterface := test.waitForMQMessage(t, submitResp.TxHash, client.MessageTypeVaultLaunch)
 	require.NotNil(t, mqMessageInterface)
 
 	// 类型断言
