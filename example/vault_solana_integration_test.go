@@ -112,6 +112,77 @@ type SolanaKeyPair struct {
 	PrivateKey string `json:"private_key"`
 }
 
+// ProcessTxReq 处理交易请求结构体
+type ProcessTxReq struct {
+	Vault     string `json:"vault" binding:"required"`   // Vault ID
+	TaskID    string `json:"task_id" binding:"required"` // 任务ID
+	Mint      string `json:"mint" binding:"required"`    // Token mint 地址
+	StartSlot int64  `json:"start_slot"`                 // 起始 slot
+	EndSlot   int64  `json:"end_slot"`                   // 结束 slot (可选，如果不传则处理到最新)
+}
+
+// SyncTxTaskReq 同步交易任务请求结构体
+type SyncTxTaskReq struct {
+	Vault        string `json:"vault" binding:"required"` // Vault ID
+	Mint         string `json:"mint" binding:"required"`  // Token mint 地址
+	LaunchTxHash string `json:"launch_tx_hash"`           // 发起vault的交易哈希
+	StartSlot    int64  `json:"start_slot"`               // 起始 slot
+}
+
+// SyncTxTaskResp 同步交易任务响应结构体
+type SyncTxTaskResp struct {
+	Vault  string `json:"vault"`
+	TaskID string `json:"task_id"`
+	Step   int    `json:"step"` // 同步1，处理2
+	Status int    `json:"status"`
+}
+
+// ProcessTxResp 处理交易响应结构体
+type ProcessTxResp struct {
+	Status int    `json:"status"`
+	Step   int    `json:"step"`
+	TaskID string `json:"task_id"`
+}
+
+// GetHolderInfoReq 获取持有者信息请求结构体
+type GetHolderInfoReq struct {
+	Vault    string `form:"vault" binding:"required"` // Vault ID
+	Mint     string `form:"mint" binding:"required"`  // Token mint 地址
+	Sequence int    `form:"sequence"`                 // 序列号
+	UsingApi int    `form:"using_api"`                // 使用API
+}
+
+// GetTaskInfoReq 获取任务信息请求结构体
+type GetTaskInfoReq struct {
+	TaskID string `form:"task_id"` // 任务ID
+	Vault  string `form:"vault"`   // Vault ID
+}
+
+// HolderInfo 持有者信息结构体
+type HolderInfo struct {
+	HolderAddress string `json:"holder_address"`
+	TokenAddress  string `json:"token_address"`
+	Balance       int64  `json:"balance"`
+	BalanceSTR    string `json:"balance_str"`
+	Decimals      int64  `json:"decimals"`
+	StartSlot     int64  `json:"start_slot,omitempty"`
+	EndSlot       int64  `json:"end_slot,omitempty"`
+}
+
+// GetHolderInfoResp 获取持有者信息响应结构体
+type GetHolderInfoResp struct {
+	Holders []*HolderInfo `json:"holders"`
+	Total   int           `json:"total"`
+}
+
+// TaskInfoResp 获取任务信息响应结构体
+type TaskInfoResp struct {
+	TaskID string `json:"task_id"`
+	Vault  string `json:"vault"`
+	Step   int    `json:"step"` // 同步1，处理2
+	Status int    `json:"status"`
+}
+
 // VaultInitReq Vault 初始化配置请求结构体
 type VaultInitReq struct {
 	ChainId client.CommonChainID `json:"chain_id"`
@@ -629,6 +700,193 @@ func (test *SolanaVaultIntegrationTest) callPrepareCreateAuthSolana(t *testing.T
 	return &prepareResp
 }
 
+// callSyncTxTask 调用同步交易任务接口
+func (test *SolanaVaultIntegrationTest) callSyncTxTask(t *testing.T, req *SyncTxTaskReq) *SyncTxTaskResp {
+	// 创建请求体
+	reqBody, err := json.Marshal(req)
+	require.NoError(t, err)
+
+	t.Logf("调用 /api/v2/token_txs/sync")
+	t.Logf("请求体: %s", string(reqBody))
+
+	// 创建 HTTP 请求
+	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/token_txs/sync", bytes.NewBuffer(reqBody))
+	require.NoError(t, err)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", appId)
+
+	// 执行请求
+	resp, err := test.httpClient.Do(httpReq)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// 解析响应
+	var apiResp client.CommonApiResp
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	require.NoError(t, err)
+	assert.Equal(t, 0, *apiResp.Code)
+
+	t.Log("收到同步交易任务响应")
+
+	// 解析数据
+	respData, err := json.Marshal(apiResp.Data)
+	require.NoError(t, err)
+
+	var syncResp SyncTxTaskResp
+	err = json.Unmarshal(respData, &syncResp)
+	require.NoError(t, err)
+
+	return &syncResp
+}
+
+// callProcessTx 调用处理交易接口
+func (test *SolanaVaultIntegrationTest) callProcessTx(t *testing.T, req *ProcessTxReq) *ProcessTxResp {
+	// 创建请求体
+	reqBody, err := json.Marshal(req)
+	require.NoError(t, err)
+
+	t.Logf("调用 /api/v2/token_txs/process")
+	t.Logf("请求体: %s", string(reqBody))
+
+	// 创建 HTTP 请求
+	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/token_txs/process", bytes.NewBuffer(reqBody))
+	require.NoError(t, err)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", appId)
+
+	// 执行请求
+	resp, err := test.httpClient.Do(httpReq)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// 解析响应
+	var apiResp client.CommonApiResp
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	require.NoError(t, err)
+	assert.Equal(t, 0, *apiResp.Code)
+
+	t.Log("收到处理交易响应")
+
+	// 解析数据
+	respData, err := json.Marshal(apiResp.Data)
+	require.NoError(t, err)
+
+	var processResp ProcessTxResp
+	err = json.Unmarshal(respData, &processResp)
+	require.NoError(t, err)
+
+	return &processResp
+}
+
+// callGetHolderInfo 调用获取持有者信息接口
+func (test *SolanaVaultIntegrationTest) callGetHolderInfo(t *testing.T, req *GetHolderInfoReq) *GetHolderInfoResp {
+	// 构建查询参数
+	queryParams := fmt.Sprintf("vault=%s&mint=%s", req.Vault, req.Mint)
+	if req.Sequence != 0 {
+		queryParams += fmt.Sprintf("&sequence=%d", req.Sequence)
+	}
+	if req.UsingApi != 0 {
+		queryParams += fmt.Sprintf("&using_api=%d", req.UsingApi)
+	}
+
+	t.Logf("调用 /api/v2/token_txs/holder_info")
+	t.Logf("查询参数: %s", queryParams)
+
+	// 创建 HTTP 请求
+	httpReq, err := http.NewRequest("GET", test.baseURL+"/api/v2/token_txs/holder_info?"+queryParams, nil)
+	require.NoError(t, err)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", appId)
+
+	// 执行请求
+	resp, err := test.httpClient.Do(httpReq)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// 解析响应
+	var apiResp client.CommonApiResp
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	require.NoError(t, err)
+	assert.Equal(t, 0, *apiResp.Code)
+
+	t.Log("收到获取持有者信息响应")
+
+	// 解析数据
+	respData, err := json.Marshal(apiResp.Data)
+	require.NoError(t, err)
+
+	var holderResp GetHolderInfoResp
+	err = json.Unmarshal(respData, &holderResp)
+	require.NoError(t, err)
+
+	return &holderResp
+}
+
+// callGetTaskInfo 调用获取任务信息接口
+func (test *SolanaVaultIntegrationTest) callGetTaskInfo(t *testing.T, req *GetTaskInfoReq) *TaskInfoResp {
+	// 构建查询参数
+	var queryParams string
+	if req.TaskID != "" {
+		queryParams = fmt.Sprintf("task_id=%s", req.TaskID)
+	}
+	if req.Vault != "" {
+		if queryParams != "" {
+			queryParams += "&"
+		}
+		queryParams += fmt.Sprintf("vault=%s", req.Vault)
+	}
+
+	t.Logf("调用 /api/v2/token_txs/task_info")
+	t.Logf("查询参数: %s", queryParams)
+
+	// 创建 HTTP 请求
+	var url string
+	if queryParams != "" {
+		url = test.baseURL + "/api/v2/token_txs/task_info?" + queryParams
+	} else {
+		url = test.baseURL + "/api/v2/token_txs/task_info"
+	}
+	httpReq, err := http.NewRequest("GET", url, nil)
+	require.NoError(t, err)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", appId)
+
+	// 执行请求
+	resp, err := test.httpClient.Do(httpReq)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// 解析响应
+	var apiResp client.CommonApiResp
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	require.NoError(t, err)
+	assert.Equal(t, 0, *apiResp.Code)
+
+	t.Log("收到获取任务信息响应")
+
+	// 解析数据
+	respData, err := json.Marshal(apiResp.Data)
+	require.NoError(t, err)
+
+	var taskResp TaskInfoResp
+	err = json.Unmarshal(respData, &taskResp)
+	require.NoError(t, err)
+
+	return &taskResp
+}
+
 // generateSolanaTestVaultRequest 生成 Solana 测试 Vault 创建请求
 func (test *SolanaVaultIntegrationTest) generateSolanaTestVaultRequest(t *testing.T) *client.RequestVaultCreateReq {
 	// 使用当前时间戳生成唯一的项目名称
@@ -900,7 +1158,7 @@ func TestSolanaVaultCommonInfo(t *testing.T) {
 		commonInfoReq := &VaultCommonInfoReq{
 			ChainId:      client.SOLANA,
 			VaultAddress: "11111111111111111111111111111111",             // 示例地址，实际应该使用真实的Vault地址
-			InfoType:     "vault_state",                              // 可选参数
+			InfoType:     "vault_state",                                  // 可选参数
 			InfoId:       "GzTyAkvV8Q1yetRRvm4BqwJC8JGdsrfkMQ9e1LdMQEvz", // 可选参数
 		}
 
@@ -915,5 +1173,342 @@ func TestSolanaVaultCommonInfo(t *testing.T) {
 		t.Logf("✅ Solana Vault 基本信息查询完成")
 		retJson, _ := json.MarshalIndent(commonInfoResp, "", "  ")
 		t.Logf("返回数据: %s", string(retJson))
+	})
+}
+
+// TestSolanaSyncTxTask 测试同步交易任务API
+func TestSolanaSyncTxTask(t *testing.T) {
+	// 加载配置
+	loadSolanaConfig(t)
+
+	// 创建测试实例
+	test := NewSolanaVaultIntegrationTest(&solanaConfig, t)
+
+	t.Run("SyncTxTask", func(t *testing.T) {
+		// 1. 准备同步请求 - 使用示例数据
+		syncReq := &SyncTxTaskReq{
+			Vault: "6AnTH5Z2MVa5tfUADQ6XcScEVHqqLBr6Hn29kJNN7Jsr", // 示例vault ID
+			Mint:  "8qTwdgepKvdX8Dzx12NxSdLfGy8wEJREPY4ruqnKSV1Q", // SOL的mint地址作为示例
+			// LaunchTxHash: "5VfJHKLSBFyKw4mhfYrJrSvwWWYFhWTdTwWfQhyFjgpnYzgKfUGQRKmtjz4k4Ah1k8Kj9zL5WfG", // 示例交易哈希
+			// StartSlot:    260000000,                                                                     // 示例起始slot
+		}
+
+		t.Logf("生成同步交易任务请求:")
+		t.Logf("  Vault: %s", syncReq.Vault)
+		t.Logf("  Mint: %s", syncReq.Mint)
+		t.Logf("  LaunchTxHash: %s", syncReq.LaunchTxHash)
+		t.Logf("  StartSlot: %d", syncReq.StartSlot)
+
+		// 2. 调用同步任务接口
+		syncResp := test.callSyncTxTask(t, syncReq)
+		require.NotNil(t, syncResp)
+
+		t.Logf("同步交易任务响应:")
+		t.Logf("  Vault: %s", syncResp.Vault)
+		t.Logf("  TaskID: %s", syncResp.TaskID)
+		t.Logf("  Step: %d", syncResp.Step)
+		t.Logf("  Status: %d", syncResp.Status)
+
+		// 3. 验证响应结果
+		assert.Equal(t, syncReq.Vault, syncResp.Vault)
+		assert.NotEmpty(t, syncResp.TaskID)
+		assert.Equal(t, 1, syncResp.Step) // 同步步骤
+
+		// 状态可能是各种值，这里只检查是否有返回
+		assert.GreaterOrEqual(t, syncResp.Status, 0)
+
+		t.Logf("✅ 同步交易任务调用成功!")
+		t.Logf("   任务ID: %s", syncResp.TaskID)
+		t.Logf("   状态: %d", syncResp.Status)
+	})
+}
+
+// TestSolanaProcessTx 测试处理交易API
+func TestSolanaProcessTx(t *testing.T) {
+	// 加载配置
+	loadSolanaConfig(t)
+
+	// 创建测试实例
+	test := NewSolanaVaultIntegrationTest(&solanaConfig, t)
+
+	t.Run("ProcessTx", func(t *testing.T) {
+		// 1. 准备处理请求 - 使用示例数据
+		processReq := &ProcessTxReq{
+			Vault:  "6AnTH5Z2MVa5tfUADQ6XcScEVHqqLBr6Hn29kJNN7Jsr", // 示例vault ID
+			TaskID: "1972103737698680832",                          // 示例任务ID
+			Mint:   "8qTwdgepKvdX8Dzx12NxSdLfGy8wEJREPY4ruqnKSV1Q", // SOL的mint地址作为示例
+			// StartSlot: 260000000,                                      // 示例起始slot
+			// EndSlot:   260001000,                                      // 示例结束slot
+		}
+
+		t.Logf("生成处理交易请求:")
+		t.Logf("  Vault: %s", processReq.Vault)
+		t.Logf("  TaskID: %s", processReq.TaskID)
+		t.Logf("  Mint: %s", processReq.Mint)
+		t.Logf("  StartSlot: %d", processReq.StartSlot)
+		t.Logf("  EndSlot: %d", processReq.EndSlot)
+
+		// 2. 调用处理交易接口
+		processResp := test.callProcessTx(t, processReq)
+		require.NotNil(t, processResp)
+
+		t.Logf("处理交易响应:")
+		t.Logf("  TaskID: %s", processResp.TaskID)
+		t.Logf("  Step: %d", processResp.Step)
+		t.Logf("  Status: %d", processResp.Status)
+
+		// 3. 验证响应结果
+		assert.Equal(t, processReq.TaskID, processResp.TaskID)
+		assert.Equal(t, 2, processResp.Step) // 处理步骤
+
+		// 状态可能是各种值，这里只检查是否有返回
+		assert.GreaterOrEqual(t, processResp.Status, 0)
+
+		t.Logf("✅ 处理交易调用成功!")
+		t.Logf("   任务ID: %s", processResp.TaskID)
+		t.Logf("   状态: %d", processResp.Status)
+	})
+}
+
+// TestSolanaTokenTxsWorkflow 测试完整的Token交易处理工作流
+func TestSolanaTokenTxsWorkflow(t *testing.T) {
+	// 加载配置
+	loadSolanaConfig(t)
+
+	// 创建测试实例
+	test := NewSolanaVaultIntegrationTest(&solanaConfig, t)
+
+	t.Run("CompleteTokenTxsWorkflow", func(t *testing.T) {
+		// 1. 首先调用同步任务
+		syncReq := &SyncTxTaskReq{
+			Vault:        "workflow_test_vault",                                                         // 工作流测试vault ID
+			Mint:         "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",                                // USDC mint地址
+			LaunchTxHash: "5VfJHKLSBFyKw4mhfYrJrSvwWWYFhWTdTwWfQhyFjgpnYzgKfUGQRKmtjz4k4Ah1k8Kj9zL5WfG", // 示例交易哈希
+			StartSlot:    260000000,                                                                     // 示例起始slot
+		}
+
+		t.Logf("步骤1: 同步交易任务")
+		syncResp := test.callSyncTxTask(t, syncReq)
+		require.NotNil(t, syncResp)
+		require.NotEmpty(t, syncResp.TaskID)
+
+		t.Logf("同步任务创建成功，TaskID: %s", syncResp.TaskID)
+
+		// 2. 等待一小段时间模拟同步过程
+		time.Sleep(2 * time.Second)
+
+		// 3. 使用同步返回的TaskID进行处理
+		processReq := &ProcessTxReq{
+			Vault:     syncReq.Vault,
+			TaskID:    syncResp.TaskID, // 使用同步返回的TaskID
+			Mint:      syncReq.Mint,
+			StartSlot: syncReq.StartSlot,
+			EndSlot:   syncReq.StartSlot + 1000, // 处理1000个slot
+		}
+
+		t.Logf("步骤2: 处理交易数据")
+		processResp := test.callProcessTx(t, processReq)
+		require.NotNil(t, processResp)
+
+		// 4. 验证工作流结果
+		assert.Equal(t, syncResp.TaskID, processResp.TaskID, "任务ID应该保持一致")
+		assert.Equal(t, 1, syncResp.Step, "同步步骤应该是1")
+		assert.Equal(t, 2, processResp.Step, "处理步骤应该是2")
+
+		t.Logf("✅ 完整工作流测试成功!")
+		t.Logf("   任务ID: %s", processResp.TaskID)
+		t.Logf("   同步状态: %d", syncResp.Status)
+		t.Logf("   处理状态: %d", processResp.Status)
+	})
+}
+
+// TestSolanaGetHolderInfo 测试获取持有者信息API
+func TestSolanaGetHolderInfo(t *testing.T) {
+	// 加载配置
+	loadSolanaConfig(t)
+
+	// 创建测试实例
+	test := NewSolanaVaultIntegrationTest(&solanaConfig, t)
+
+	t.Run("GetHolderInfo", func(t *testing.T) {
+		// 1. 准备获取持有者信息请求 - 使用示例数据
+		holderReq := &GetHolderInfoReq{
+			Vault:    "test_vault_001",                              // 示例vault ID
+			Mint:     "So11111111111111111111111111111111111111112", // SOL的mint地址作为示例
+			Sequence: 1,                                             // 示例序列号
+			UsingApi: 1,                                             // 使用API标识
+		}
+
+		t.Logf("生成获取持有者信息请求:")
+		t.Logf("  Vault: %s", holderReq.Vault)
+		t.Logf("  Mint: %s", holderReq.Mint)
+		t.Logf("  Sequence: %d", holderReq.Sequence)
+		t.Logf("  UsingApi: %d", holderReq.UsingApi)
+
+		// 2. 调用获取持有者信息接口
+		holderResp := test.callGetHolderInfo(t, holderReq)
+		require.NotNil(t, holderResp)
+
+		t.Logf("获取持有者信息响应:")
+		t.Logf("  Total: %d", holderResp.Total)
+		t.Logf("  Holders Count: %d", len(holderResp.Holders))
+
+		// 3. 验证响应结果
+		assert.GreaterOrEqual(t, holderResp.Total, 0, "持有者总数应该大于等于0")
+		assert.Equal(t, holderResp.Total, len(holderResp.Holders), "持有者总数应该与实际数量一致")
+
+		// 4. 如果有持有者数据，验证数据结构
+		if len(holderResp.Holders) > 0 {
+			holder := holderResp.Holders[0]
+			assert.NotEmpty(t, holder.HolderAddress, "持有者地址不应为空")
+			assert.NotEmpty(t, holder.TokenAddress, "代币地址不应为空")
+			assert.GreaterOrEqual(t, holder.Balance, int64(0), "余额应该大于等于0")
+			assert.NotEmpty(t, holder.BalanceSTR, "余额字符串不应为空")
+
+			t.Logf("第一个持有者信息:")
+			t.Logf("  地址: %s", holder.HolderAddress)
+			t.Logf("  代币地址: %s", holder.TokenAddress)
+			t.Logf("  余额: %d", holder.Balance)
+			t.Logf("  余额字符串: %s", holder.BalanceSTR)
+			t.Logf("  精度: %d", holder.Decimals)
+		}
+
+		t.Logf("✅ 获取持有者信息调用成功!")
+		t.Logf("   总计持有者: %d", holderResp.Total)
+	})
+}
+
+// TestSolanaGetTaskInfo 测试获取任务信息API
+func TestSolanaGetTaskInfo(t *testing.T) {
+	// 加载配置
+	loadSolanaConfig(t)
+
+	// 创建测试实例
+	test := NewSolanaVaultIntegrationTest(&solanaConfig, t)
+
+	t.Run("GetTaskInfo", func(t *testing.T) {
+		// 1. 准备获取任务信息请求 - 使用示例数据
+		taskReq := &GetTaskInfoReq{
+			TaskID: "task_12345678901234567890", // 示例任务ID
+			Vault:  "test_vault_001",            // 示例vault ID
+		}
+
+		t.Logf("生成获取任务信息请求:")
+		t.Logf("  TaskID: %s", taskReq.TaskID)
+		t.Logf("  Vault: %s", taskReq.Vault)
+
+		// 2. 调用获取任务信息接口
+		taskResp := test.callGetTaskInfo(t, taskReq)
+		require.NotNil(t, taskResp)
+
+		t.Logf("获取任务信息响应:")
+		t.Logf("  TaskID: %s", taskResp.TaskID)
+		t.Logf("  Vault: %s", taskResp.Vault)
+		t.Logf("  Step: %d", taskResp.Step)
+		t.Logf("  Status: %d", taskResp.Status)
+
+		// 3. 验证响应结果
+		assert.NotEmpty(t, taskResp.TaskID, "任务ID不应为空")
+		assert.NotEmpty(t, taskResp.Vault, "Vault ID不应为空")
+		assert.GreaterOrEqual(t, taskResp.Step, 0, "步骤应该大于等于0")
+		assert.GreaterOrEqual(t, taskResp.Status, 0, "状态应该大于等于0")
+
+		// 4. 验证步骤值的合理性（同步=1，处理=2）
+		if taskResp.Step == 1 {
+			t.Logf("   任务类型: 同步任务")
+		} else if taskResp.Step == 2 {
+			t.Logf("   任务类型: 处理任务")
+		} else {
+			t.Logf("   任务类型: 未知类型 (Step=%d)", taskResp.Step)
+		}
+
+		t.Logf("✅ 获取任务信息调用成功!")
+		t.Logf("   任务ID: %s", taskResp.TaskID)
+		t.Logf("   步骤: %d", taskResp.Step)
+		t.Logf("   状态: %d", taskResp.Status)
+	})
+}
+
+// TestSolanaTokenTxsCompleteWorkflow 测试Token交易处理的完整工作流（包含查询）
+func TestSolanaTokenTxsCompleteWorkflow(t *testing.T) {
+	// 加载配置
+	loadSolanaConfig(t)
+
+	// 创建测试实例
+	test := NewSolanaVaultIntegrationTest(&solanaConfig, t)
+
+	t.Run("CompleteWorkflowWithQueries", func(t *testing.T) {
+		// 1. 同步交易任务
+		syncReq := &SyncTxTaskReq{
+			Vault:        "complete_workflow_vault",                                                     // 完整工作流测试vault ID
+			Mint:         "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",                                // USDC mint地址
+			LaunchTxHash: "5VfJHKLSBFyKw4mhfYrJrSvwWWYFhWTdTwWfQhyFjgpnYzgKfUGQRKmtjz4k4Ah1k8Kj9zL5WfG", // 示例交易哈希
+			StartSlot:    260000000,                                                                     // 示例起始slot
+		}
+
+		t.Logf("步骤1: 创建同步任务")
+		syncResp := test.callSyncTxTask(t, syncReq)
+		require.NotNil(t, syncResp)
+		require.NotEmpty(t, syncResp.TaskID)
+
+		t.Logf("同步任务创建成功，TaskID: %s", syncResp.TaskID)
+
+		// 2. 查询任务信息
+		t.Logf("步骤2: 查询任务信息")
+		taskInfoReq := &GetTaskInfoReq{
+			TaskID: syncResp.TaskID,
+			Vault:  syncReq.Vault,
+		}
+		taskInfoResp := test.callGetTaskInfo(t, taskInfoReq)
+		require.NotNil(t, taskInfoResp)
+
+		t.Logf("任务信息查询成功")
+		assert.Equal(t, syncResp.TaskID, taskInfoResp.TaskID, "任务ID应该一致")
+		assert.Equal(t, syncReq.Vault, taskInfoResp.Vault, "Vault ID应该一致")
+
+		// 3. 等待同步完成
+		time.Sleep(2 * time.Second)
+
+		// 4. 处理交易
+		t.Logf("步骤3: 处理交易数据")
+		processReq := &ProcessTxReq{
+			Vault:     syncReq.Vault,
+			TaskID:    syncResp.TaskID,
+			Mint:      syncReq.Mint,
+			StartSlot: syncReq.StartSlot,
+			EndSlot:   syncReq.StartSlot + 1000,
+		}
+		processResp := test.callProcessTx(t, processReq)
+		require.NotNil(t, processResp)
+
+		// 5. 再次查询任务信息，验证状态更新
+		t.Logf("步骤4: 再次查询任务信息")
+		taskInfoResp2 := test.callGetTaskInfo(t, taskInfoReq)
+		require.NotNil(t, taskInfoResp2)
+
+		// 6. 查询持有者信息
+		t.Logf("步骤5: 查询持有者信息")
+		holderReq := &GetHolderInfoReq{
+			Vault:    syncReq.Vault,
+			Mint:     syncReq.Mint,
+			Sequence: 1,
+			UsingApi: 1,
+		}
+		holderResp := test.callGetHolderInfo(t, holderReq)
+		require.NotNil(t, holderResp)
+
+		// 7. 验证整个工作流
+		assert.Equal(t, syncResp.TaskID, processResp.TaskID, "处理阶段的任务ID应该与同步阶段一致")
+		assert.Equal(t, syncResp.TaskID, taskInfoResp2.TaskID, "查询的任务ID应该一致")
+		assert.Equal(t, 1, syncResp.Step, "同步步骤应该是1")
+		assert.Equal(t, 2, processResp.Step, "处理步骤应该是2")
+		assert.GreaterOrEqual(t, holderResp.Total, 0, "持有者总数应该大于等于0")
+
+		t.Logf("✅ 完整工作流测试成功!")
+		t.Logf("   任务ID: %s", processResp.TaskID)
+		t.Logf("   同步状态: %d", syncResp.Status)
+		t.Logf("   处理状态: %d", processResp.Status)
+		t.Logf("   持有者总数: %d", holderResp.Total)
+		t.Logf("   最终任务状态: %d", taskInfoResp2.Status)
 	})
 }

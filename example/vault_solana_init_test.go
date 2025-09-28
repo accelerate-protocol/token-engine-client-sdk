@@ -875,12 +875,12 @@ func TestSolanaVaultDeposit(t *testing.T) {
 		// 1. 准备投资请求
 		depositReq := &client.RequestVaultDepositReq{
 			ChainId:      client.SOLANA,
-			Investor:     solanaConfig.Solana.User.PublicKey,
-			Sender:       solanaConfig.Solana.User.PublicKey,
-			VaultAddress: "GzTyAkvV8Q1yetRRvm4BqwJC8JGdsrfkMQ9e1LdMQEvz", // 示例地址，实际应该使用真实的Vault地址
+			Investor:     solanaConfig.Solana.Admin.PublicKey,
+			Sender:       solanaConfig.Solana.Admin.PublicKey,
+			VaultAddress: "6AnTH5Z2MVa5tfUADQ6XcScEVHqqLBr6Hn29kJNN7Jsr", // 示例地址，实际应该使用真实的Vault地址
 			Amount:       "500000000",                                    // 1 USDC (6 decimals)
 			Signature:    stringPtr(""),                                  // 管理员签名，prepare deposit阶段必填
-			VaultId:      stringPtr("791019057648791960"),                // 示例Vault ID，实际应该使用真实的Vault ID
+			VaultId:      stringPtr("4765353"),                           // 示例Vault ID，实际应该使用真实的Vault ID
 		}
 
 		t.Logf("生成 Solana Vault 投资请求:")
@@ -905,13 +905,13 @@ func TestSolanaVaultDeposit(t *testing.T) {
 		require.NoError(t, err)
 
 		// 3. 模拟签名过程
-		signedTxBase64, err := signTx(t, test.user, signedTx)
+		signedTxBase64, err := signTx(t, test.admin, signedTx)
 		require.NoError(t, err)
 
 		// 4. 准备提交请求
 		submitReq := &client.RequestSubmitReq{
 			ChainId:      client.SOLANA,
-			Sender:       solanaConfig.Solana.User.PublicKey,
+			Sender:       solanaConfig.Solana.Creator.PublicKey,
 			TxMsgBase64:  signedTxBase64,
 			SignTxBase64: signedTxBase64,
 		}
