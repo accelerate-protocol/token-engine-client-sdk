@@ -29,6 +29,12 @@ const (
 	SOLANA CommonChainID = "1001"
 )
 
+// Defines values for CommonVaultType.
+const (
+	VaultTypeFund CommonVaultType = 1
+	VaultTypeRBF  CommonVaultType = 0
+)
+
 // Defines values for EntityDEXPlatform.
 const (
 	DexRaydium     EntityDEXPlatform = "Raydium"
@@ -114,6 +120,9 @@ type CommonApiResp struct {
 
 // CommonChainID defines model for common.ChainID.
 type CommonChainID string
+
+// CommonVaultType defines model for common.VaultType.
+type CommonVaultType int
 
 // EntityDEXPlatform defines model for entity.DEX_Platform.
 type EntityDEXPlatform string
@@ -312,6 +321,15 @@ type RequestFinancingRuleInfo struct {
 
 	// Whitelist 投资人白名单列表
 	Whitelist *[]string `json:"whitelist,omitempty"`
+}
+
+// RequestFundExtraData defines model for request.FundExtraData.
+type RequestFundExtraData struct {
+	// MinRedemptionAmount 代币最小赎回数量
+	MinRedemptionAmount *string `json:"min_redemption_amount,omitempty"`
+
+	// StartTime 代币锁定的开始时间
+	StartTime *int `json:"start_time,omitempty"`
 }
 
 // RequestFundingOverviewReq defines model for request.FundingOverviewReq.
@@ -578,11 +596,15 @@ type RequestVaultCreateReq struct {
 	// FinancingRuleData 融资信息
 	FinancingRuleData RequestFinancingRuleInfo `json:"financing_rule_data"`
 
+	// FundExtraData fund模式下的额外信息
+	FundExtraData *RequestFundExtraData `json:"fund_extra_data,omitempty"`
+
 	// ManagementData 管理信息
 	ManagementData RequestVaultManagement `json:"management_data"`
 
 	// TokenMetaData token元数据信息
 	TokenMetaData RequestTokenMeta `json:"token_meta_data"`
+	VaultType     *CommonVaultType `json:"vault_type,omitempty"`
 }
 
 // RequestVaultDepositReq defines model for request.VaultDepositReq.
