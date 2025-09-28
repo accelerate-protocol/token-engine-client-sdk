@@ -884,7 +884,7 @@ func TestSolanaVaultDeposit(t *testing.T) {
 			VaultAddress: "DxsiCWJosfaW8hac1nteyLUrAJo1MJMgeYwRwHtPVBd3", // 示例地址，实际应该使用真实的Vault地址
 			Amount:       "500000000",                                    // 1 USDC (6 decimals)
 			Signature:    stringPtr(""),                                  // 管理员签名，prepare deposit阶段必填
-			VaultId:      stringPtr("9760427"),                           // 示例Vault ID，实际应该使用真实的Vault ID
+			// VaultId:      stringPtr("9760427"),                           // 示例Vault ID，实际应该使用真实的Vault ID
 		}
 
 		t.Logf("生成 Solana Vault 投资请求:")
