@@ -7,10 +7,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"math"
 	"math/big"
 	"net/http"
-	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -54,7 +52,7 @@ type Config struct {
 	Blockchain struct {
 		ChainID  string `toml:"chain_id"`
 		MockUSDC string `toml:"mock_usdc"`
-		Decimal  int    `toml:"decimal"`
+		Decimal  uint64 `toml:"decimal"`
 	} `toml:"blockchain"`
 }
 
@@ -294,12 +292,13 @@ func boolPtr(b bool) *bool {
 }
 
 // parseUsd 根据decimal精度转换金额
-func parseUsd(amount float64) string {
+func parseUsd(amount int64) string {
 	decimal := config.Blockchain.Decimal
 	// 计算精度倍数
-	multiplier := math.Pow10(decimal)
+	multiplier := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(decimal)), nil)
+	scaleUpAmount := new(big.Int).Mul(big.NewInt(int64(amount)), multiplier)
 	// 转换金额并返回字符串
-	return strconv.FormatInt(int64(amount*multiplier), 10)
+	return scaleUpAmount.String()
 }
 
 // VaultDepositRequest Vault 投资请求
@@ -699,6 +698,41 @@ func (test *VaultLaunchIntegrationTest) waitForMQMessage(t *testing.T, txHash st
 					// 通道已满，忽略
 				}
 			}
+		case uint(client.MessageTypeWithdrawManageFee):
+			// 解析 WithdrawManageFee 消息
+			var withdrawFee client.VaultWithdrawFee
+			if err := msg.DecodeData(&withdrawFee); err != nil {
+				t.Logf("解析 WithdrawManageFee 消息失败: %v", err)
+				return err
+			}
+			// 检查是否是我们要等待的交易
+			if withdrawFee.TxHash == txHash && uint(messageType) == uint(client.MessageTypeWithdrawManageFee) {
+				t.Logf("找到匹配的 WithdrawManageFee 交易消息: %s", txHash)
+				select {
+				case messageChan <- &withdrawFee:
+					// 消息已发送到通道
+				default:
+					// 通道已满，忽略
+				}
+			}
+
+		case uint(client.MessageTypeVaultWithdraw):
+			// 解析 VaultWithdraw 消息
+			var vaultWithdraw client.VaultWithdraw
+			if err := msg.DecodeData(&vaultWithdraw); err != nil {
+				t.Logf("解析 VaultWithdraw 消息失败: %v", err)
+				return err
+			}
+			// 检查是否是我们要等待的交易
+			if vaultWithdraw.TxHash == txHash && uint(messageType) == uint(client.MessageTypeVaultWithdraw) {
+				t.Logf("找到匹配的 VaultWithdraw 交易消息: %s", txHash)
+				select {
+				case messageChan <- &vaultWithdraw:
+					// 消息已发送到通道
+				default:
+					// 通道已满，忽略
+				}
+			}
 
 		default:
 			t.Logf("收到其他类型的消息: %d", msg.Type)
@@ -724,38 +758,7 @@ func (test *VaultLaunchIntegrationTest) waitForMQMessage(t *testing.T, txHash st
 		return msg
 	case <-timeout:
 		t.Logf("等待 MQ 消息超时")
-		// 返回模拟消息用于测试
-		switch messageType {
-		case client.MessageTypeRBFVaultLaunch:
-			return &client.VaultLaunch{
-				BaseData: client.BaseData{
-					CorrelationId: "test-correlation-id",
-					TxHash:        txHash,
-					Ts:            time.Now().Unix(),
-					Sender:        "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-					Success:       true,
-					FailReason:    "",
-				},
-				VaultAddress:      "0x1234567890123456789012345678901234567890",
-				VaultTokenAddress: "0x0987654321098765432109876543210987654321",
-			}
-		case client.MessageTypeVaultInvest:
-			return &client.VaultInvest{
-				BaseData: client.BaseData{
-					CorrelationId: "test-correlation-id",
-					TxHash:        txHash,
-					Ts:            time.Now().Unix(),
-					Sender:        "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-					Success:       true,
-					FailReason:    "",
-				},
-				ReceiverAddress:  "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-				VaultTokenAmount: "1000000",
-				AssetTokenAmount: "1000000",
-			}
-		default:
-			return nil
-		}
+		return nil
 	}
 }
 
@@ -1709,4 +1712,120 @@ func (test *VaultLaunchIntegrationTest) validateVaultOffChainRedeemMQMessage(t *
 	t.Logf("   ReceiverAddress: %s", mqMessage.ReceiverAddress)
 	t.Logf("   AssetTokenAmount: %s", mqMessage.AssetTokenAmount)
 	t.Logf("   VaultTokenAmount: %s", mqMessage.VaultTokenAmount)
+}
+
+// callPrepareWithdrawManageFee 调用 prepare_withdraw_fee 接口
+func (test *VaultLaunchIntegrationTest) callPrepareWithdrawManageFee(t *testing.T, req *client.RequestVaultWithdrawManagerFeeReq) *PrepareTxResponse {
+	// 创建请求体
+	reqBody, err := json.Marshal(req)
+	require.NoError(t, err)
+
+	t.Logf("调用 /api/v2/primary/vault/prepare_withdraw_fee")
+
+	// 创建 HTTP 请求
+	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/primary/vault/prepare_withdraw_fee", bytes.NewBuffer(reqBody))
+	require.NoError(t, err)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", appId)
+
+	// 执行请求
+	resp, err := test.httpClient.Do(httpReq)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// 解析响应
+	var apiResp APIResponse
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	require.NoError(t, err)
+	assert.Equal(t, 0, apiResp.Code)
+
+	// 解析数据
+	respData, err := json.Marshal(apiResp.Data)
+	require.NoError(t, err)
+
+	var prepareResp PrepareTxResponse
+	err = json.Unmarshal(respData, &prepareResp)
+	require.NoError(t, err)
+
+	return &prepareResp
+}
+
+// validateVaultWithdrawManageFeeMQMessage 验证 VaultWithdrawManageFee MQ 消息
+func (test *VaultLaunchIntegrationTest) validateVaultWithdrawManageFeeMQMessage(t *testing.T, mqMessage *client.VaultWithdrawFee, req *client.RequestVaultWithdrawManagerFeeReq, txHash string) {
+	// 验证基础数据
+	assert.Equal(t, txHash, mqMessage.TxHash)
+	assert.True(t, mqMessage.Success)
+	assert.Empty(t, mqMessage.FailReason)
+	assert.Equal(t, req.Withdrawer, mqMessage.ReceiverAddress)
+
+	// 验证时间戳
+	assert.Greater(t, mqMessage.Ts, int64(0))
+
+	t.Logf("VaultWithdrawManageFee MQ 消息验证通过:")
+	t.Logf("   CorrelationId: %s", mqMessage.CorrelationId)
+	t.Logf("   TxHash: %s", mqMessage.TxHash)
+	t.Logf("   Success: %t", mqMessage.Success)
+	t.Logf("   ReceiverAddress: %s", mqMessage.ReceiverAddress)
+	t.Logf("   manageFeeAmount: %s", mqMessage.AssetTokenAmount)
+}
+
+// callPrepareWithdrawManageFee 调用 prepare_withdraw_fee 接口
+func (test *VaultLaunchIntegrationTest) callPrepareWithdraw(t *testing.T, req *client.RequestVaultWithdrawAssetReq) *PrepareTxResponse {
+	// 创建请求体
+	reqBody, err := json.Marshal(req)
+	require.NoError(t, err)
+
+	t.Logf("调用 /api/v2/primary/vault/prepare_withdraw")
+
+	// 创建 HTTP 请求
+	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/primary/vault/prepare_withdraw", bytes.NewBuffer(reqBody))
+	require.NoError(t, err)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", appId)
+
+	// 执行请求
+	resp, err := test.httpClient.Do(httpReq)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// 解析响应
+	var apiResp APIResponse
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	require.NoError(t, err)
+	assert.Equal(t, 0, apiResp.Code)
+
+	// 解析数据
+	respData, err := json.Marshal(apiResp.Data)
+	require.NoError(t, err)
+
+	var prepareResp PrepareTxResponse
+	err = json.Unmarshal(respData, &prepareResp)
+	require.NoError(t, err)
+
+	return &prepareResp
+}
+
+// validateVaultWithdrawMQMessage 验证 VaultWithdraw MQ 消息
+func (test *VaultLaunchIntegrationTest) validateVaultWithdrawMQMessage(t *testing.T, mqMessage *client.VaultWithdraw, req *client.RequestVaultWithdrawAssetReq, txHash string) {
+	// 验证基础数据
+	assert.Equal(t, txHash, mqMessage.TxHash)
+	assert.True(t, mqMessage.Success)
+	assert.Empty(t, mqMessage.FailReason)
+	assert.Equal(t, req.Withdrawer, mqMessage.ReceiverAddress)
+
+	// 验证时间戳
+	assert.Greater(t, mqMessage.Ts, int64(0))
+
+	t.Logf("VaultWithdraw MQ 消息验证通过:")
+	t.Logf("   CorrelationId: %s", mqMessage.CorrelationId)
+	t.Logf("   TxHash: %s", mqMessage.TxHash)
+	t.Logf("   Success: %t", mqMessage.Success)
+	t.Logf("   ReceiverAddress: %s", mqMessage.ReceiverAddress)
+	t.Logf("   AssetTokenAmount: %s", mqMessage.AssetTokenAmount)
 }
