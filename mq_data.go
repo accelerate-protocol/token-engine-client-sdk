@@ -31,12 +31,12 @@ const (
 	MessageTypeOldVaultClaim    //旧版vault 用户领取分红
 	MessageTypeFundVaultLaunch  //fund发行
 
-	MessageTypeFoundVaultAddPrice                //found 价格更新
-	MessageTypeFoundVaultRedemptionRequest       //found 融资成功后用户赎回请求
-	MessageTypeFoundVaultRedemptionRequestCancel //found 融资成功后用户取消赎回请求
-	MessageTypeFoundVaultChangeEpoch             //found 更新赎回周期
-	MessageTypeFoundVaultFinishEpoch             //found 结束赎回周期
-	MessageTypeFoundVaultRedemptionClaim         //found 用户领取赎回金额
+	MessageTypeFundVaultAddPrice                //fund 价格更新
+	MessageTypeFundVaultRedemptionRequest       //fund 融资成功后用户赎回请求
+	MessageTypeFundVaultRedemptionRequestCancel //fund 融资成功后用户取消赎回请求
+	MessageTypeFundVaultChangeEpoch             //fund 更新赎回周期
+	MessageTypeFundVaultFinishEpoch             //fund 结束赎回周期
+	MessageTypeFundVaultRedemptionClaim         //fund 用户领取赎回金额
 )
 
 type Message struct {
@@ -215,36 +215,36 @@ type OffChainRedeem struct {
 	VaultAddress     string `json:"vault_address"`      //vault合约地址
 }
 
-type FoundAddPrice struct {
+type FundAddPrice struct {
 	BaseData
 	LatestRoundId string `json:"latest_round_id"` //最新价格编号
 	Price         string `json:"price"`
 	Timestamp     int64  `json:"timestamp"` //链上更新时间戳
 }
-type FoundRedemptionRequest struct {
+type FundRedemptionRequest struct {
 	BaseData
 	Sender      string `json:"sender"`
 	EpochId     string `json:"epoch_id"`
 	ShareAmount string `json:"share_amount"`
 }
-type FoundRedemptionRequestCancel struct {
+type FundRedemptionRequestCancel struct {
 	BaseData
 	Sender      string `json:"sender"`
 	EpochId     string `json:"epoch_id"`
 	ShareAmount string `json:"share_amount"`
 }
-type FoundChangeEpoch struct {
+type FundChangeEpoch struct {
 	BaseData
 	EpochId string `json:"epoch_id"`
 }
-type FoundFinishEpoch struct {
+type FundFinishEpoch struct {
 	BaseData
 	Sender      string `json:"sender"`
 	EpochId     string `json:"epoch_id"`
 	AssetAmount string `json:"asset_amount"` //向链上打款的U的数量
 	Signature   string `json:"signature"`    //drds的签名
 }
-type FoundRedemptionClaim struct {
+type FundRedemptionClaim struct {
 	BaseData
 	Sender      string `json:"sender"`
 	EpochId     string `json:"epoch_id"`
