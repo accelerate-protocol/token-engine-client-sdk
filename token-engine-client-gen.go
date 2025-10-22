@@ -109,6 +109,26 @@ const (
 	GetApiV2DividendGetOldParamsChainIdN1001 GetApiV2DividendGetOldParamsChainId = "1001"
 )
 
+// Defines values for GetApiV2FoundEpochDataParamsChainId.
+const (
+	GetApiV2FoundEpochDataParamsChainIdN1001 GetApiV2FoundEpochDataParamsChainId = "1001"
+)
+
+// Defines values for GetApiV2FoundGetRoundPriceParamsChainId.
+const (
+	GetApiV2FoundGetRoundPriceParamsChainIdN1001 GetApiV2FoundGetRoundPriceParamsChainId = "1001"
+)
+
+// Defines values for GetApiV2FoundUserPendingClaimParamsChainId.
+const (
+	GetApiV2FoundUserPendingClaimParamsChainIdN1001 GetApiV2FoundUserPendingClaimParamsChainId = "1001"
+)
+
+// Defines values for GetApiV2FoundUserRedemptionInfoParamsChainId.
+const (
+	GetApiV2FoundUserRedemptionInfoParamsChainIdN1001 GetApiV2FoundUserRedemptionInfoParamsChainId = "1001"
+)
+
 // Defines values for GetApiV2PrimaryVaultCommonInfoParamsChainId.
 const (
 	N1001 GetApiV2PrimaryVaultCommonInfoParamsChainId = "1001"
@@ -162,6 +182,15 @@ type EntityTokenHolder struct {
 
 	// HolderAddress 持有者地址 (Base58编码的字符串)
 	HolderAddress *string `json:"holder_address,omitempty"`
+}
+
+// RequestAddFoundPriceReq defines model for request.AddFoundPriceReq.
+type RequestAddFoundPriceReq struct {
+	ChainId CommonChainID `json:"chain_id"`
+	Price   string        `json:"price"`
+
+	// VaultAddress vault地址
+	VaultAddress string `json:"vault_address"`
 }
 
 // RequestAddVaultDeployerWhiteListReq defines model for request.AddVaultDeployerWhiteListReq.
@@ -222,8 +251,42 @@ type RequestBorrowerWithdrawReq struct {
 	Withdrawer string `json:"withdrawer"`
 }
 
+// RequestCancelFoundRedeemReq defines model for request.CancelFoundRedeemReq.
+type RequestCancelFoundRedeemReq struct {
+	ChainId CommonChainID `json:"chain_id"`
+
+	// UserAddr 用户地址
+	UserAddr string `json:"user_addr"`
+
+	// VaultAddress vault地址
+	VaultAddress string `json:"vault_address"`
+}
+
 // RequestChainId defines model for request.ChainId.
 type RequestChainId string
+
+// RequestChangeFoundEpochReq defines model for request.ChangeFoundEpochReq.
+type RequestChangeFoundEpochReq struct {
+	ChainId CommonChainID `json:"chain_id"`
+
+	// ManagerAddress 管理员地址
+	ManagerAddress string `json:"manager_address"`
+
+	// VaultAddress vault地址
+	VaultAddress string `json:"vault_address"`
+}
+
+// RequestClaimFoundRedeemReq defines model for request.ClaimFoundRedeemReq.
+type RequestClaimFoundRedeemReq struct {
+	ChainId CommonChainID `json:"chain_id"`
+
+	// EpochId 链上赎回周期ID
+	EpochId string `json:"epoch_id"`
+
+	// UserAddr 用户地址
+	UserAddr     string `json:"user_addr"`
+	VaultAddress string `json:"vault_address"`
+}
 
 // RequestCreateAuthReq defines model for request.CreateAuthReq.
 type RequestCreateAuthReq struct {
@@ -332,6 +395,35 @@ type RequestFinancingRuleInfo struct {
 
 	// Whitelist 投资人白名单列表
 	Whitelist *[]string `json:"whitelist,omitempty"`
+}
+
+// RequestFinishFoundEpochReq defines model for request.FinishFoundEpochReq.
+type RequestFinishFoundEpochReq struct {
+	// AssetAmount 金额
+	AssetAmount string        `json:"asset_amount"`
+	ChainId     CommonChainID `json:"chain_id"`
+	EpochId     string        `json:"epoch_id"`
+
+	// SettlerAddress 结算人地址
+	SettlerAddress string `json:"settler_address"`
+
+	// Signature drds签名
+	Signature string `json:"signature"`
+
+	// VaultAddress vault地址
+	VaultAddress string `json:"vault_address"`
+}
+
+// RequestFoundRedeemReq defines model for request.FoundRedeemReq.
+type RequestFoundRedeemReq struct {
+	ChainId          CommonChainID `json:"chain_id"`
+	FoundTokenAmount string        `json:"found_token_amount"`
+
+	// UserAddr 用户地址
+	UserAddr string `json:"user_addr"`
+
+	// VaultAddress vault地址
+	VaultAddress string `json:"vault_address"`
 }
 
 // RequestFundExtraData defines model for request.FundExtraData.
@@ -879,6 +971,39 @@ type ResponseExchangeTxDetail struct {
 // ResponseFinancingStatus defines model for response.FinancingStatus.
 type ResponseFinancingStatus string
 
+// ResponseFoundEpochDataResp defines model for response.FoundEpochDataResp.
+type ResponseFoundEpochDataResp struct {
+	EpochStatus           *string `json:"epoch_status,omitempty"`
+	TotalClaimedAssets    *string `json:"total_claimed_assets,omitempty"`
+	TotalRedemptionAssets *string `json:"total_redemption_assets,omitempty"`
+	TotalShares           *string `json:"total_shares,omitempty"`
+}
+
+// ResponseFoundUserPendingClaimResp defines model for response.FoundUserPendingClaimResp.
+type ResponseFoundUserPendingClaimResp struct {
+	// AssetAmount U的数量
+	AssetAmount *string `json:"asset_amount,omitempty"`
+}
+
+// ResponseFoundUserRedemptionInfoResp defines model for response.FoundUserRedemptionInfoResp.
+type ResponseFoundUserRedemptionInfoResp struct {
+	ClaimAssets          *string `json:"claim_assets,omitempty"`
+	ClaimShares          *string `json:"claim_shares,omitempty"`
+	LastClaimTimeStamp   *int    `json:"last_claim_time_stamp,omitempty"`
+	LastRequestTimeStamp *int    `json:"last_request_time_stamp,omitempty"`
+	RequestShares        *string `json:"request_shares,omitempty"`
+}
+
+// ResponseFoundVaultRoundPriceInfoResp defines model for response.FoundVaultRoundPriceInfoResp.
+type ResponseFoundVaultRoundPriceInfoResp struct {
+	Decimals *int    `json:"decimals,omitempty"`
+	Price    *string `json:"price,omitempty"`
+	RoundId  *string `json:"round_id,omitempty"`
+
+	// Ts 秒级时间戳
+	Ts *int `json:"ts,omitempty"`
+}
+
 // ResponseFoundingOverviewResp defines model for response.FoundingOverviewResp.
 type ResponseFoundingOverviewResp struct {
 	ChainId *string `json:"chain_id,omitempty"`
@@ -1157,6 +1282,9 @@ type GetApiV1CommonTxsParamsChainId string
 type GetApiV1DataTokenHoldersParams struct {
 	// Mint Token mint 地址
 	Mint string `form:"mint" json:"mint"`
+
+	// TokenProgramId solana.Token2022ProgramID or solana.TokenProgramID
+	TokenProgramId *string `form:"token_program_id,omitempty" json:"token_program_id,omitempty"`
 }
 
 // GetApiV1SwapPriceParams defines parameters for GetApiV1SwapPrice.
@@ -1216,6 +1344,70 @@ type GetApiV2DividendGetOldParams struct {
 // GetApiV2DividendGetOldParamsChainId defines parameters for GetApiV2DividendGetOld.
 type GetApiV2DividendGetOldParamsChainId string
 
+// GetApiV2FoundEpochDataParams defines parameters for GetApiV2FoundEpochData.
+type GetApiV2FoundEpochDataParams struct {
+	// ChainId 链ID
+	ChainId GetApiV2FoundEpochDataParamsChainId `form:"chain_id" json:"chain_id"`
+
+	// EpochId 链上赎回周期ID
+	EpochId string `form:"epoch_id" json:"epoch_id"`
+
+	// Vault Vault
+	Vault string `form:"vault" json:"vault"`
+}
+
+// GetApiV2FoundEpochDataParamsChainId defines parameters for GetApiV2FoundEpochData.
+type GetApiV2FoundEpochDataParamsChainId string
+
+// GetApiV2FoundGetRoundPriceParams defines parameters for GetApiV2FoundGetRoundPrice.
+type GetApiV2FoundGetRoundPriceParams struct {
+	// ChainId 链ID
+	ChainId GetApiV2FoundGetRoundPriceParamsChainId `form:"chain_id" json:"chain_id"`
+	RoundId *string                                 `form:"round_id,omitempty" json:"round_id,omitempty"`
+
+	// VaultAddress vault地址
+	VaultAddress string `form:"vault_address" json:"vault_address"`
+}
+
+// GetApiV2FoundGetRoundPriceParamsChainId defines parameters for GetApiV2FoundGetRoundPrice.
+type GetApiV2FoundGetRoundPriceParamsChainId string
+
+// GetApiV2FoundUserPendingClaimParams defines parameters for GetApiV2FoundUserPendingClaim.
+type GetApiV2FoundUserPendingClaimParams struct {
+	// ChainId 链ID
+	ChainId GetApiV2FoundUserPendingClaimParamsChainId `form:"chain_id" json:"chain_id"`
+
+	// EpochId 链上赎回周期ID
+	EpochId string `form:"epoch_id" json:"epoch_id"`
+
+	// UserAddr 用户地址
+	UserAddr string `form:"user_addr" json:"user_addr"`
+
+	// Vault Vault
+	Vault string `form:"vault" json:"vault"`
+}
+
+// GetApiV2FoundUserPendingClaimParamsChainId defines parameters for GetApiV2FoundUserPendingClaim.
+type GetApiV2FoundUserPendingClaimParamsChainId string
+
+// GetApiV2FoundUserRedemptionInfoParams defines parameters for GetApiV2FoundUserRedemptionInfo.
+type GetApiV2FoundUserRedemptionInfoParams struct {
+	// ChainId 链ID
+	ChainId GetApiV2FoundUserRedemptionInfoParamsChainId `form:"chain_id" json:"chain_id"`
+
+	// EpochId 链上赎回周期ID
+	EpochId string `form:"epoch_id" json:"epoch_id"`
+
+	// UserAddr 用户地址
+	UserAddr string `form:"user_addr" json:"user_addr"`
+
+	// Vault Vault
+	Vault string `form:"vault" json:"vault"`
+}
+
+// GetApiV2FoundUserRedemptionInfoParamsChainId defines parameters for GetApiV2FoundUserRedemptionInfo.
+type GetApiV2FoundUserRedemptionInfoParamsChainId string
+
 // GetApiV2PrimaryVaultCommonInfoParams defines parameters for GetApiV2PrimaryVaultCommonInfo.
 type GetApiV2PrimaryVaultCommonInfoParams struct {
 	ChainId  GetApiV2PrimaryVaultCommonInfoParamsChainId `form:"chain_id" json:"chain_id"`
@@ -1233,7 +1425,10 @@ type GetApiV2PrimaryVaultCommonInfoParamsChainId string
 type GetApiV2PrimaryVaultTopTokenHoldersParams struct {
 	ChainId      string `form:"chain_id" json:"chain_id"`
 	TokenAddress string `form:"token_address" json:"token_address"`
-	Top          int    `form:"top" json:"top"`
+
+	// TokenProgramId solana.TokenProgram or solana.Token2022Program
+	TokenProgramId *string `form:"token_program_id,omitempty" json:"token_program_id,omitempty"`
+	Top            int     `form:"top" json:"top"`
 }
 
 // GetApiV2TokenTxsHolderInfoParams defines parameters for GetApiV2TokenTxsHolderInfo.
@@ -1298,6 +1493,24 @@ type PostApiV2BalanceGetJSONRequestBody = RequestBalanceQueryReq
 
 // PostApiV2DeploySubmitJSONRequestBody defines body for PostApiV2DeploySubmit for application/json ContentType.
 type PostApiV2DeploySubmitJSONRequestBody = RequestDeploySubmitReq
+
+// PostApiV2FoundPrepareAddFoundPriceJSONRequestBody defines body for PostApiV2FoundPrepareAddFoundPrice for application/json ContentType.
+type PostApiV2FoundPrepareAddFoundPriceJSONRequestBody = RequestAddFoundPriceReq
+
+// PostApiV2FoundPrepareCancelRedeemJSONRequestBody defines body for PostApiV2FoundPrepareCancelRedeem for application/json ContentType.
+type PostApiV2FoundPrepareCancelRedeemJSONRequestBody = RequestCancelFoundRedeemReq
+
+// PostApiV2FoundPrepareChangeEpochJSONRequestBody defines body for PostApiV2FoundPrepareChangeEpoch for application/json ContentType.
+type PostApiV2FoundPrepareChangeEpochJSONRequestBody = RequestChangeFoundEpochReq
+
+// PostApiV2FoundPrepareClaimRedemptionJSONRequestBody defines body for PostApiV2FoundPrepareClaimRedemption for application/json ContentType.
+type PostApiV2FoundPrepareClaimRedemptionJSONRequestBody = RequestClaimFoundRedeemReq
+
+// PostApiV2FoundPrepareFinishEpochJSONRequestBody defines body for PostApiV2FoundPrepareFinishEpoch for application/json ContentType.
+type PostApiV2FoundPrepareFinishEpochJSONRequestBody = RequestFinishFoundEpochReq
+
+// PostApiV2FoundPrepareFoundRedeemJSONRequestBody defines body for PostApiV2FoundPrepareFoundRedeem for application/json ContentType.
+type PostApiV2FoundPrepareFoundRedeemJSONRequestBody = RequestFoundRedeemReq
 
 // GetApiV2PrimaryVaultFundingOverviewJSONRequestBody defines body for GetApiV2PrimaryVaultFundingOverview for application/json ContentType.
 type GetApiV2PrimaryVaultFundingOverviewJSONRequestBody = RequestFundingOverviewReq
@@ -1535,6 +1748,48 @@ type ClientInterface interface {
 
 	// GetApiV2DividendGetOld request
 	GetApiV2DividendGetOld(ctx context.Context, params *GetApiV2DividendGetOldParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetApiV2FoundEpochData request
+	GetApiV2FoundEpochData(ctx context.Context, params *GetApiV2FoundEpochDataParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetApiV2FoundGetRoundPrice request
+	GetApiV2FoundGetRoundPrice(ctx context.Context, params *GetApiV2FoundGetRoundPriceParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV2FoundPrepareAddFoundPriceWithBody request with any body
+	PostApiV2FoundPrepareAddFoundPriceWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2FoundPrepareAddFoundPrice(ctx context.Context, body PostApiV2FoundPrepareAddFoundPriceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV2FoundPrepareCancelRedeemWithBody request with any body
+	PostApiV2FoundPrepareCancelRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2FoundPrepareCancelRedeem(ctx context.Context, body PostApiV2FoundPrepareCancelRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV2FoundPrepareChangeEpochWithBody request with any body
+	PostApiV2FoundPrepareChangeEpochWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2FoundPrepareChangeEpoch(ctx context.Context, body PostApiV2FoundPrepareChangeEpochJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV2FoundPrepareClaimRedemptionWithBody request with any body
+	PostApiV2FoundPrepareClaimRedemptionWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2FoundPrepareClaimRedemption(ctx context.Context, body PostApiV2FoundPrepareClaimRedemptionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV2FoundPrepareFinishEpochWithBody request with any body
+	PostApiV2FoundPrepareFinishEpochWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2FoundPrepareFinishEpoch(ctx context.Context, body PostApiV2FoundPrepareFinishEpochJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV2FoundPrepareFoundRedeemWithBody request with any body
+	PostApiV2FoundPrepareFoundRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2FoundPrepareFoundRedeem(ctx context.Context, body PostApiV2FoundPrepareFoundRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetApiV2FoundUserPendingClaim request
+	GetApiV2FoundUserPendingClaim(ctx context.Context, params *GetApiV2FoundUserPendingClaimParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetApiV2FoundUserRedemptionInfo request
+	GetApiV2FoundUserRedemptionInfo(ctx context.Context, params *GetApiV2FoundUserRedemptionInfoParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetApiV2PrimaryVaultCommonInfo request
 	GetApiV2PrimaryVaultCommonInfo(ctx context.Context, params *GetApiV2PrimaryVaultCommonInfoParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2065,6 +2320,198 @@ func (c *Client) GetApiV2DividendGet(ctx context.Context, params *GetApiV2Divide
 
 func (c *Client) GetApiV2DividendGetOld(ctx context.Context, params *GetApiV2DividendGetOldParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetApiV2DividendGetOldRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetApiV2FoundEpochData(ctx context.Context, params *GetApiV2FoundEpochDataParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiV2FoundEpochDataRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetApiV2FoundGetRoundPrice(ctx context.Context, params *GetApiV2FoundGetRoundPriceParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiV2FoundGetRoundPriceRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2FoundPrepareAddFoundPriceWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2FoundPrepareAddFoundPriceRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2FoundPrepareAddFoundPrice(ctx context.Context, body PostApiV2FoundPrepareAddFoundPriceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2FoundPrepareAddFoundPriceRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2FoundPrepareCancelRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2FoundPrepareCancelRedeemRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2FoundPrepareCancelRedeem(ctx context.Context, body PostApiV2FoundPrepareCancelRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2FoundPrepareCancelRedeemRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2FoundPrepareChangeEpochWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2FoundPrepareChangeEpochRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2FoundPrepareChangeEpoch(ctx context.Context, body PostApiV2FoundPrepareChangeEpochJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2FoundPrepareChangeEpochRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2FoundPrepareClaimRedemptionWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2FoundPrepareClaimRedemptionRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2FoundPrepareClaimRedemption(ctx context.Context, body PostApiV2FoundPrepareClaimRedemptionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2FoundPrepareClaimRedemptionRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2FoundPrepareFinishEpochWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2FoundPrepareFinishEpochRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2FoundPrepareFinishEpoch(ctx context.Context, body PostApiV2FoundPrepareFinishEpochJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2FoundPrepareFinishEpochRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2FoundPrepareFoundRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2FoundPrepareFoundRedeemRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2FoundPrepareFoundRedeem(ctx context.Context, body PostApiV2FoundPrepareFoundRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2FoundPrepareFoundRedeemRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetApiV2FoundUserPendingClaim(ctx context.Context, params *GetApiV2FoundUserPendingClaimParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiV2FoundUserPendingClaimRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) GetApiV2FoundUserRedemptionInfo(ctx context.Context, params *GetApiV2FoundUserRedemptionInfoParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiV2FoundUserRedemptionInfoRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -3056,6 +3503,22 @@ func NewGetApiV1DataTokenHoldersRequest(server string, params *GetApiV1DataToken
 			}
 		}
 
+		if params.TokenProgramId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "token_program_id", runtime.ParamLocationQuery, *params.TokenProgramId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -3804,6 +4267,550 @@ func NewGetApiV2DividendGetOldRequest(server string, params *GetApiV2DividendGet
 		queryValues := queryURL.Query()
 
 		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "chain_id", runtime.ParamLocationQuery, params.ChainId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "user_addr", runtime.ParamLocationQuery, params.UserAddr); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "vault", runtime.ParamLocationQuery, params.Vault); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetApiV2FoundEpochDataRequest generates requests for GetApiV2FoundEpochData
+func NewGetApiV2FoundEpochDataRequest(server string, params *GetApiV2FoundEpochDataParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/found/epoch_data")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "chain_id", runtime.ParamLocationQuery, params.ChainId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "epoch_id", runtime.ParamLocationQuery, params.EpochId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "vault", runtime.ParamLocationQuery, params.Vault); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetApiV2FoundGetRoundPriceRequest generates requests for GetApiV2FoundGetRoundPrice
+func NewGetApiV2FoundGetRoundPriceRequest(server string, params *GetApiV2FoundGetRoundPriceParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/found/get_round_price")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "chain_id", runtime.ParamLocationQuery, params.ChainId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if params.RoundId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "round_id", runtime.ParamLocationQuery, *params.RoundId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "vault_address", runtime.ParamLocationQuery, params.VaultAddress); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPostApiV2FoundPrepareAddFoundPriceRequest calls the generic PostApiV2FoundPrepareAddFoundPrice builder with application/json body
+func NewPostApiV2FoundPrepareAddFoundPriceRequest(server string, body PostApiV2FoundPrepareAddFoundPriceJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2FoundPrepareAddFoundPriceRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2FoundPrepareAddFoundPriceRequestWithBody generates requests for PostApiV2FoundPrepareAddFoundPrice with any type of body
+func NewPostApiV2FoundPrepareAddFoundPriceRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/found/prepare_add_found_price")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiV2FoundPrepareCancelRedeemRequest calls the generic PostApiV2FoundPrepareCancelRedeem builder with application/json body
+func NewPostApiV2FoundPrepareCancelRedeemRequest(server string, body PostApiV2FoundPrepareCancelRedeemJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2FoundPrepareCancelRedeemRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2FoundPrepareCancelRedeemRequestWithBody generates requests for PostApiV2FoundPrepareCancelRedeem with any type of body
+func NewPostApiV2FoundPrepareCancelRedeemRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/found/prepare_cancel_redeem")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiV2FoundPrepareChangeEpochRequest calls the generic PostApiV2FoundPrepareChangeEpoch builder with application/json body
+func NewPostApiV2FoundPrepareChangeEpochRequest(server string, body PostApiV2FoundPrepareChangeEpochJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2FoundPrepareChangeEpochRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2FoundPrepareChangeEpochRequestWithBody generates requests for PostApiV2FoundPrepareChangeEpoch with any type of body
+func NewPostApiV2FoundPrepareChangeEpochRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/found/prepare_change_epoch")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiV2FoundPrepareClaimRedemptionRequest calls the generic PostApiV2FoundPrepareClaimRedemption builder with application/json body
+func NewPostApiV2FoundPrepareClaimRedemptionRequest(server string, body PostApiV2FoundPrepareClaimRedemptionJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2FoundPrepareClaimRedemptionRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2FoundPrepareClaimRedemptionRequestWithBody generates requests for PostApiV2FoundPrepareClaimRedemption with any type of body
+func NewPostApiV2FoundPrepareClaimRedemptionRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/found/prepare_claim_redemption")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiV2FoundPrepareFinishEpochRequest calls the generic PostApiV2FoundPrepareFinishEpoch builder with application/json body
+func NewPostApiV2FoundPrepareFinishEpochRequest(server string, body PostApiV2FoundPrepareFinishEpochJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2FoundPrepareFinishEpochRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2FoundPrepareFinishEpochRequestWithBody generates requests for PostApiV2FoundPrepareFinishEpoch with any type of body
+func NewPostApiV2FoundPrepareFinishEpochRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/found/prepare_finish_epoch")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiV2FoundPrepareFoundRedeemRequest calls the generic PostApiV2FoundPrepareFoundRedeem builder with application/json body
+func NewPostApiV2FoundPrepareFoundRedeemRequest(server string, body PostApiV2FoundPrepareFoundRedeemJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2FoundPrepareFoundRedeemRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2FoundPrepareFoundRedeemRequestWithBody generates requests for PostApiV2FoundPrepareFoundRedeem with any type of body
+func NewPostApiV2FoundPrepareFoundRedeemRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/found/prepare_found_redeem")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetApiV2FoundUserPendingClaimRequest generates requests for GetApiV2FoundUserPendingClaim
+func NewGetApiV2FoundUserPendingClaimRequest(server string, params *GetApiV2FoundUserPendingClaimParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/found/user_pending_claim")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "chain_id", runtime.ParamLocationQuery, params.ChainId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "epoch_id", runtime.ParamLocationQuery, params.EpochId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "user_addr", runtime.ParamLocationQuery, params.UserAddr); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "vault", runtime.ParamLocationQuery, params.Vault); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetApiV2FoundUserRedemptionInfoRequest generates requests for GetApiV2FoundUserRedemptionInfo
+func NewGetApiV2FoundUserRedemptionInfoRequest(server string, params *GetApiV2FoundUserRedemptionInfoParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/found/user_redemption_info")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "chain_id", runtime.ParamLocationQuery, params.ChainId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "epoch_id", runtime.ParamLocationQuery, params.EpochId); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
 			return nil, err
@@ -4825,6 +5832,22 @@ func NewGetApiV2PrimaryVaultTopTokenHoldersRequest(server string, params *GetApi
 			}
 		}
 
+		if params.TokenProgramId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "token_program_id", runtime.ParamLocationQuery, *params.TokenProgramId); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "top", runtime.ParamLocationQuery, params.Top); err != nil {
 			return nil, err
 		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
@@ -5330,6 +6353,48 @@ type ClientWithResponsesInterface interface {
 
 	// GetApiV2DividendGetOldWithResponse request
 	GetApiV2DividendGetOldWithResponse(ctx context.Context, params *GetApiV2DividendGetOldParams, reqEditors ...RequestEditorFn) (*GetApiV2DividendGetOldResponse, error)
+
+	// GetApiV2FoundEpochDataWithResponse request
+	GetApiV2FoundEpochDataWithResponse(ctx context.Context, params *GetApiV2FoundEpochDataParams, reqEditors ...RequestEditorFn) (*GetApiV2FoundEpochDataResponse, error)
+
+	// GetApiV2FoundGetRoundPriceWithResponse request
+	GetApiV2FoundGetRoundPriceWithResponse(ctx context.Context, params *GetApiV2FoundGetRoundPriceParams, reqEditors ...RequestEditorFn) (*GetApiV2FoundGetRoundPriceResponse, error)
+
+	// PostApiV2FoundPrepareAddFoundPriceWithBodyWithResponse request with any body
+	PostApiV2FoundPrepareAddFoundPriceWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareAddFoundPriceResponse, error)
+
+	PostApiV2FoundPrepareAddFoundPriceWithResponse(ctx context.Context, body PostApiV2FoundPrepareAddFoundPriceJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareAddFoundPriceResponse, error)
+
+	// PostApiV2FoundPrepareCancelRedeemWithBodyWithResponse request with any body
+	PostApiV2FoundPrepareCancelRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareCancelRedeemResponse, error)
+
+	PostApiV2FoundPrepareCancelRedeemWithResponse(ctx context.Context, body PostApiV2FoundPrepareCancelRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareCancelRedeemResponse, error)
+
+	// PostApiV2FoundPrepareChangeEpochWithBodyWithResponse request with any body
+	PostApiV2FoundPrepareChangeEpochWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareChangeEpochResponse, error)
+
+	PostApiV2FoundPrepareChangeEpochWithResponse(ctx context.Context, body PostApiV2FoundPrepareChangeEpochJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareChangeEpochResponse, error)
+
+	// PostApiV2FoundPrepareClaimRedemptionWithBodyWithResponse request with any body
+	PostApiV2FoundPrepareClaimRedemptionWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareClaimRedemptionResponse, error)
+
+	PostApiV2FoundPrepareClaimRedemptionWithResponse(ctx context.Context, body PostApiV2FoundPrepareClaimRedemptionJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareClaimRedemptionResponse, error)
+
+	// PostApiV2FoundPrepareFinishEpochWithBodyWithResponse request with any body
+	PostApiV2FoundPrepareFinishEpochWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareFinishEpochResponse, error)
+
+	PostApiV2FoundPrepareFinishEpochWithResponse(ctx context.Context, body PostApiV2FoundPrepareFinishEpochJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareFinishEpochResponse, error)
+
+	// PostApiV2FoundPrepareFoundRedeemWithBodyWithResponse request with any body
+	PostApiV2FoundPrepareFoundRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareFoundRedeemResponse, error)
+
+	PostApiV2FoundPrepareFoundRedeemWithResponse(ctx context.Context, body PostApiV2FoundPrepareFoundRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareFoundRedeemResponse, error)
+
+	// GetApiV2FoundUserPendingClaimWithResponse request
+	GetApiV2FoundUserPendingClaimWithResponse(ctx context.Context, params *GetApiV2FoundUserPendingClaimParams, reqEditors ...RequestEditorFn) (*GetApiV2FoundUserPendingClaimResponse, error)
+
+	// GetApiV2FoundUserRedemptionInfoWithResponse request
+	GetApiV2FoundUserRedemptionInfoWithResponse(ctx context.Context, params *GetApiV2FoundUserRedemptionInfoParams, reqEditors ...RequestEditorFn) (*GetApiV2FoundUserRedemptionInfoResponse, error)
 
 	// GetApiV2PrimaryVaultCommonInfoWithResponse request
 	GetApiV2PrimaryVaultCommonInfoWithResponse(ctx context.Context, params *GetApiV2PrimaryVaultCommonInfoParams, reqEditors ...RequestEditorFn) (*GetApiV2PrimaryVaultCommonInfoResponse, error)
@@ -6088,6 +7153,316 @@ func (r GetApiV2DividendGetOldResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r GetApiV2DividendGetOldResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetApiV2FoundEpochDataResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                        `json:"code,omitempty"`
+		Data *ResponseFoundEpochDataResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r GetApiV2FoundEpochDataResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetApiV2FoundEpochDataResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetApiV2FoundGetRoundPriceResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                                  `json:"code,omitempty"`
+		Data *ResponseFoundVaultRoundPriceInfoResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r GetApiV2FoundGetRoundPriceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetApiV2FoundGetRoundPriceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiV2FoundPrepareAddFoundPriceResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2FoundPrepareAddFoundPriceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2FoundPrepareAddFoundPriceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiV2FoundPrepareCancelRedeemResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2FoundPrepareCancelRedeemResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2FoundPrepareCancelRedeemResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiV2FoundPrepareChangeEpochResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2FoundPrepareChangeEpochResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2FoundPrepareChangeEpochResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiV2FoundPrepareClaimRedemptionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2FoundPrepareClaimRedemptionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2FoundPrepareClaimRedemptionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiV2FoundPrepareFinishEpochResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2FoundPrepareFinishEpochResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2FoundPrepareFinishEpochResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiV2FoundPrepareFoundRedeemResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2FoundPrepareFoundRedeemResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2FoundPrepareFoundRedeemResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetApiV2FoundUserPendingClaimResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                               `json:"code,omitempty"`
+		Data *ResponseFoundUserPendingClaimResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r GetApiV2FoundUserPendingClaimResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetApiV2FoundUserPendingClaimResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type GetApiV2FoundUserRedemptionInfoResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                                 `json:"code,omitempty"`
+		Data *ResponseFoundUserRedemptionInfoResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r GetApiV2FoundUserRedemptionInfoResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetApiV2FoundUserRedemptionInfoResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -7308,6 +8683,144 @@ func (c *ClientWithResponses) GetApiV2DividendGetOldWithResponse(ctx context.Con
 	return ParseGetApiV2DividendGetOldResponse(rsp)
 }
 
+// GetApiV2FoundEpochDataWithResponse request returning *GetApiV2FoundEpochDataResponse
+func (c *ClientWithResponses) GetApiV2FoundEpochDataWithResponse(ctx context.Context, params *GetApiV2FoundEpochDataParams, reqEditors ...RequestEditorFn) (*GetApiV2FoundEpochDataResponse, error) {
+	rsp, err := c.GetApiV2FoundEpochData(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetApiV2FoundEpochDataResponse(rsp)
+}
+
+// GetApiV2FoundGetRoundPriceWithResponse request returning *GetApiV2FoundGetRoundPriceResponse
+func (c *ClientWithResponses) GetApiV2FoundGetRoundPriceWithResponse(ctx context.Context, params *GetApiV2FoundGetRoundPriceParams, reqEditors ...RequestEditorFn) (*GetApiV2FoundGetRoundPriceResponse, error) {
+	rsp, err := c.GetApiV2FoundGetRoundPrice(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetApiV2FoundGetRoundPriceResponse(rsp)
+}
+
+// PostApiV2FoundPrepareAddFoundPriceWithBodyWithResponse request with arbitrary body returning *PostApiV2FoundPrepareAddFoundPriceResponse
+func (c *ClientWithResponses) PostApiV2FoundPrepareAddFoundPriceWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareAddFoundPriceResponse, error) {
+	rsp, err := c.PostApiV2FoundPrepareAddFoundPriceWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2FoundPrepareAddFoundPriceResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2FoundPrepareAddFoundPriceWithResponse(ctx context.Context, body PostApiV2FoundPrepareAddFoundPriceJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareAddFoundPriceResponse, error) {
+	rsp, err := c.PostApiV2FoundPrepareAddFoundPrice(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2FoundPrepareAddFoundPriceResponse(rsp)
+}
+
+// PostApiV2FoundPrepareCancelRedeemWithBodyWithResponse request with arbitrary body returning *PostApiV2FoundPrepareCancelRedeemResponse
+func (c *ClientWithResponses) PostApiV2FoundPrepareCancelRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareCancelRedeemResponse, error) {
+	rsp, err := c.PostApiV2FoundPrepareCancelRedeemWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2FoundPrepareCancelRedeemResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2FoundPrepareCancelRedeemWithResponse(ctx context.Context, body PostApiV2FoundPrepareCancelRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareCancelRedeemResponse, error) {
+	rsp, err := c.PostApiV2FoundPrepareCancelRedeem(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2FoundPrepareCancelRedeemResponse(rsp)
+}
+
+// PostApiV2FoundPrepareChangeEpochWithBodyWithResponse request with arbitrary body returning *PostApiV2FoundPrepareChangeEpochResponse
+func (c *ClientWithResponses) PostApiV2FoundPrepareChangeEpochWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareChangeEpochResponse, error) {
+	rsp, err := c.PostApiV2FoundPrepareChangeEpochWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2FoundPrepareChangeEpochResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2FoundPrepareChangeEpochWithResponse(ctx context.Context, body PostApiV2FoundPrepareChangeEpochJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareChangeEpochResponse, error) {
+	rsp, err := c.PostApiV2FoundPrepareChangeEpoch(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2FoundPrepareChangeEpochResponse(rsp)
+}
+
+// PostApiV2FoundPrepareClaimRedemptionWithBodyWithResponse request with arbitrary body returning *PostApiV2FoundPrepareClaimRedemptionResponse
+func (c *ClientWithResponses) PostApiV2FoundPrepareClaimRedemptionWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareClaimRedemptionResponse, error) {
+	rsp, err := c.PostApiV2FoundPrepareClaimRedemptionWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2FoundPrepareClaimRedemptionResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2FoundPrepareClaimRedemptionWithResponse(ctx context.Context, body PostApiV2FoundPrepareClaimRedemptionJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareClaimRedemptionResponse, error) {
+	rsp, err := c.PostApiV2FoundPrepareClaimRedemption(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2FoundPrepareClaimRedemptionResponse(rsp)
+}
+
+// PostApiV2FoundPrepareFinishEpochWithBodyWithResponse request with arbitrary body returning *PostApiV2FoundPrepareFinishEpochResponse
+func (c *ClientWithResponses) PostApiV2FoundPrepareFinishEpochWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareFinishEpochResponse, error) {
+	rsp, err := c.PostApiV2FoundPrepareFinishEpochWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2FoundPrepareFinishEpochResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2FoundPrepareFinishEpochWithResponse(ctx context.Context, body PostApiV2FoundPrepareFinishEpochJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareFinishEpochResponse, error) {
+	rsp, err := c.PostApiV2FoundPrepareFinishEpoch(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2FoundPrepareFinishEpochResponse(rsp)
+}
+
+// PostApiV2FoundPrepareFoundRedeemWithBodyWithResponse request with arbitrary body returning *PostApiV2FoundPrepareFoundRedeemResponse
+func (c *ClientWithResponses) PostApiV2FoundPrepareFoundRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareFoundRedeemResponse, error) {
+	rsp, err := c.PostApiV2FoundPrepareFoundRedeemWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2FoundPrepareFoundRedeemResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2FoundPrepareFoundRedeemWithResponse(ctx context.Context, body PostApiV2FoundPrepareFoundRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FoundPrepareFoundRedeemResponse, error) {
+	rsp, err := c.PostApiV2FoundPrepareFoundRedeem(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2FoundPrepareFoundRedeemResponse(rsp)
+}
+
+// GetApiV2FoundUserPendingClaimWithResponse request returning *GetApiV2FoundUserPendingClaimResponse
+func (c *ClientWithResponses) GetApiV2FoundUserPendingClaimWithResponse(ctx context.Context, params *GetApiV2FoundUserPendingClaimParams, reqEditors ...RequestEditorFn) (*GetApiV2FoundUserPendingClaimResponse, error) {
+	rsp, err := c.GetApiV2FoundUserPendingClaim(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetApiV2FoundUserPendingClaimResponse(rsp)
+}
+
+// GetApiV2FoundUserRedemptionInfoWithResponse request returning *GetApiV2FoundUserRedemptionInfoResponse
+func (c *ClientWithResponses) GetApiV2FoundUserRedemptionInfoWithResponse(ctx context.Context, params *GetApiV2FoundUserRedemptionInfoParams, reqEditors ...RequestEditorFn) (*GetApiV2FoundUserRedemptionInfoResponse, error) {
+	rsp, err := c.GetApiV2FoundUserRedemptionInfo(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetApiV2FoundUserRedemptionInfoResponse(rsp)
+}
+
 // GetApiV2PrimaryVaultCommonInfoWithResponse request returning *GetApiV2PrimaryVaultCommonInfoResponse
 func (c *ClientWithResponses) GetApiV2PrimaryVaultCommonInfoWithResponse(ctx context.Context, params *GetApiV2PrimaryVaultCommonInfoParams, reqEditors ...RequestEditorFn) (*GetApiV2PrimaryVaultCommonInfoResponse, error) {
 	rsp, err := c.GetApiV2PrimaryVaultCommonInfo(ctx, params, reqEditors...)
@@ -8486,6 +9999,356 @@ func ParseGetApiV2DividendGetOldResponse(rsp *http.Response) (*GetApiV2DividendG
 	return response, nil
 }
 
+// ParseGetApiV2FoundEpochDataResponse parses an HTTP response from a GetApiV2FoundEpochDataWithResponse call
+func ParseGetApiV2FoundEpochDataResponse(rsp *http.Response) (*GetApiV2FoundEpochDataResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetApiV2FoundEpochDataResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                        `json:"code,omitempty"`
+			Data *ResponseFoundEpochDataResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetApiV2FoundGetRoundPriceResponse parses an HTTP response from a GetApiV2FoundGetRoundPriceWithResponse call
+func ParseGetApiV2FoundGetRoundPriceResponse(rsp *http.Response) (*GetApiV2FoundGetRoundPriceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetApiV2FoundGetRoundPriceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                                  `json:"code,omitempty"`
+			Data *ResponseFoundVaultRoundPriceInfoResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV2FoundPrepareAddFoundPriceResponse parses an HTTP response from a PostApiV2FoundPrepareAddFoundPriceWithResponse call
+func ParsePostApiV2FoundPrepareAddFoundPriceResponse(rsp *http.Response) (*PostApiV2FoundPrepareAddFoundPriceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2FoundPrepareAddFoundPriceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV2FoundPrepareCancelRedeemResponse parses an HTTP response from a PostApiV2FoundPrepareCancelRedeemWithResponse call
+func ParsePostApiV2FoundPrepareCancelRedeemResponse(rsp *http.Response) (*PostApiV2FoundPrepareCancelRedeemResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2FoundPrepareCancelRedeemResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV2FoundPrepareChangeEpochResponse parses an HTTP response from a PostApiV2FoundPrepareChangeEpochWithResponse call
+func ParsePostApiV2FoundPrepareChangeEpochResponse(rsp *http.Response) (*PostApiV2FoundPrepareChangeEpochResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2FoundPrepareChangeEpochResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV2FoundPrepareClaimRedemptionResponse parses an HTTP response from a PostApiV2FoundPrepareClaimRedemptionWithResponse call
+func ParsePostApiV2FoundPrepareClaimRedemptionResponse(rsp *http.Response) (*PostApiV2FoundPrepareClaimRedemptionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2FoundPrepareClaimRedemptionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV2FoundPrepareFinishEpochResponse parses an HTTP response from a PostApiV2FoundPrepareFinishEpochWithResponse call
+func ParsePostApiV2FoundPrepareFinishEpochResponse(rsp *http.Response) (*PostApiV2FoundPrepareFinishEpochResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2FoundPrepareFinishEpochResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV2FoundPrepareFoundRedeemResponse parses an HTTP response from a PostApiV2FoundPrepareFoundRedeemWithResponse call
+func ParsePostApiV2FoundPrepareFoundRedeemResponse(rsp *http.Response) (*PostApiV2FoundPrepareFoundRedeemResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2FoundPrepareFoundRedeemResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetApiV2FoundUserPendingClaimResponse parses an HTTP response from a GetApiV2FoundUserPendingClaimWithResponse call
+func ParseGetApiV2FoundUserPendingClaimResponse(rsp *http.Response) (*GetApiV2FoundUserPendingClaimResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetApiV2FoundUserPendingClaimResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                               `json:"code,omitempty"`
+			Data *ResponseFoundUserPendingClaimResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetApiV2FoundUserRedemptionInfoResponse parses an HTTP response from a GetApiV2FoundUserRedemptionInfoWithResponse call
+func ParseGetApiV2FoundUserRedemptionInfoResponse(rsp *http.Response) (*GetApiV2FoundUserRedemptionInfoResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetApiV2FoundUserRedemptionInfoResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                                 `json:"code,omitempty"`
+			Data *ResponseFoundUserRedemptionInfoResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetApiV2PrimaryVaultCommonInfoResponse parses an HTTP response from a GetApiV2PrimaryVaultCommonInfoWithResponse call
 func ParseGetApiV2PrimaryVaultCommonInfoResponse(rsp *http.Response) (*GetApiV2PrimaryVaultCommonInfoResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -9539,144 +11402,161 @@ func ParsePostApiV2TransferSubmitResponse(rsp *http.Response) (*PostApiV2Transfe
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/+x9a1MUSfb3V+mo53kinIgeaJjLGrz6o+iMsTr6QLuzETNGR9GdQO10V9VUVXPZDSMa",
-	"BUVtBAe8o4KrYswq4KwCNqgfZjqrul/xFf5RmVXVdcmsS18QkVdiV1XmyTy/PHny3PJfTFrIiQIPeEVm",
-	"uv7FSODXPJCVI0KGA/Yf2vry/TlO6QW/6j+mBV4BvKL/yYpilkuzCifw7f+QBV7/TU4PgRyr//V/JTDA",
-	"dDH/p73WSzt+Krd7Wz5//nycyQA5LXGi3iDTxagzs+XSk3LpiXpnrrK6ob66wMQRTZwEMkyXIuXB+bhF",
-	"5N/YfFbpAaIgt4ZUd/sEgiOR2gsyAORaRmmt+ciEno8bHcqYtFxO4Nu6Ra4XyKL+i7Ot7jMn1MXL8PIl",
-	"ODcNS/Pq4jbcnmHijCgJIpAUA0ppIQO83x4VMiDGyTFlCMQkIIsCL4OY/urP/P/01N6M4aa1q+tqYVxb",
-	"HGfiDBhlc2IWMF0diUSiM84oYyJguhiOV8AgkBh9xKzCenvsYRXW06P+KrFH9eaaOr2it5YDsswOEoZw",
-	"Cj/wtGl8QG52fUodX7WPggGSJEgxg4MxkZXYHFCAxFgjkxWJ4wcZnTnGL0L/P0Ba0YkzWHR0iOX4Ez06",
-	"jYDP55iun5iORKKDOeduJM6Mfqm/8eUwK/FsTufQT0zf6ZPdP3Qz52rtIRwl0ZdWi4l4xznPbBPbs77u",
-	"PXKcidf+ezzPZ1AvgFc4Zayt59jfU2eyrDIgSDk76b3sWIbL55i4+Vfs6MlTp0IOpgeM1r6v/SeFm6h1",
-	"fkYCZyQgshLoMeDigq0+pSkuo//tYgRGWKqflcG3X3txAd9Pai/fw9lpA0OhGFmjSicpOdproIlAmCBJ",
-	"IIukhEGes/vK6lO8yOHkc/iqAOdXy5uFEz1eMuKMMprKyYMtGUhS+AXw3wvZDJC8Q+hnsyyfJiyp8ta/",
-	"4eZ4+d3d6uMHsUPw5W3txbPy5h9YsuxsF6vjH+DktPbHe1h6Vt58DJ+8+oI0riHUb4rNZCQgy95u1OK4",
-	"unClUpiEC2vwQSF26Agrg28Oa9u3tMVx7d6E1fEX4cZsit/uTMbcK7LCGJB+HOIUcJKTzV2JjjA/4e5a",
-	"40ik4/bpI6w8/o+6sQWvLlZeP1OnNkiTJIzwfi2kJYAwBmentNIz9DKplWF9vORlct6+vfxUGy6Bfjc1",
-	"5/wmWRQlYdhcvMSZZXNCHm+prll596Ly+ln18o3q4wcOGdyRSLR9kyCNz84kNps9PcB0/RRuL8b8yjDn",
-	"z7n34Orce8zHAUnIoTET1t7MjWphXL31FkPUQW1itKPzq6/b2tpIBMsi4E3wk3FxfUp9cJHW8jff/uUw",
-	"pWVFX9KUdvHCxVjB7R6CM6vVwpUvXO0nvvr2aH8PsQcXXgwmxu3AqU2Ya6AO6vzQcwSLnv+fB9JY4Kps",
-	"OsNbPYVmD4qxdUcbAJLZaNf3DgFTp73agg+vHTqW/L79bF9P0knZseT3OgV5mYo+bf65OrURDdF0KWIb",
-	"qr1XX+4LkiSMAOlHThnKSOxIJOmhzszCmVvqzTUsPbx6Z/0CHUtRqixGj61p8/B8xBgNkIhEqy/el0ul",
-	"utabky5HT37TbK4Em053+OtvvmLiWCuNM998y8SZv3Qe7uj89uvOw0ycSYTU7vSNmokzfUKW5VkmzhyR",
-	"00ycSUoCz8SZ0wMDqGek5lm06PsY6M4rQ2RmZ3IcH3nG6+c02lYFKXi7xIQ5uGF+6zv1aLhnBCHbzWdO",
-	"cr/muQynjDVZ/2gErvT17GzVb5BYv3LYJuhDI4li+ymStJJlbpAHmZQyShgd3PgDa8XavYnqxefauz8M",
-	"dXvqdmXpORNnOAXk5NBmENQTHlAO8EpylKlpmKwksWN+U2ajM2C+bLaRkNLu6s3Km4nq4weHyltPEWsq",
-	"D6crbyYqr5fh5nhlZam8tfFFk8Ugxw8D2VgdJGrKpRJ9TTYRlCRRaNEWBajHOZ7l0xw/2JvPEo5yYDQN",
-	"ZDk1kOczEsvJHD+YknSlO9UvknT69Ul47ZG6Ol9+f01/gTT3A2aHqXRekgCfHqMpgjZm0ue01lwGsJks",
-	"xwOb4CJ2KyuspKQULkd5M6fPJ5pKHe3o6JnyEk0AwEIBrs1YoCQOXpS4NAjfpBfPxFYVVhoESgpjInzr",
-	"2v0VdfEy7oNMsAt0NNaFnrOgCQg7lNCAPsEPCF5QZ0Cay7FZOZXLZxVOzHIktQQf4WFhWr25Fo+V31+D",
-	"zy7sbBfL7z5o88+PJb/H87azXYRrr9Q7q7GfmY6fmXgMP9dVT+ILJAgDnu3PgtSIfhTPcjJJ0t1ZhbPP",
-	"4HYBzq5igGl338HZaTh9s9ZgvyBkAcujFhtZtbE8xyvffu2/2Fq4dkktqVO/qy8fq7fXq7dfxxB5h/B/",
-	"1Kn/fhHTln/TSsvWD5ZtJED+OAUBqVt9xpevNafbPJ9BfABpwA0D6pyp15+q8+v0OcuxPDsIUgMAkJmp",
-	"rSxps5cqr9/qnFRX5+GzC53/D4MQXrob+5npTCTIMLS1TCfSaj6QzuZIUQOMO9vFWEciETsbj+GB/Kzr",
-	"6eRxiJKgy4SUrpFTNtnq0lvt/oquIC2vES0UQ6wEUkhWkU7B76qPH5S3NtTF7Xgs0dZhERX7mfmZSbR1",
-	"6P8QmxUGlFSaFUlmn9Xq0npHorx5OR5DY0vQhlensC9vTsNL01g60U/lOXY0JedFMTtGmbkYei+mc+nJ",
-	"Mpy5UVkqVi/PEI98PuLMVJUsKebVTL0E+imcTdmZbLCx8YowNb7bT57PHBtVJJZss9fJkUAG5NBcpGiq",
-	"LbZl4LVQeXMd3n+oH+rJE+0nxnA71flxuHJPu+eQZ+Tt3ndcHD94ehhIwxwY2WfHNXwMZRXQ6nG1gHbT",
-	"ptCyI5SPQlD/zODdhrrDwBt36HuLBNKcyAHigNC21LJTWBRvAumIZo7aPoZ6eO3wzzcLrPufJc3kRBY7",
-	"0o5mWS7XC0ZYKVO3qbYlC2zfWSrMGe/h9J768wro4Ya5DOAzTV4HUv8A5VjT2z9g936QZs7PtxC8jGqz",
-	"EQnMFsX2/h2t+U3sGUnQj4vJUeI8Aj6TkrMCAcLa1pz64FFMfxgzHEH6QePZBfXhQnlzury9CKfuwicT",
-	"+qCn1tSFgnprjWyPy3GkJYKcPTH9WYw+Y1j7IRNYebMBl68hAil2E/kXogm2vLUFry6RIxLQpHo/QdCM",
-	"kT5xsQ2Ntda32aAfg3yk/UfwBO07wdIHFCUbzU3v1sY/uostsqfMd0K8Fn9CjA+vSCz1mG2ISfoJ23QL",
-	"pIbAqI8HAzsu9KPL9DicfFn5cB9OrVeWnmtPgt2FThLdffpOQDi/TTT2yigYgLhUUSSpz6rRKdfppoVB",
-	"2eeq/G7OskTF8Ac4aqhF4VU0vw8erYd2d5++bBhhxXqCaODLO3DyKV6j7XDyhjr9GF4uafcm6IfoRsSh",
-	"mFdS5B0ME2KETfiY9EZTHN0WUL07C6fWDYsLatAayc52MQZ/K57i+NN5pRt9HyuXitXClfJmQX9Y3bpT",
-	"WXkCJ6cqq1tw5pb9RZrRTsgrIUhZm4Ezq+GmVsgrPjNkayJonkRbIKYfj0ixm471t/u7kjUBzumwjcm2",
-	"YiII6jE+nRxNsvIvxPWRZfN8eggJPFYeIkZwVd5soO706cc+4rkpuFmkgONjKGlN0reCtSw0kpNoypos",
-	"+Wv2RimfBSkz+Dta6JPTUesNf8KGm/KHJXV8tXaaR0bP+jpE83EKtULoDh9mat0ZRlKgsA11BxSW0Blq",
-	"HE5exNuQ2Sl98yFNuHdGvEQHwsOYDm+4sBG1RfdfzcKrj+DsdV1S0uOdanGn5MW6VKR8Fmy6CVwn1hBs",
-	"RNQaDp4ZQDJ3c3Iql1fY/iygOjVnVtX7r9Vba0RHJmaQ6a9FBnR2lMvlc0xXx2HikQ59YOqkFC+HPJbr",
-	"F7I+L+QlLvj87aLN0berJ3u7gTPpSmpAQYtx5mxfz1H8T5KJM0d+OMLEmWTv35k487fusyeTqeTpvx77",
-	"wSdETZdKZi6V1Y3eTBcDrz/S5h8ZTZqP9F7NR5gC65HerfkIk2A9QlR2IWLxbu56mMQPk96HOAVD/5+1",
-	"4SLAW3qBPk+EcDsHwW5K3J3HnUN3jYlMjT1SLymxvDwApIPIblpoL6VFbAPegxHdHz8cOWJMuTnFDsJ9",
-	"ZYqB2ZBn2ubizIFzv0Nw/ckE5qHePwwSK7f6ud8Fjc6BwxGDuh0nW9y13/yfFTOsAqw9UtczmqxeNnXP",
-	"c05hVhgUIhjzIgbGB22VUY5CSGIbiTe+fgGqSe/1e3V89VNzhbb45FrzktXHiTos1yj2BsfYWJyIoR9b",
-	"z4kg07aVj/epmLZ3w0XJyjLwkwKfpK+hUUd/A9xC6RF73gKBImuDrRADeT6TAqOKVK9ZwBlP5e1Q70B9",
-	"vgS3Z8qb17R7E9XHD+CTW000gyCmnLJa2ZumEBNlphobAh21BPpdNqQQamHs9WClhsSQj91Z1yBZJS8B",
-	"n73fcOEgRXZnuyjio2csgyewemddXXkDP0zCpf/sYRlYh207SqyHv04XYQcjmacnyqXlVuTZ+TAf0415",
-	"HjXIxJnAGhBhQrCptwoNteEGcv0ET5MMu5wKadPMyQfP+rIkwxhV3dsOIYmFZinGKX+VwiTRwGysoxT1",
-	"1AGnLmmlx5b8qf72ChZ91F5OlvPNs1djZ5TZd+xQde59efMqXgnEQhrCwEAKTy21TcEImnQ3e62ydlGb",
-	"fx7HRiP48ra68mZnu1jenIZL/4FTd7HzFIfMY05IX1ASDkbHUoN5VspwLAGecPqyVlrGdirXke5Qo337",
-	"JVZHcj24UGtzAXgQY/Hcfj4MmXftrS7VSDyTW4TT81bO6qOfX1dfvMcTv7NdhLPF6tx7vIGrt9d3touV",
-	"1af4KZwtnjA2r53t+5WN5/qL86vlrTuuF8ubJfy79t8tbeuRvYe9pIGEUDM8CoaEmLTn9AsXo5t06DrL",
-	"n2HzMrbS7aGo6o8QFx1x4swyFd06W/ZQUojv6JtVj6LxMhSOOTTk/HEA9slEBkmmJk4nLkXmqp2DKwKG",
-	"LeyFSnoFSW2yk4Pgxq95rElpxQzdd12HryvApxXSL9W8U8b5ECwK5I4vG8ilwny8G75OCjqxtFolJNo9",
-	"sZQB4QMhwiANKpzFREh9S0DOZxWZdhbQtubUhwtRy384etcPIb2oF2IyZhDxts/pocRUCYVHgXXYoASM",
-	"BgOTUa1LAgXzdyurq9jctrM9hZMc1IUrO9tXKAFvSp7ODlQrlBKPSw7V8w/OC2KAIHOKFbOwu9g9Npoe",
-	"YvlBkBztAQrLZcOr/HjIaPnSg0v7s0L6F0ryq5WZT5S28ggr0kQkDjpHIjKW6Cq/XYOTT2MdXXD6Frxc",
-	"YoLjjsiymwY5t4OWKK9fPIMzG3VABj0j7urZPHXolI1whM1mgc8yNSr3onqOde0Nloehz1o/ZhSUUT9B",
-	"V/izLJfDf+Iziv53uNpcx61GjtYa6a014qBFcGc8kxaO76bkKDVhjCesJ4AyIzSPS+XDfVh6ZggWNIwc",
-	"y/Goa0o6f2XjAS4AY8vrx+tMF7IbK7CwTQarwmZR9DLIUOPE4cYf1bnNamFRuzdha943TNzpwIiCmu+A",
-	"gsu4nuAHBDKbcLlVHJIYafOrNezd9ozJIFURCqI3OSpTBDGa3jTFCFLY8kk8IpYCq6/wF012R9v5bXMX",
-	"QtGzjcR4mJIVskpn1669X9sTFr1PvYV3A6LV/fT0OjRKHGDuuxljE4e+xCjaN3ohZiYSkk1higRYOS+N",
-	"+TZhvkRqZjAr9CMo8gPcIC1QENVvrk5Oa+9MV2QDSUb0FvycFqFOr2xeGfL7Pqa/QP/chxf4cxovDKHm",
-	"zwtDQlJ5Ub/yZStrsbtany2lmNRxbTsk6GUKECnrrpauG2XF9QKkMXwk/RdrFx+p8z7kdjVO3EeRLPd2",
-	"z7MKNwxSptBNW6+5limK97aXP4czd2DxFnEvMtqkm0HsrdlD6CnCNog4L1l1bnnIAuycsGibnplMvMuM",
-	"9rENDLBcFmT0psi7Ha5R7Z3hiJoqCWuEqGisj6Bo30ph0s6xne2i8fTJq8rrp+rt9fJmicdah5xPp52b",
-	"rT1JpHYCiiIXHNmlu8wu1DVHs4I5U0q9HlfrsU0BD0q79HtOz/d8PFFZWbJneqoPatmnh+DGH5XCxcrd",
-	"GxK+wUK9ck3bell5/Rb+VlS3bmgX3lL8pcS6atrspcpKqbx5tbxZKG/+Dqdvlt9Na/cm0HDhzGp566lB",
-	"xpN7cO0Gpl+noXr3if5sdqJy+XdTlmBfKqbOlyw+n+s3Np4sJ4rsIKWunrrwQn2xZB6P9Wkpl5a1+Uf6",
-	"bKA2D/WL8hehi2qZQLAlcNa7UbrtW0X15dOOne0irrzRGVT5gl7gIspi0odAP359OsPwin/a0YW+FxE3",
-	"xzC+gRAbITkJ1z9zOnjEIW5B8VrejGnIc8THgeesAKpEG2H6WZl0VBZTeFLqPt3bBx9tm3dn1RBtQ029",
-	"BqfpdmGknKNojHq0hhZsyIRMmY+0P5+VgVQLOKSf0esLGQxwQcZxeRPDxfZuDl6ZhjOrOABGuzeh9ywp",
-	"MaMRXUCijbK8WcL96hsSLtCAfm+ad7LRmMOIKfx05uAoeeTkpu84/nZZoxYvpc6WrmFhm5Xb2rFRfjdH",
-	"t1KMcSCb8Sne5RoS0r3TeYlTxvp0wYQJ7xa5v4Kx7rxCWOz6r4LE/ROJFGxSRVEvTBczBFgcYItdEIz5",
-	"0BRpqFV82545uLTAK2wa8QXkkGcGf/Ul4Ac5HvzPoP5jW1rIuVo1nse6z5yI9eVFUZAUJs7kJb2BIUUR",
-	"u9rbOzr/0pZoS7R1dB1OHE60y8Zbnqv+kkOcHOPkGBuTUUpeTAbSMJBijn7wb21MnMlyaWBcOGYQ1C2y",
-	"6SEQ62xLuEkYGRlpY9HTNkEabDc+ldtPnjh67Ie+Y192tiXahpQctmkCKSefHugD0jDSTM025BF2cBBI",
-	"bZzQjl5p1yeUU7KkqWDizDCQZDyujrYEUrFFwLMix3QxX+nTwcQZkVWGEJvbWZFrH+4wgjXabSJhEJCS",
-	"h69vwJlbqE8rTkGHO0LCiQzTxXwHlG6R+1sHXhiGCoN6NG7rk9FRDoHl1zxAdiZjEu2F5ByXLcZtdzv6",
-	"X9p3PuDWPs94nD4iElXmfV50kjwr7F/EXAnUSRwbHLCX4/ZidaFQeXMNuzhInTtNvH6dnqtJJsTYzkQi",
-	"0p2Z4U7Zrnsu9aG6ooGNRJNQao89BIMgmM6RLuVEqMNxBLb6G3I+l2OlMQpCFXZQxoW4dOqZc/oXLuDL",
-	"SH8y0ndFQVbo9bF0RccD+zOCbMc9VseSo0zcdmHsGG1iHHfKkq59/QR5a1NIQ7LWPr+YwS7WuhgQgqvK",
-	"aEqygj18BJqjU3+JZmqre0ikEQWHofpGkVufoghxHB7CyhAbt31kiAsUoeAmU4GmLr5Vp1fgzAX15hpu",
-	"X10oVD7cwL2oU7ew8uryk/ojUd6z+2p16Y22OL6zXSxvXe/A1d4pO5zIDgLHxpbjeKOwDsmG5ZnW1Znq",
-	"0hvLG03qQeb+6erBKt2TSMQj9mfbykNu2Q3oDfbzjH7AQoGWfxYuGFFfM7Pl9/fh1F310dPK6mM7flBW",
-	"wTPrkR1pFKqtU9V+1DNsgQ6RRARehoEiwlqtfiJCJ7jdYyby2ZPU4mW4ci+G69rph2nzJl7r4EcWDj2s",
-	"wtptVl4ZEVw4j4QQw7X8yW4noSxyhCuZQ9jjiNoMSndynK7RWOzn6p/O6ZPkBlUw402c4RRnO8pEidPb",
-	"akf3H4KUKOBIPrJCq23dxUELU/fhVkl9tQhfzsK361iuqG/G4dXnamGZruqewZ3VYpO92m5Tr+ynX9gY",
-	"+fb+T1CI+YSAh4Xkwu+uOkRE0RYaFiYMDdClcqz0C1DIgDSyuVJmdb+UmUlBh6crbRCnwwSi0bDUuq+v",
-	"bTE0Sbflfg6g9EaVNBeLNAzUAz2jUgEdcOXNglZahpsX4EIJ5wyFRZsR2t5ikNlqVXwO2CLkCzQXXER+",
-	"14MsXN+YDix8aEB56GERhcMzWwwoV6XhzwFU3rDX5mLKyeq6wGTGSvpYIjcntZXboaFkNdhaNDnuLvss",
-	"sOSIam0ujiwW1wMhnI7igx8zIRZf6RcWSHizbzGKajUZPg/9yRMT3GQceVhdD6BkFEzqd5KciyCQcGhq",
-	"i3FUu0znc8CRLdq32YfBuehyKI8CaFK1Ymw+ogjVXDeLyVFMW24cuQJ0WowkSuHczwFWAZFQTRZVZCiE",
-	"AZ48woqWsPLz4Wrzj9SpWSdBRa20HOTVtcVok5y6zZVcztuGPgvx5QqBrwtYNT6SJVkQ602g6WAiwosL",
-	"DIzBl3EHGOitoPtw3jur4lAkR9KeckajyPlTHK/01AKLPdQ7nG7UVlKR3RCU1nDYfsNEOW9Rapgq2zVM",
-	"wSzqxdkOTNz8K3b05KlTYZnWA0ZrDdT+k8Jt0AhE1QoynATSCPgEshLxjnOkuE0Sbn7sPpPqOdF77Gjy",
-	"xOkfUid+YOLu306fTZL8y85kSxKh7so9+zsMwpnIE9bJaZdWRPemU5zRBGRnO4urrJtbsI+693CiWlg0",
-	"XkcRwr/b7wykbsCdRh13Y5No8Q7s7IyyCeN7VODlS/DJ5U9/KzYcn5aO02vQXc9WbLDXZy/Gs2a8Z0OW",
-	"+YsDXEZMarux71KcRTbXKa7Vif82qpbcm8DBgDvbRXV+VS2OH0t+/2dh/Gxfz1H8T/LPwviRH478WRhP",
-	"9v5de3nFuhiIgkcjdPE70Gqjv7OSGFkdREPDoR77SCn01FCLFCJqBMWQ4ghN4VZL1bVB0IyAdkAQVyE1",
-	"gkSDIkTt173gOktmmMgaLJbgg9vVuffauxva1gIdXvZKW633KtmKehEBhkeBR7e/HEzOcmYtDO3wh4Y9",
-	"pgMR5YKfkQJkikDiCQQM5+yBYHoPSA7iMsrqxUl46Q3tTNJpJhlheeYbL+TKKiIeWWpJSQ3Fv5llDfdI",
-	"UKMrvcg3jK6xgaPUIj/Fdt8rtJ7Mt+bamkIulmDbk3NxfilkM8ELVL29rF2ZUhde4CLjjS3X09lM0Io9",
-	"WEYHyyjiMoLvJzEQ/VdPFCSHWUumAwE1Z0xFyswTJIfVIzqwOeBRSV14EbByDA+CK3dzjydz6DNgXF4R",
-	"1aCEPkXvRlo5B/YV5zoi5fqGXEpoosgODyp2o68VM5VYMKpEBiwYvEKN6LrwK+a4sxRli08mx92FLz8P",
-	"Zwix4GeTXW10EESHniiBVF0xltXHEzg8AbWzs13ERQa0+efl0nV8SK/dTWAW58P3jdFPzna4npFAUIBm",
-	"+HRM93Vhn6Rxz5wOdIddHZAKCqNsjKWNYS8o6qn6eAIHwbQebrRIqYhos8VCHYANg60xJtYFMAQuNpNJ",
-	"2W+6ohgAN7bg1UX0pWneKWl338HZaTh9MzSI9A67M5me2tVHLXV2ZDKmaEPd/TjEKeAkJ+/3OPNmejz8",
-	"ttoASNQPSRQ5mJLQfbohYj3R6zF1fl27fzUSFG3X9rYYiqRbgg8Q2LQQUBcCGkAeSkWjYw4fafzzHYhI",
-	"w+3uBsisy40P8NUovpzcbhBVgoRqZPsmrRovqten1AcXowNMkLpxke3W56rqHVFAZmRXojEcQC18aqqb",
-	"+fXjrY58wDicvYEaCUgPJGHv4Ai6CwAJw7KGEZMyw1QClC4sGK/YQmLU60/hzL/rgU23FStzgJ4G0UPX",
-	"kXwY1gBorKvDU6ar0Ac46MLtaADxXE2+GwoU+UL0A2WqYWXdBEBTARcssSyjCSYAXpmuRec1gkWq3Go+",
-	"JI2uDvDYHJHoh4j6wcnxnMKxWe6fwLjRhw5JOPUALl+DxVvGvT4BEcIEOJ6wOjuK+9oFFOp9UlV+x4AO",
-	"MBhSJtKAUD8Ka5f1Bx4CjBv6V55UXr+MBL7Txm3/u1MbxNXbgfBrBvBcvG8G3gKdVLhL/7x8P7jtSpK+",
-	"s7MDsDURbOHT9Klgy2bC+gYc4VuNewpOZzO75yw4nc0c+AtacgQJhYrG8BntUOwkKPoR+XQ2s+unZBOe",
-	"BwflXUFp48fmZhXNIQHwIB5k97ycTdhBMRRCGE1QwDN+u06LCWbp7ltJDjS3pthIaACoH3t5XmTzslE8",
-	"xyffdfnf1flxnMOoGHeARQLeWdxP0rifp+W4O8ufsfo7gF1TaqOSIVA/9IJL8qL3o9XlJWFvl4ryoi7N",
-	"vrplGRyYRZoX8FF/Zd4g+KUGAIgGwZqpGl9Oh/5bef22LlAeB2A3cXmK5dlBIB0HB9FILQOnDz6iw1UR",
-	"xC/xpWtB9zgYOXLXf4Oz0/DKNLy8qN2bQJ/Ghqy7GYKTblx3kDYxVy1kDllDN5qQGxTDNFMrvvRJ3kzk",
-	"vTo2bPLl3DQszRNTdgLAFAbNmJvKqNxuXI3rn1+Jry0qzcCp23BmA1Nh3E3hupjC/9KiTvRNclTG80HO",
-	"utylm0k86Y7W+GhXCOmSG99j6F8izF2J5IM2/xxfykhOc0a3f4pcxHZtF5Z+vqnN3wGlBqVWl++wlxey",
-	"wOJ7NwveIpRRmbb6REkwby6mHvHUh7PGbTBoFVg7H05o2dkualuPKitL7vUIZ67CyXXX/d8UTchclmcM",
-	"clqr+hi96Ls/2UWOLlnfdymdtmG3Fqf2+YNv1zE8aiB1FzsKBKk8xqd9AmS3rsf6hCzLszFc0Ajflu+4",
-	"wMgQ38+NH+WsoMQqxYvw/mt4adIF6GCU9un0tLj86hifTo4mWfkXGkbRIA0VdGsLXl3aT5VYbaNvMVTt",
-	"WCGJtyg4VVj5F39Fxi7B9Y4Q4/wrtVqo06cjjMKCG6Xuy5jIDBO9hknwXr/PbvU0Jnw3t3UvKILQJ7G8",
-	"zKI6qCErwwWFsCVrLdJKvx1cH9zs64N9z0qGWTVsYVNcE9Rb19RedhL+Vjzb15MMQMEAkHan1qmrt4Ni",
-	"pxFNUXhmAmud4tfsQsW02JMBF73UpJ0Qb6nJuhC4K/UnnZ354m/fVaB0jz28tHNwe24KbhaJ0s4Xdmin",
-	"lIZNXSYvZZkupr09K6TZ7JAgK12HE4c79e7/NwAA///muLC3BPUAAA==",
+	"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",
+	"x2PHezXy/xsAAP//z0AmeXEeAQA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
