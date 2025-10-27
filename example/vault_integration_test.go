@@ -8,12 +8,13 @@ import (
 	"testing"
 	"time"
 
-	client "github.com/accelerate-protocol/token-engine-client-sdk"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/stretchr/testify/require"
+
+	client "github.com/accelerate-protocol/token-engine-client-sdk"
 )
 
 var (
@@ -47,6 +48,13 @@ func init() {
 	mockUSDC = config.Blockchain.MockUSDC
 }
 
+// encodeTransactionToBase64 将签名后的交易编码为base64字符串
+func encodeTransactionToBase64(t *testing.T, signedTx *types.Transaction) string {
+	signedTxBytes, err := signedTx.MarshalBinary()
+	require.NoError(t, err)
+	return base64.StdEncoding.EncodeToString(signedTxBytes)
+}
+
 // 添加发行人白名单
 func TestAddVaultDeployerIntegration(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
@@ -71,13 +79,17 @@ func TestAddVaultDeployerIntegration(t *testing.T) {
 	signedTx, err := signTransaction(t, chainId, adminPrivateKey, tx)
 	require.NoError(t, err)
 
+	signedTxBytes, err := signedTx.MarshalBinary()
+	require.NoError(t, err)
+	signedTxBase64 := base64.StdEncoding.EncodeToString(signedTxBytes)
+
 	t.Logf("交易签名成功，准备提交交易")
 	// 4. 调用 /api/v1/common/submit_tx 接口提交交易
 	submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
 		ChainId:      req.ChainId,
 		Sender:       req.OwnerAddress,
 		TxMsgBase64:  prepareResp.TxMsgBase64,
-		SignTxBase64: signedTx,
+		SignTxBase64: signedTxBase64,
 	})
 	require.NotNil(t, submitResp)
 	require.NotEmpty(t, submitResp.TxHash)
@@ -343,13 +355,14 @@ func TestErc20Approve(t *testing.T) {
 	// 3. 签名交易
 	signedTx, err := signTransaction(t, string(approveReq.ChainId), adminPrivateKey, tx)
 	require.NoError(t, err)
+
 	t.Logf("交易签名成功，准备提交交易")
 	// 4. 调用 /api/v1/common/submit_tx 接口提交交易
 	submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
 		ChainId:      client.CommonChainID(approveReq.ChainId),
 		Sender:       approveReq.FromAddr,
 		TxMsgBase64:  approveResp.TxMsgBase64,
-		SignTxBase64: signedTx,
+		SignTxBase64: encodeTransactionToBase64(t, signedTx),
 	})
 	require.NotNil(t, submitResp)
 	require.NotEmpty(t, submitResp.TxHash)
@@ -431,13 +444,19 @@ func TestErc20Transfer(t *testing.T) {
 		// 3. 签名交易
 		signedTx, err := signTransaction(t, string(transferReq.ChainId), tc.sender.PrivateKey, tx)
 		require.NoError(t, err)
+
+		// 编码为base64
+		signedTxBytes, err := signedTx.MarshalBinary()
+		require.NoError(t, err)
+		signedTxBase64 := base64.StdEncoding.EncodeToString(signedTxBytes)
+
 		t.Logf("交易签名成功，准备提交交易")
 		// 4. 调用 /api/v1/common/submit_tx 接口提交交易
 		submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
 			ChainId:      client.CommonChainID(transferReq.ChainId),
 			Sender:       transferReq.FromAddr,
 			TxMsgBase64:  transferResp.TxMsgBase64,
-			SignTxBase64: signedTx,
+			SignTxBase64: signedTxBase64,
 		})
 		require.NotNil(t, submitResp)
 		require.NotEmpty(t, submitResp.TxHash)
@@ -497,6 +516,147 @@ func TestErc20Balance(t *testing.T) {
 		require.NotNil(t, balanceResp)
 		t.Logf("查询余额成功，用户: %s, 余额: %s", tc.sender.Address, balanceResp)
 	}
+}
+
+func TestEventMatch(t *testing.T) {
+	// 创建测试实例，连接本地 token-engine 服务
+	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+
+	// 创建管理器实例
+	balanceManager := NewBalanceManager(test, chainId, mockUSDC)
+	transactionManager := NewTransactionManager(test, chainId)
+	validationManager := NewValidationManager(test)
+
+	t.Logf("开始 EventMatch 集成测试")
+	testCases := []struct {
+		name                string
+		sender              Signer
+		amount              string
+		receiver            string
+		aheadTx             bool
+		changeNonce         bool
+		insufficientBalance bool
+
+		expectSuccessNum uint
+	}{
+		{
+			name:             "用户1连续准备两笔交易，内容均为转账1USDC，不修改交易体，上链成功1笔，能够精确匹配，返回两个成功的结果",
+			sender:           users[0],
+			amount:           parseUsd(1), // 1 USDC
+			receiver:         users[1].Address,
+			changeNonce:      false,
+			expectSuccessNum: 2,
+		},
+		{
+			name:             "用户1连续发两笔交易,内容均为转账1USDC，修改交易体（nonce更改），上链成功，能够内容匹配，返回两个成功的结果",
+			sender:           users[0],
+			amount:           parseUsd(1),
+			receiver:         users[1].Address,
+			changeNonce:      true,
+			expectSuccessNum: 2,
+		},
+		{
+			name:             "用户1连续发两笔交易,内容均为转账1USDC，修改交易体（交易插队时的nonce更改），上链成功，能够内容匹配，返回两个成功的结果",
+			sender:           users[0],
+			amount:           parseUsd(1),
+			receiver:         users[1].Address,
+			changeNonce:      true,
+			aheadTx:          true,
+			expectSuccessNum: 3,
+		},
+		{
+			name:                "用户1连续发两笔交易,内容均为转账1USDC，修改交易体（nonce更改），只有一笔交易上链成功，能够精确匹配，返回1个成功，1个失败的结果",
+			sender:              users[0],
+			amount:              parseUsd(1),
+			receiver:            users[1].Address,
+			changeNonce:         true,
+			insufficientBalance: true,
+			expectSuccessNum:    1,
+		},
+		{
+			name:                "用户1连续发两笔交易,内容均为转账1USDC，修改交易体（交易插队后的两笔交易nonce更改），只有一笔交易上链成功，能够精确匹配，返回2个成功，1个失败的结果",
+			sender:              users[0],
+			amount:              parseUsd(1),
+			receiver:            users[1].Address,
+			changeNonce:         true,
+			aheadTx:             true,
+			insufficientBalance: true,
+			expectSuccessNum:    2,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Logf("开始执行测试用例: %s", tc.name)
+
+		// 1. 记录用户1的初始USDC余额（任何情况下都需要记录）
+		initialBalance := balanceManager.RecordUserBalance(t, tc.sender.Address)
+
+		// 2. 对于insufficientBalance的情况，需要确保余额满足条件：amount < 用户1余额 < 2*amount
+		if tc.insufficientBalance {
+			initialBalance = balanceManager.AdjustUserBalanceForTest(t, tc.sender.Address, admin, adminPrivateKey, tc.sender.PrivateKey, tc.amount)
+		}
+
+		// 3. 准备转账请求
+		tokenAddr := mockUSDC
+		transferReq1 := &client.RequestTransferPrepareReq{
+			ChainId:   client.RequestChainId(chainId),
+			FromAddr:  tc.sender.Address,
+			ToAddr:    tc.receiver,
+			TokenAddr: &tokenAddr,
+			Amount:    tc.amount,
+			TokenType: client.TokenTypeUSDC,
+		}
+
+		// 准备第二笔交易请求
+		var transferReq2 *client.RequestTransferPrepareReq
+		if tc.insufficientBalance {
+			// 对于insufficientBalance的情况，第二笔交易使用相同金额
+			// 由于我们已经确保用户1余额满足 amount < 余额 < 2*amount
+			// 第一笔交易成功后，余额会减少amount，导致第二笔交易余额不足
+			transferReq2 = &client.RequestTransferPrepareReq{
+				ChainId:   client.RequestChainId(chainId),
+				FromAddr:  tc.sender.Address,
+				ToAddr:    tc.receiver,
+				TokenAddr: &tokenAddr,
+				Amount:    tc.amount, // 使用相同金额，第二笔会因余额不足而失败
+				TokenType: client.TokenTypeUSDC,
+			}
+			t.Logf("第二笔交易使用相同金额: %s (预期因余额不足而失败)", transferReq2.Amount)
+		} else {
+			// 正常情况下，第二笔交易与第一笔相同
+			transferReq2 = transferReq1
+		}
+
+		// 4. 准备并签名交易
+		transactions := transactionManager.PrepareTransferTransactions(t, transferReq1, transferReq2, tc.changeNonce, tc.aheadTx, tc.sender.Address, tc.sender.PrivateKey)
+
+		// 5. 预订阅交易 - 在提交交易前订阅，避免消息丢失
+		expectedTxHashes := make([]string, 0)
+		for _, tx := range transactions {
+			if tx.Type == TokenTransfer {
+				expectedTxHashes = append(expectedTxHashes, tx.TxHash)
+			}
+		}
+		subscriptions := transactionManager.PreSubscribeMQ(t, expectedTxHashes, client.MessageTypeTokenTransfer)
+		defer transactionManager.CleanupSubscriptions(subscriptions)
+
+		// 6. 提交已签名交易
+		submitResults := transactionManager.SubmitTransactions(t, transactions, tc.sender.Address, tc.sender.PrivateKey)
+
+		// 等待预订阅的MQ消息
+		mqMessages := transactionManager.WaitForMQMessages(t, subscriptions, 30)
+
+		// 7. 验证交易结果（使用预订阅的消息）
+		validationResult := validationManager.ValidateTransactionResultsWithMQMessages(t, submitResults, mqMessages)
+
+		// 8. 验证测试用例
+		validationManager.ValidateTestCase(t, tc.name, validationResult, tc.expectSuccessNum, tc.changeNonce, tc.aheadTx)
+
+		// 9. 恢复sender的USDC余额
+		balanceManager.RestoreUserBalance(t, tc.sender.Address, admin, adminPrivateKey, initialBalance)
+	}
+
+	t.Logf("✅ EventMatch 集成测试通过")
 }
 
 // vaultLaunchOption 定义vault
@@ -585,13 +745,24 @@ func createVault(t *testing.T, test *VaultLaunchIntegrationTest, fundingDuration
 	signedTx, err := signTransaction(t, string(vaultCreateReq.ChainId), adminPrivateKey, tx)
 	require.NoError(t, err)
 
+	// 编码为base64
+	signedTxBytes, err := signedTx.MarshalBinary()
+	require.NoError(t, err)
+	signedTxBase64 := base64.StdEncoding.EncodeToString(signedTxBytes)
+
 	t.Logf("交易签名成功，准备提交交易")
+	// 准备一个 channel 用于接收 MQ 消息
+	mqMessageInterfaceCh := make(chan interface{}, 1)
+	go func() {
+		res := test.waitForMQMessage(t, signedTx.Hash().String(), client.MessageTypeVaultLaunch)
+		mqMessageInterfaceCh <- res
+	}()
 	// 4. 调用 /api/v1/common/submit_tx 接口提交交易
 	submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
 		ChainId:      vaultCreateReq.ChainId,
 		Sender:       vaultCreateReq.ManagementData.Deployer,
 		TxMsgBase64:  prepareResp.TxMsgBase64,
-		SignTxBase64: signedTx,
+		SignTxBase64: signedTxBase64,
 	})
 	require.NotNil(t, submitResp)
 	require.NotEmpty(t, submitResp.TxHash)
@@ -599,12 +770,16 @@ func createVault(t *testing.T, test *VaultLaunchIntegrationTest, fundingDuration
 	t.Logf("交易提交成功，TxHash: %s", submitResp.TxHash)
 
 	// 5. 等待 MQ 推送
-	mqMessageInterface := test.waitForMQMessage(t, submitResp.TxHash, client.MessageTypeVaultLaunch)
-	require.NotNil(t, mqMessageInterface)
-
-	// 类型断言
-	mqMessage, ok := mqMessageInterface.(*client.VaultLaunch)
-	require.True(t, ok, "MQ 消息类型断言失败")
+	mqMessage := &client.VaultLaunch{}
+	var ok bool
+	select {
+	case mqMessageInterface := <-mqMessageInterfaceCh:
+		// 类型断言
+		mqMessage, ok = mqMessageInterface.(*client.VaultLaunch)
+		require.True(t, ok, "MQ 消息类型断言失败")
+	case <-time.After(70 * time.Second):
+		require.Fail(t, "等待 MQ 消息超时")
+	}
 
 	// 6. 验证 MQ 消息内容
 	test.validateVaultLaunchMQMessage(t, mqMessage, submitResp.TxHash)
@@ -647,7 +822,7 @@ func redeem(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress string,
 		ChainId:      client.CommonChainID(approveReq.ChainId),
 		Sender:       approveReq.Investor,
 		TxMsgBase64:  approveResp.TxMsgBase64,
-		SignTxBase64: signedApproveTx,
+		SignTxBase64: encodeTransactionToBase64(t, signedApproveTx),
 	})
 	require.NotNil(t, approveSubmitResp)
 	require.NotEmpty(t, approveSubmitResp.TxHash)
@@ -702,12 +877,19 @@ func redeem(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress string,
 	signedRedeemTx, err := signTransaction(t, string(redeemReq.ChainId), signer.PrivateKey, redeemTx)
 	require.NoError(t, err)
 
+	// 准备一个 channel 用于接收 MQ 消息
+	mqMessageInterfaceCh := make(chan interface{}, 1)
+	go func() {
+		res := test.waitForMQMessage(t, signedRedeemTx.Hash().String(), client.MessageTypeVaultRedeem)
+		mqMessageInterfaceCh <- res
+	}()
+
 	// 7. 调用 /api/v1/common/submit_tx 接口提交 redeem 交易
 	redeemSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
 		ChainId:      redeemReq.ChainId,
 		Sender:       redeemReq.Investor,
 		TxMsgBase64:  redeemResp.TxMsgBase64,
-		SignTxBase64: signedRedeemTx,
+		SignTxBase64: encodeTransactionToBase64(t, signedRedeemTx),
 	})
 	require.NotNil(t, redeemSubmitResp)
 	require.NotEmpty(t, redeemSubmitResp.TxHash)
@@ -715,12 +897,15 @@ func redeem(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress string,
 	t.Logf("Redeem 交易已提交，交易哈希: %s", redeemSubmitResp.TxHash)
 
 	// 8. 等待 MQ 推送
-	mqMessageInterface := test.waitForMQMessage(t, redeemSubmitResp.TxHash, client.MessageTypeVaultRedeem)
-	require.NotNil(t, mqMessageInterface)
-
-	// 类型断言
-	mqMessage, ok := mqMessageInterface.(*client.VaultRedeem)
-	require.True(t, ok, "MQ 消息类型断言失败")
+	mqMessage := &client.VaultRedeem{}
+	var ok bool
+	select {
+	case mqMessageInterface := <-mqMessageInterfaceCh:
+		mqMessage, ok = mqMessageInterface.(*client.VaultRedeem)
+		require.True(t, ok, "MQ 消息类型断言失败")
+	case <-time.After(70 * time.Second):
+		require.Fail(t, "等待 MQ 消息超时")
+	}
 
 	// 9. 验证 MQ 消息内容
 	test.validateVaultRedeemMQMessage(t, mqMessage, redeemReq, redeemSubmitResp.TxHash)
@@ -763,7 +948,7 @@ func deposit(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress, amoun
 		ChainId:      client.CommonChainID(approveReq.ChainId),
 		Sender:       approveReq.Sender,
 		TxMsgBase64:  approveResp.TxMsgBase64,
-		SignTxBase64: signedApproveTx,
+		SignTxBase64: encodeTransactionToBase64(t, signedApproveTx),
 	})
 	require.NotNil(t, approveSubmitResp)
 	require.NotEmpty(t, approveSubmitResp.TxHash)
@@ -811,12 +996,19 @@ func deposit(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress, amoun
 	signedDepositTx, err := signTransaction(t, depositReq.ChainId, sender.PrivateKey, depositTx)
 	require.NoError(t, err)
 
+	// 准备一个 channel 用于接收 MQ 消息
+	mqMessageInterfaceCh := make(chan interface{}, 1)
+	go func() {
+		res := test.waitForMQMessage(t, signedDepositTx.Hash().String(), client.MessageTypeVaultInvest)
+		mqMessageInterfaceCh <- res
+	}()
+
 	// 7. 调用 /api/v1/common/submit_tx 接口提交 deposit 交易
 	depositSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
 		ChainId:      client.CommonChainID(depositReq.ChainId),
 		Sender:       depositReq.Sender,
 		TxMsgBase64:  depositResp.TxMsgBase64,
-		SignTxBase64: signedDepositTx,
+		SignTxBase64: encodeTransactionToBase64(t, signedDepositTx),
 	})
 	require.NotNil(t, depositSubmitResp)
 	require.NotEmpty(t, depositSubmitResp.TxHash)
@@ -824,12 +1016,16 @@ func deposit(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress, amoun
 	t.Logf("Deposit 交易已提交，交易哈希: %s", depositSubmitResp.TxHash)
 
 	// 8. 等待 MQ 推送
-	mqMessageInterface := test.waitForMQMessage(t, depositSubmitResp.TxHash, client.MessageTypeVaultInvest)
-	require.NotNil(t, mqMessageInterface)
-
-	// 类型断言
-	mqMessage, ok := mqMessageInterface.(*client.VaultInvest)
-	require.True(t, ok, "MQ 消息类型断言失败")
+	mqMessage := &client.VaultInvest{}
+	var ok bool
+	select {
+	case mqMessageInterface := <-mqMessageInterfaceCh:
+		// 类型断言
+		mqMessage, ok = mqMessageInterface.(*client.VaultInvest)
+		require.True(t, ok, "MQ 消息类型断言失败")
+	case <-time.After(70 * time.Second):
+		require.Fail(t, "等待 MQ 消息超时")
+	}
 
 	// 9. 验证 MQ 消息内容
 	test.validateVaultInvestMQMessage(t, mqMessage, depositReq, depositSubmitResp.TxHash)
@@ -867,12 +1063,19 @@ func offchainDeposit(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddres
 	signedDepositTx, err := signTransaction(t, string(depositReq.ChainId), adminPrivateKey, depositTx)
 	require.NoError(t, err)
 
+	// 准备一个 channel 用于接收 MQ 消息
+	mqMessageInterfaceCh := make(chan interface{}, 1)
+	go func() {
+		res := test.waitForMQMessage(t, signedDepositTx.Hash().String(), client.MessageTypeOffChainDeposit)
+		mqMessageInterfaceCh <- res
+	}()
+
 	// 4. 调用 /api/v1/common/submit_tx 接口提交 offchain deposit 交易
 	depositSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
 		ChainId:      depositReq.ChainId,
 		Sender:       depositReq.Manager,
 		TxMsgBase64:  depositResp.TxMsgBase64,
-		SignTxBase64: signedDepositTx,
+		SignTxBase64: encodeTransactionToBase64(t, signedDepositTx),
 	})
 	require.NotNil(t, depositSubmitResp)
 	require.NotEmpty(t, depositSubmitResp.TxHash)
@@ -880,12 +1083,16 @@ func offchainDeposit(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddres
 	t.Logf("Offchain Deposit 交易已提交，交易哈希: %s", depositSubmitResp.TxHash)
 
 	// 5. 等待 MQ 推送
-	mqMessageInterface := test.waitForMQMessage(t, depositSubmitResp.TxHash, client.MessageTypeOffChainDeposit)
-	require.NotNil(t, mqMessageInterface)
-
-	// 类型断言
-	mqMessage, ok := mqMessageInterface.(*client.OffChainDeposit)
-	require.True(t, ok, "MQ 消息类型断言失败")
+	mqMessage := &client.OffChainDeposit{}
+	var ok bool
+	select {
+	case mqMessageInterface := <-mqMessageInterfaceCh:
+		// 类型断言
+		mqMessage, ok = mqMessageInterface.(*client.OffChainDeposit)
+		require.True(t, ok, "MQ 消息类型断言失败")
+	case <-time.After(70 * time.Second):
+		require.Fail(t, "等待 MQ 消息超时")
+	}
 
 	// 6. 验证 MQ 消息内容
 	test.validateVaultOffChainInvestMQMessage(t, mqMessage, depositReq, depositSubmitResp.TxHash)
@@ -896,41 +1103,6 @@ func dividend(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress strin
 	t.Logf("开始执行 dividend 测试，Vault 地址: %s", vaultAddress)
 	// 0. 准备 approve VaultDividend 请求, 调用 /api/v2/primary/vault/prepare_dividend_approve 接口
 	t.Logf("开始approve usdt, user: %s", admin)
-	// 1. 准备 VaultInvest 请求 - 先进行 approve
-	approveReq := &VaultApproveDividendRequest{
-		ChainId:      chainId,
-		Manager:      admin,
-		VaultAddress: vaultAddress,
-		Amount:       amount,
-	}
-
-	// 1.1 调用 /api/v2/primary/vault/prepare_deposit_approve 接口
-	approveResp := test.callPrepareDividendApprove(t, approveReq)
-	require.NotNil(t, approveResp)
-	require.NotEmpty(t, approveResp.TxMsgBase64)
-
-	// 1.2 签名 approve 交易
-	approveTx := &types.Transaction{}
-	approveData, err := base64.StdEncoding.DecodeString(approveResp.TxMsgBase64)
-	require.NoError(t, err)
-	err = approveTx.UnmarshalBinary(approveData)
-	require.NoError(t, err)
-
-	signedApproveTx, err := signTransaction(t, approveReq.ChainId, adminPrivateKey, approveTx)
-	require.NoError(t, err)
-
-	// 1.3 提交 approve 交易
-	approveSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
-		ChainId:      client.CommonChainID(approveReq.ChainId),
-		Sender:       approveReq.Manager,
-		TxMsgBase64:  approveResp.TxMsgBase64,
-		SignTxBase64: signedApproveTx,
-	})
-	require.NotNil(t, approveSubmitResp)
-	require.NotEmpty(t, approveSubmitResp.TxHash)
-
-	t.Logf("Approve 交易已提交，交易哈希: %s", approveSubmitResp.TxHash)
-
 	// 1. 准备 VaultDividend 请求，其中签名字段, 使用管理员私钥签名, 使用generateDrdsDividendSign方法
 	// 解析管理员私钥
 	privateKey, err := crypto.HexToECDSA(adminPrivateKey)
@@ -977,12 +1149,19 @@ func dividend(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress strin
 	signedTx, err := signTransaction(t, string(dividendReq.ChainId), adminPrivateKey, tx)
 	require.NoError(t, err)
 
+	// 准备一个 channel 用于接收 MQ 消息
+	mqMessageInterfaceCh := make(chan interface{}, 1)
+	go func() {
+		res := test.waitForMQMessage(t, signedTx.Hash().String(), client.MessageTypeVaultDividend)
+		mqMessageInterfaceCh <- res
+	}()
+
 	// 提交交易
 	submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
 		ChainId:      dividendReq.ChainId,
 		Sender:       *dividendReq.UserAddr,
 		TxMsgBase64:  prepareResp.TxMsgBase64,
-		SignTxBase64: signedTx,
+		SignTxBase64: encodeTransactionToBase64(t, signedTx),
 	})
 	require.NotNil(t, submitResp)
 	require.NotEmpty(t, submitResp.TxHash)
@@ -990,12 +1169,15 @@ func dividend(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress strin
 	t.Logf("分红交易提交成功，TxHash: %s", submitResp.TxHash)
 
 	// 4. 等待 MQ 推送
-	mqMessageInterface := test.waitForMQMessage(t, submitResp.TxHash, client.MessageTypeVaultDividend)
-	require.NotNil(t, mqMessageInterface)
-
-	// 类型断言
-	mqMessage, ok := mqMessageInterface.(*client.VaultDividend)
-	require.True(t, ok, "MQ 消息类型断言失败")
+	var mqMessage *client.VaultDividend
+	select {
+	case mqMessageInterface := <-mqMessageInterfaceCh:
+		// 类型断言
+		mqMessage, ok = mqMessageInterface.(*client.VaultDividend)
+		require.True(t, ok, "MQ 消息类型断言失败")
+	case <-time.After(70 * time.Second):
+		require.Fail(t, "等待 MQ 消息超时")
+	}
 
 	// 5. 验证 MQ 消息内容
 	test.validateVaultDividendMQMessage(t, mqMessage, dividendReq, submitResp.TxHash)
@@ -1026,21 +1208,34 @@ func claim(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress string, 
 	require.NoError(t, err)
 	signedTx, err := signTransaction(t, string(claimReq.ChainId), user.PrivateKey, tx)
 	require.NoError(t, err)
+
+	// 准备一个 channel 用于接收 MQ 消息
+	mqMessageInterfaceCh := make(chan interface{}, 1)
+	go func() {
+		res := test.waitForMQMessage(t, signedTx.Hash().String(), client.MessageTypeVaultClaim)
+		mqMessageInterfaceCh <- res
+	}()
+
 	submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
 		ChainId:      claimReq.ChainId,
 		Sender:       claimReq.Investor,
 		TxMsgBase64:  claimResp.TxMsgBase64,
-		SignTxBase64: signedTx,
+		SignTxBase64: encodeTransactionToBase64(t, signedTx),
 	})
 	require.NotNil(t, submitResp)
 	require.NotEmpty(t, submitResp.TxHash)
 	t.Logf("Claim 交易提交成功，TxHash: %s", submitResp.TxHash)
 	// 3. 等待 MQ 推送
-	mqMessageInterface := test.waitForMQMessage(t, submitResp.TxHash, client.MessageTypeVaultClaim)
-	require.NotNil(t, mqMessageInterface)
-	// 类型断言
-	mqMessage, ok := mqMessageInterface.(*client.VaultClaim)
-	require.True(t, ok, "MQ 消息类型断言失败")
+	var mqMessage *client.VaultClaim
+	var ok bool
+	select {
+	case mqMessageInterface := <-mqMessageInterfaceCh:
+		// 类型断言
+		mqMessage, ok = mqMessageInterface.(*client.VaultClaim)
+		require.True(t, ok, "MQ 消息类型断言失败")
+	case <-time.After(70 * time.Second):
+		require.Fail(t, "等待 MQ 消息超时")
+	}
 	// 4. 验证 MQ 消息内容
 	test.validateVaultClaimMQMessage(t, mqMessage, claimReq, submitResp.TxHash)
 	t.Logf("  用户 %s 成功领取金额: %s USDC", mqMessage.Sender, mqMessage.AssetTokenAmount)
@@ -1074,7 +1269,7 @@ func unPauseToken(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress s
 		ChainId:      unPauseReq.ChainId,
 		Sender:       *unPauseReq.Manager,
 		TxMsgBase64:  unPauseResp.TxMsgBase64,
-		SignTxBase64: signedTx,
+		SignTxBase64: encodeTransactionToBase64(t, signedTx),
 	})
 	require.NotNil(t, submitResp)
 	require.NotEmpty(t, submitResp.TxHash)
@@ -1106,23 +1301,39 @@ func withdrawManageFee(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddr
 	signedTx, err := signTransaction(t, string(withdrawReq.ChainId), adminPrivateKey, tx)
 	require.NoError(t, err)
 	t.Logf("交易签名成功，准备提交交易")
+
+	// 准备一个 channel 用于接收 MQ 消息
+	mqMessageInterfaceCh := make(chan interface{}, 1)
+	go func() {
+		res := test.waitForMQMessage(t, signedTx.Hash().String(), client.MessageTypeWithdrawManageFee)
+		mqMessageInterfaceCh <- res
+	}()
+
 	// 4. 调用 /api/v1/common/submit_tx 接口提交交易
 	submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
 		ChainId:      withdrawReq.ChainId,
 		Sender:       withdrawReq.Withdrawer,
 		TxMsgBase64:  withdrawResp.TxMsgBase64,
-		SignTxBase64: signedTx,
+		SignTxBase64: encodeTransactionToBase64(t, signedTx),
 	})
 	require.NotNil(t, submitResp)
 	require.NotEmpty(t, submitResp.TxHash)
 	t.Logf("交易提交成功，TxHash: %s", submitResp.TxHash)
 
 	// 5. 等待并验证 MQ 消息内容
-	mqMessageInterface := test.waitForMQMessage(t, submitResp.TxHash, client.MessageTypeWithdrawManageFee)
-	require.NotNil(t, mqMessageInterface)
-	// 类型断言
-	mqMessage, ok := mqMessageInterface.(*client.VaultWithdrawFee)
-	require.True(t, ok, "MQ 消息类型断言失败")
+	var (
+		mqMessage *client.VaultWithdrawFee
+		ok        bool
+	)
+
+	select {
+	case mqMessageInterface := <-mqMessageInterfaceCh:
+		// 类型断言
+		mqMessage, ok = mqMessageInterface.(*client.VaultWithdrawFee)
+		require.True(t, ok, "MQ 消息类型断言失败")
+	case <-time.After(70 * time.Second):
+		require.Fail(t, "等待 MQ 消息超时")
+	}
 	test.validateVaultWithdrawManageFeeMQMessage(t, mqMessage, withdrawReq, submitResp.TxHash)
 	t.Logf("✅ WithdrawManageFee 集成测试通过")
 }
@@ -1149,23 +1360,37 @@ func withdraw(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress strin
 	signedTx, err := signTransaction(t, string(withdrawReq.ChainId), adminPrivateKey, tx)
 	require.NoError(t, err)
 	t.Logf("交易签名成功，准备提交交易")
+
+	// 准备一个 channel 用于接收 MQ 消息
+	mqMessageInterfaceCh := make(chan interface{}, 1)
+	go func() {
+		res := test.waitForMQMessage(t, signedTx.Hash().String(), client.MessageTypeVaultWithdraw)
+		mqMessageInterfaceCh <- res
+	}()
 	// 4. 调用 /api/v1/common/submit_tx 接口提交交易
 	submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
 		ChainId:      withdrawReq.ChainId,
 		Sender:       withdrawReq.Withdrawer,
 		TxMsgBase64:  withdrawResp.TxMsgBase64,
-		SignTxBase64: signedTx,
+		SignTxBase64: encodeTransactionToBase64(t, signedTx),
 	})
 	require.NotNil(t, submitResp)
 	require.NotEmpty(t, submitResp.TxHash)
 	t.Logf("交易提交成功，TxHash: %s", submitResp.TxHash)
 
 	// 5. 等待并验证 MQ 消息内容
-	mqMessageInterface := test.waitForMQMessage(t, submitResp.TxHash, client.MessageTypeVaultWithdraw)
-	require.NotNil(t, mqMessageInterface)
-	// 类型断言
-	mqMessage, ok := mqMessageInterface.(*client.VaultWithdraw)
-	require.True(t, ok, "MQ 消息类型断言失败")
+	var (
+		mqMessage *client.VaultWithdraw
+		ok        bool
+	)
+	select {
+	case mqMessageInterface := <-mqMessageInterfaceCh:
+		// 类型断言
+		mqMessage, ok = mqMessageInterface.(*client.VaultWithdraw)
+		require.True(t, ok, "MQ 消息类型断言失败")
+	case <-time.After(70 * time.Second):
+		require.Fail(t, "等待 MQ 消息超时")
+	}
 	test.validateVaultWithdrawMQMessage(t, mqMessage, withdrawReq, submitResp.TxHash)
 	t.Logf("✅ Withdraw 集成测试通过")
 }

@@ -59,12 +59,13 @@ func (m *Message) EncodeData(target interface{}) error {
 }
 
 type BaseData struct {
-	CorrelationId string `json:"correlation_id"` //全局唯一ID
-	TxHash        string `json:"tx_hash"`        //交易hash，失败时可为空
-	Ts            int64  `json:"ts"`             //交易发生的链上秒级时间戳，失败时可为0
-	Sender        string `json:"sender"`         //交易发起人
-	Success       bool   `json:"success"`        //交易是否成功，失败时也要推送
-	FailReason    string `json:"fail_reason"`    //失败原因描述
+	CorrelationId        string `json:"correlation_id"`          //全局唯一ID
+	OnChainCorrelationId string `json:"on_chain_correlation_id"` //交易实际上链的ID(防止用户修改交易体导致correlation_id与实际的txId不匹配)
+	TxHash               string `json:"tx_hash"`                 //交易hash，失败时可为空
+	Ts                   int64  `json:"ts"`                      //交易发生的链上秒级时间戳，失败时可为0
+	Sender               string `json:"sender"`                  //交易发起人
+	Success              bool   `json:"success"`                 //交易是否成功，失败时也要推送
+	FailReason           string `json:"fail_reason"`             //失败原因描述
 }
 
 // VaultLaunch vault发行成功后推送的数据
