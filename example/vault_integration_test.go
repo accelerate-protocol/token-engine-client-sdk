@@ -559,6 +559,10 @@ func TestFundVaultRedeem(t *testing.T) {
 		fundVaultRedemptionRequest(t, test, vaultAddr, tc.amount, tc.sender)
 		//更改epoch
 		fundVaultChangeEpoch(t, test, vaultAddr, adminSigner)
+		//结束epoch
+		fundVaultFinishEpoch(t, test, vaultAddr, parseUsd(1000), "0", adminSigner)
+		//claim赎回金额
+		fundVaultClaimRedemption(t, test, vaultAddr, "0", adminSigner)
 	}
 }
 
@@ -1426,6 +1430,155 @@ func fundVaultChangeEpoch(t *testing.T, test *VaultLaunchIntegrationTest, vaultA
 	test.validateFundVaultChangeEpochMQMessage(t, mqMessage, redeemReq, redeemSubmitResp.TxHash)
 
 	t.Logf("✅ FundChangeEpoch 集成测试通过")
+	t.Logf("   EpochId: %s", mqMessage.EpochId)
+	t.Logf("   交易哈希: %s", redeemSubmitResp.TxHash)
+	return mqMessage
+}
+
+func fundVaultFinishEpoch(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress, amount, epochId string, manager Signer) *client.FundFinishEpoch {
+	t.Logf("开始执行 fundVaultFinishEpoch 测试，Vault 地址: %s", vaultAddress)
+	t.Logf("开始approve finish epoch, user: %s", manager)
+	// 1. 准备 VaultInvest 请求 - 先进行 approve
+	approveReq := &FundVaultFinishEpochApprove{
+		ChainId:        chainId,
+		SettlerAddress: manager.Address,
+		VaultAddress:   vaultAddress,
+		AssetAmount:    amount,
+	}
+
+	// 1.1 调用 /api/v2/fund/prepare_fund_finish_epoch_approve 接口
+	approveResp := test.callPrepareFundFinishEpochApprove(t, approveReq)
+	require.NotNil(t, approveResp)
+	require.NotEmpty(t, approveResp.TxMsgBase64)
+
+	// 1.2 签名 approve 交易
+	approveTx := &types.Transaction{}
+	approveData, err := base64.StdEncoding.DecodeString(approveResp.TxMsgBase64)
+	require.NoError(t, err)
+	err = approveTx.UnmarshalBinary(approveData)
+	require.NoError(t, err)
+
+	signedApproveTx, err := signTransaction(t, approveReq.ChainId, manager.PrivateKey, approveTx)
+	require.NoError(t, err)
+
+	// 1.3 提交 approve 交易
+	approveSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      client.CommonChainID(approveReq.ChainId),
+		Sender:       approveReq.SettlerAddress,
+		TxMsgBase64:  approveResp.TxMsgBase64,
+		SignTxBase64: signedApproveTx,
+	})
+	require.NotNil(t, approveSubmitResp)
+	require.NotEmpty(t, approveSubmitResp.TxHash)
+
+	t.Logf("Approve 交易已提交，交易哈希: %s", approveSubmitResp.TxHash)
+
+	// 2. 准备 redemptionRequest 请求
+	redeemReq := &FundVaultFinishEpoch{
+		ChainId:        chainId,
+		SettlerAddress: manager.Address,
+		VaultAddress:   vaultAddress,
+		EpochId:        epochId,
+		AssetAmount:    amount,
+		Signature:      "", //todo
+	}
+
+	// 5. 调用 /api/v2/fund/prepare_finish_epoch 接口
+	redemptionRequestResp := test.callPrepareFundFinishEpoch(t, redeemReq)
+	require.NotNil(t, redemptionRequestResp)
+	require.NotEmpty(t, redemptionRequestResp.TxMsgBase64)
+
+	redemptionRequestTx := &types.Transaction{}
+	depositData, err := base64.StdEncoding.DecodeString(redemptionRequestResp.TxMsgBase64)
+	require.NoError(t, err)
+	err = redemptionRequestTx.UnmarshalBinary(depositData)
+	require.NoError(t, err)
+
+	// user签名
+	signedRedeemTx, err := signTransaction(t, redeemReq.ChainId, manager.PrivateKey, redemptionRequestTx)
+	require.NoError(t, err)
+
+	// 7. 调用 /api/v1/common/submit_tx 接口提交 redemptionRequest 交易
+	redeemSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      client.CommonChainID(redeemReq.ChainId),
+		Sender:       redeemReq.SettlerAddress,
+		TxMsgBase64:  redemptionRequestResp.TxMsgBase64,
+		SignTxBase64: signedRedeemTx,
+	})
+	require.NotNil(t, redeemSubmitResp)
+	require.NotEmpty(t, redeemSubmitResp.TxHash)
+
+	t.Logf("Fund Finish Epoch 交易已提交，交易哈希: %s", redeemSubmitResp.TxHash)
+
+	// 8. 等待 MQ 推送
+	mqMessageInterface := test.waitForMQMessage(t, redeemSubmitResp.TxHash, client.MessageTypeFundVaultFinishEpoch)
+	require.NotNil(t, mqMessageInterface)
+
+	// 类型断言
+	mqMessage, ok := mqMessageInterface.(*client.FundFinishEpoch)
+	require.True(t, ok, "MQ 消息类型断言失败")
+
+	// 9. 验证 MQ 消息内容
+	test.validateFundVaultFinishEpochMQMessage(t, mqMessage, redeemReq, redeemSubmitResp.TxHash)
+
+	t.Logf("✅ FundFinishEpoch 集成测试通过")
+	t.Logf("   打款数量: %s AssetToken", redeemReq.AssetAmount)
+	t.Logf("   EpochId: %s", mqMessage.EpochId)
+	t.Logf("   交易哈希: %s", redeemSubmitResp.TxHash)
+	return mqMessage
+}
+
+func fundVaultClaimRedemption(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress, epochId string, sender Signer) *client.FundRedemptionClaim {
+	t.Logf("开始执行 fundVaultClaimRedemption 测试，Vault 地址: %s", vaultAddress)
+
+	// 2. 准备 redemptionRequest 请求
+	redeemReq := &FundVaultClaimRedemptionRequest{
+		ChainId:      chainId,
+		UserAddr:     sender.Address,
+		VaultAddress: vaultAddress,
+		EpochId:      epochId,
+	}
+
+	// 5. 调用 /api/v2/fund/prepare_claim_redemption 接口
+	redemptionRequestResp := test.callPrepareFundClaimRedemption(t, redeemReq)
+	require.NotNil(t, redemptionRequestResp)
+	require.NotEmpty(t, redemptionRequestResp.TxMsgBase64)
+
+	redemptionRequestTx := &types.Transaction{}
+	depositData, err := base64.StdEncoding.DecodeString(redemptionRequestResp.TxMsgBase64)
+	require.NoError(t, err)
+	err = redemptionRequestTx.UnmarshalBinary(depositData)
+	require.NoError(t, err)
+
+	// user签名
+	signedRedeemTx, err := signTransaction(t, redeemReq.ChainId, sender.PrivateKey, redemptionRequestTx)
+	require.NoError(t, err)
+
+	// 7. 调用 /api/v1/common/submit_tx 接口提交 redemptionRequest 交易
+	redeemSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      client.CommonChainID(redeemReq.ChainId),
+		Sender:       redeemReq.UserAddr,
+		TxMsgBase64:  redemptionRequestResp.TxMsgBase64,
+		SignTxBase64: signedRedeemTx,
+	})
+	require.NotNil(t, redeemSubmitResp)
+	require.NotEmpty(t, redeemSubmitResp.TxHash)
+
+	t.Logf("Fund Claim Redemption 交易已提交，交易哈希: %s", redeemSubmitResp.TxHash)
+
+	// 8. 等待 MQ 推送
+	mqMessageInterface := test.waitForMQMessage(t, redeemSubmitResp.TxHash, client.MessageTypeFundVaultRedemptionClaim)
+	require.NotNil(t, mqMessageInterface)
+
+	// 类型断言
+	mqMessage, ok := mqMessageInterface.(*client.FundRedemptionClaim)
+	require.True(t, ok, "MQ 消息类型断言失败")
+
+	// 9. 验证 MQ 消息内容
+	test.validateFundVaultClaimRedemptionMQMessage(t, mqMessage, redeemReq, redeemSubmitResp.TxHash)
+
+	t.Logf("✅ FundFinishEpoch 集成测试通过")
+	t.Logf("   领取数量: %s AssetToken", mqMessage.AssetAmount)
 	t.Logf("   EpochId: %s", mqMessage.EpochId)
 	t.Logf("   交易哈希: %s", redeemSubmitResp.TxHash)
 	return mqMessage

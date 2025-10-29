@@ -781,6 +781,38 @@ func (test *VaultLaunchIntegrationTest) waitForMQMessage(t *testing.T, txHash st
 					// 通道已满，忽略
 				}
 			}
+		case uint(client.MessageTypeFundVaultFinishEpoch):
+			var redemptionRequest client.FundFinishEpoch
+			if err := msg.DecodeData(&redemptionRequest); err != nil {
+				t.Logf("解析 FundFinishEpoch 消息失败: %v", err)
+				return err
+			}
+			// 检查是否是我们要等待的交易
+			if redemptionRequest.TxHash == txHash && uint(messageType) == uint(client.MessageTypeFundVaultFinishEpoch) {
+				t.Logf("找到匹配的 FundFinishEpoch 交易消息: %s", txHash)
+				select {
+				case messageChan <- &redemptionRequest:
+					// 消息已发送到通道
+				default:
+					// 通道已满，忽略
+				}
+			}
+		case uint(client.MessageTypeFundVaultRedemptionClaim):
+			var redemptionRequest client.FundRedemptionClaim
+			if err := msg.DecodeData(&redemptionRequest); err != nil {
+				t.Logf("解析 FundVaultRedemptionClaim 消息失败: %v", err)
+				return err
+			}
+			// 检查是否是我们要等待的交易
+			if redemptionRequest.TxHash == txHash && uint(messageType) == uint(client.MessageTypeFundVaultRedemptionClaim) {
+				t.Logf("找到匹配的 FundVaultRedemptionClaim 交易消息: %s", txHash)
+				select {
+				case messageChan <- &redemptionRequest:
+					// 消息已发送到通道
+				default:
+					// 通道已满，忽略
+				}
+			}
 
 		default:
 			t.Logf("收到其他类型的消息: %d", msg.Type)
@@ -1924,6 +1956,99 @@ func (test *VaultLaunchIntegrationTest) callPrepareFundRedemptionApprove(t *test
 	return &prepareResp
 }
 
+type FundVaultFinishEpochApprove struct {
+	ChainId        string `json:"chain_id"`
+	SettlerAddress string `json:"settler_address"`
+	//vault地址
+	VaultAddress string `json:"vault_address"`
+	AssetAmount  string `json:"asset_amount"`
+}
+
+func (test *VaultLaunchIntegrationTest) callPrepareFundFinishEpochApprove(t *testing.T, req *FundVaultFinishEpochApprove) *PrepareTxResponse {
+	// 创建请求体
+	reqBody, err := json.Marshal(req)
+	require.NoError(t, err)
+
+	// 创建 HTTP 请求
+	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/fund/prepare_fund_finish_epoch_approve", bytes.NewBuffer(reqBody))
+	require.NoError(t, err)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", appId)
+
+	// 执行请求
+	resp, err := test.httpClient.Do(httpReq)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// 解析响应
+	var apiResp APIResponse
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	require.NoError(t, err)
+	assert.Equal(t, 0, apiResp.Code)
+
+	t.Logf("prepare_fund_finish_epoch_approve 响应: %+v", apiResp)
+
+	// 解析数据
+	respData, err := json.Marshal(apiResp.Data)
+	require.NoError(t, err)
+
+	var prepareResp PrepareTxResponse
+	err = json.Unmarshal(respData, &prepareResp)
+	require.NoError(t, err)
+
+	return &prepareResp
+}
+
+type FundVaultFinishEpoch struct {
+	ChainId        string `json:"chain_id"`
+	VaultAddress   string `json:"vault_address"`
+	SettlerAddress string `json:"settler_address"` // 结算人地址
+	EpochId        string `json:"epoch_id"`
+	AssetAmount    string `json:"asset_amount"` //金额
+	Signature      string `json:"signature"`    //drds签名
+}
+
+func (test *VaultLaunchIntegrationTest) callPrepareFundFinishEpoch(t *testing.T, req *FundVaultFinishEpoch) *PrepareTxResponse {
+	// 创建请求体
+	reqBody, err := json.Marshal(req)
+	require.NoError(t, err)
+
+	// 创建 HTTP 请求
+	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/fund/prepare_finish_epoch", bytes.NewBuffer(reqBody))
+	require.NoError(t, err)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", appId)
+
+	// 执行请求
+	resp, err := test.httpClient.Do(httpReq)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// 解析响应
+	var apiResp APIResponse
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	require.NoError(t, err)
+	assert.Equal(t, 0, apiResp.Code)
+
+	t.Logf("prepare_finish_epoch 响应: %+v", apiResp)
+
+	// 解析数据
+	respData, err := json.Marshal(apiResp.Data)
+	require.NoError(t, err)
+
+	var prepareResp PrepareTxResponse
+	err = json.Unmarshal(respData, &prepareResp)
+	require.NoError(t, err)
+
+	return &prepareResp
+}
+
 // FundRedeemRequest fund Vault 赎回请求
 type FundRedeemRequest struct {
 	ChainId         string `json:"chain_id"`
@@ -2060,6 +2185,51 @@ func (test *VaultLaunchIntegrationTest) callPrepareFundChangeEpoch(t *testing.T,
 	return &prepareResp
 }
 
+type FundVaultClaimRedemptionRequest struct {
+	ChainId      string `json:"chain_id"`
+	VaultAddress string `json:"vault_address"`
+	UserAddr     string `form:"user_addr"` // 用户地址
+	EpochId      string `json:"epoch_id"`
+}
+
+func (test *VaultLaunchIntegrationTest) callPrepareFundClaimRedemption(t *testing.T, req *FundVaultClaimRedemptionRequest) *PrepareTxResponse {
+	// 创建请求体
+	reqBody, err := json.Marshal(req)
+	require.NoError(t, err)
+
+	// 创建 HTTP 请求
+	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/fund/prepare_claim_redemption", bytes.NewBuffer(reqBody))
+	require.NoError(t, err)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", appId)
+
+	// 执行请求
+	resp, err := test.httpClient.Do(httpReq)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// 解析响应
+	var apiResp APIResponse
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	require.NoError(t, err)
+	assert.Equal(t, 0, apiResp.Code)
+
+	t.Logf("prepare_claim_redemption 响应: %+v", apiResp)
+
+	// 解析数据
+	respData, err := json.Marshal(apiResp.Data)
+	require.NoError(t, err)
+
+	var prepareResp PrepareTxResponse
+	err = json.Unmarshal(respData, &prepareResp)
+	require.NoError(t, err)
+
+	return &prepareResp
+}
+
 // validateVaultInvestMQMessage 验证 VaultInvest MQ 消息
 func (test *VaultLaunchIntegrationTest) validateFundVaultRedemptionRequestMQMessage(t *testing.T, mqMessage *client.FundRedemptionRequest, req *FundRedeemRequest, txHash string) {
 	// 验证基础数据
@@ -2110,4 +2280,42 @@ func (test *VaultLaunchIntegrationTest) validateFundVaultChangeEpochMQMessage(t 
 	t.Logf("   Success: %t", mqMessage.Success)
 	t.Logf("   Sender: %s", mqMessage.Sender)
 	t.Logf("   EpochId: %s", mqMessage.EpochId)
+}
+func (test *VaultLaunchIntegrationTest) validateFundVaultFinishEpochMQMessage(t *testing.T, mqMessage *client.FundFinishEpoch, req *FundVaultFinishEpoch, txHash string) {
+	// 验证基础数据
+	assert.Equal(t, txHash, mqMessage.TxHash)
+	assert.True(t, mqMessage.Success)
+	assert.Empty(t, mqMessage.FailReason)
+	assert.Equal(t, req.SettlerAddress, mqMessage.Sender)
+	assert.Equal(t, req.EpochId, mqMessage.EpochId)
+	assert.Equal(t, req.AssetAmount, mqMessage.AssetAmount)
+	// 验证时间戳
+	assert.Greater(t, mqMessage.Ts, int64(0))
+
+	t.Logf("FundVaultFinishEpoch MQ 消息验证通过:")
+	t.Logf("   CorrelationId: %s", mqMessage.CorrelationId)
+	t.Logf("   TxHash: %s", mqMessage.TxHash)
+	t.Logf("   Success: %t", mqMessage.Success)
+	t.Logf("   Sender: %s", mqMessage.Sender)
+	t.Logf("   AssetAmount: %s", mqMessage.AssetAmount)
+}
+
+func (test *VaultLaunchIntegrationTest) validateFundVaultClaimRedemptionMQMessage(t *testing.T, mqMessage *client.FundRedemptionClaim, req *FundVaultClaimRedemptionRequest, txHash string) {
+	// 验证基础数据
+	assert.Equal(t, txHash, mqMessage.TxHash)
+	assert.True(t, mqMessage.Success)
+	assert.Empty(t, mqMessage.FailReason)
+	assert.Equal(t, req.UserAddr, mqMessage.Sender)
+	assert.Equal(t, req.EpochId, mqMessage.EpochId)
+	// 验证时间戳
+	assert.Greater(t, mqMessage.Ts, int64(0))
+
+	t.Logf("FundVaultClaimRedemption MQ 消息验证通过:")
+	t.Logf("   CorrelationId: %s", mqMessage.CorrelationId)
+	t.Logf("   TxHash: %s", mqMessage.TxHash)
+	t.Logf("   Success: %t", mqMessage.Success)
+	t.Logf("   Sender: %s", mqMessage.Sender)
+	t.Logf("   EpochId: %s", mqMessage.EpochId)
+	t.Logf("   AssetAmount: %s", mqMessage.AssetAmount)
+	t.Logf("   ShareAmount: %s", mqMessage.ShareAmount)
 }
