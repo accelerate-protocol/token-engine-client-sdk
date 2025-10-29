@@ -518,6 +518,56 @@ func TestErc20Balance(t *testing.T) {
 	}
 }
 
+// TestFundVaultRedeem FundVaultRedeem 集成测试
+func TestFundVaultRedeem(t *testing.T) {
+	// 创建测试实例，连接本地 token-engine 服务
+	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+
+	testCases := []struct {
+		name      string
+		vaultType client.CommonVaultType
+		sender    Signer
+		receiver  Signer
+		amount    string
+	}{
+		//{
+		//	name:     "RBF模式下，单链支付，用户1质押给自己",
+		//	sender:   users[0],
+		//	receiver: users[0],
+		//	amount:   parseUsd(1000), // 1000 USDC
+		//},
+		//{
+		//	name:     "RBF模式下，多链支付,用户1(多链账户)质押给用户2",
+		//	sender:   users[0],
+		//	receiver: users[1],
+		//	amount:   parseUsd(1000), // 1000 USDC
+		//},
+		{
+			name:      "Fund模式下，单链支付，用户1质押给自己",
+			sender:    users[0],
+			receiver:  users[0],
+			amount:    parseUsd(1005), // 1000 USDC
+			vaultType: client.VaultTypeFund,
+		},
+		//{
+		//	name:      "Fund模式下，多链支付,用户1(多链账户)质押给用户2",
+		//	sender:    users[0],
+		//	receiver:  users[1],
+		//	amount:    parseUsd(1000), // 1000 USDC
+		//	vaultType: client.VaultTypeFund,
+		//},
+	}
+
+	for _, tc := range testCases {
+		t.Logf("开始执行测试用例: %s", tc.name)
+		// 1. 创建 Fund Vault
+		var vaultMsg *client.VaultLaunch
+		vaultMsg = createVault(t, test, 1*time.Minute, withVaultType(client.VaultTypeFund))
+		vaultAddr := vaultMsg.VaultAddress
+		deposit(t, test, vaultAddr, tc.amount, tc.sender, tc.receiver)
+	}
+}
+
 func TestEventMatch(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
 	test := NewVaultLaunchIntegrationTest(serverUrl, t)
@@ -1103,6 +1153,41 @@ func dividend(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress strin
 	t.Logf("开始执行 dividend 测试，Vault 地址: %s", vaultAddress)
 	// 0. 准备 approve VaultDividend 请求, 调用 /api/v2/primary/vault/prepare_dividend_approve 接口
 	t.Logf("开始approve usdt, user: %s", admin)
+	// 1. 准备 VaultInvest 请求 - 先进行 approve
+	approveReq := &VaultApproveDividendRequest{
+		ChainId:      chainId,
+		Manager:      admin,
+		VaultAddress: vaultAddress,
+		Amount:       amount,
+	}
+
+	// 1.1 调用 /api/v2/primary/vault/prepare_deposit_approve 接口
+	approveResp := test.callPrepareDividendApprove(t, approveReq)
+	require.NotNil(t, approveResp)
+	require.NotEmpty(t, approveResp.TxMsgBase64)
+
+	// 1.2 签名 approve 交易
+	approveTx := &types.Transaction{}
+	approveData, err := base64.StdEncoding.DecodeString(approveResp.TxMsgBase64)
+	require.NoError(t, err)
+	err = approveTx.UnmarshalBinary(approveData)
+	require.NoError(t, err)
+
+	signedApproveTx, err := signTransaction(t, approveReq.ChainId, adminPrivateKey, approveTx)
+	require.NoError(t, err)
+
+	// 1.3 提交 approve 交易
+	approveSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      client.CommonChainID(approveReq.ChainId),
+		Sender:       approveReq.Manager,
+		TxMsgBase64:  approveResp.TxMsgBase64,
+		SignTxBase64: encodeTransactionToBase64(t, signedApproveTx),
+	})
+	require.NotNil(t, approveSubmitResp)
+	require.NotEmpty(t, approveSubmitResp.TxHash)
+
+	t.Logf("Approve 交易已提交，交易哈希: %s", approveSubmitResp.TxHash)
+
 	// 1. 准备 VaultDividend 请求，其中签名字段, 使用管理员私钥签名, 使用generateDrdsDividendSign方法
 	// 解析管理员私钥
 	privateKey, err := crypto.HexToECDSA(adminPrivateKey)
@@ -1393,4 +1478,127 @@ func withdraw(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress strin
 	}
 	test.validateVaultWithdrawMQMessage(t, mqMessage, withdrawReq, submitResp.TxHash)
 	t.Logf("✅ Withdraw 集成测试通过")
+}
+
+func fundVaultRedemptionRequest(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress, amount string, sender, receiver Signer) *client.VaultInvest {
+	t.Logf("开始执行 fundVaultRedemptionRequest 测试，Vault 地址: %s", vaultAddress)
+	t.Logf("开始approve vault token, user: %s", sender)
+	// 1. 准备 VaultInvest 请求 - 先进行 approve
+	approveReq := &VaultDepositRequest{
+		ChainId:      chainId,
+		Sender:       sender.Address,
+		Investor:     receiver.Address,
+		VaultAddress: vaultAddress,
+		Amount:       amount,
+	}
+
+	// 1.1 调用 /api/v2/primary/vault/prepare_deposit_approve 接口
+	approveResp := test.callPrepareDepositApprove(t, approveReq)
+	require.NotNil(t, approveResp)
+	require.NotEmpty(t, approveResp.TxMsgBase64)
+
+	// 1.2 签名 approve 交易
+	approveTx := &types.Transaction{}
+	approveData, err := base64.StdEncoding.DecodeString(approveResp.TxMsgBase64)
+	require.NoError(t, err)
+	err = approveTx.UnmarshalBinary(approveData)
+	require.NoError(t, err)
+
+	signedApproveTx, err := signTransaction(t, approveReq.ChainId, sender.PrivateKey, approveTx)
+	require.NoError(t, err)
+
+	// 1.3 提交 approve 交易
+	approveSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      client.CommonChainID(approveReq.ChainId),
+		Sender:       approveReq.Sender,
+		TxMsgBase64:  approveResp.TxMsgBase64,
+		SignTxBase64: encodeTransactionToBase64(t, signedApproveTx),
+	})
+	require.NotNil(t, approveSubmitResp)
+	require.NotEmpty(t, approveSubmitResp.TxHash)
+
+	t.Logf("Approve 交易已提交，交易哈希: %s", approveSubmitResp.TxHash)
+
+	// 2. 调用 /api/v2/primary/vault/pre_prepare_deposit 接口获取管理员签名数据
+	prePrepareResp := test.callPrePrepareDeposit(t, approveReq)
+	require.NotNil(t, prePrepareResp)
+	require.NotEmpty(t, prePrepareResp.DataBase64)
+
+	// 3. 管理员签名数据
+	// Parse private key
+	privateKey, err := crypto.HexToECDSA(adminPrivateKey)
+	require.NoError(t, err)
+
+	adminSignature, err := generateAdminSign(prePrepareResp.DataBase64, privateKey)
+	require.NoError(t, err)
+
+	signstr := base64.StdEncoding.EncodeToString(adminSignature)
+
+	// 4. 准备 deposit 请求（包含管理员签名）
+	depositReq := &VaultDepositRequest{
+		ChainId:      chainId,
+		Sender:       sender.Address,
+		Investor:     receiver.Address,
+		VaultAddress: vaultAddress,
+		Amount:       amount,
+		Signature:    signstr,
+	}
+
+	// 5. 调用 /api/v2/primary/vault/prepare_deposit 接口
+	depositResp := test.callPrepareDeposit(t, depositReq)
+	require.NotNil(t, depositResp)
+	require.NotEmpty(t, depositResp.TxMsgBase64)
+
+	// 6. 管理员签名 deposit 交易
+	depositTx := &types.Transaction{}
+	depositData, err := base64.StdEncoding.DecodeString(depositResp.TxMsgBase64)
+	require.NoError(t, err)
+	err = depositTx.UnmarshalBinary(depositData)
+	require.NoError(t, err)
+
+	// user签名
+	signedDepositTx, err := signTransaction(t, depositReq.ChainId, sender.PrivateKey, depositTx)
+	require.NoError(t, err)
+
+	// 准备一个 channel 用于接收 MQ 消息
+	mqMessageInterfaceCh := make(chan interface{}, 1)
+	go func() {
+		res := test.waitForMQMessage(t, signedDepositTx.Hash().String(), client.MessageTypeVaultInvest)
+		mqMessageInterfaceCh <- res
+	}()
+
+	// 7. 调用 /api/v1/common/submit_tx 接口提交 deposit 交易
+	depositSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      client.CommonChainID(depositReq.ChainId),
+		Sender:       depositReq.Sender,
+		TxMsgBase64:  depositResp.TxMsgBase64,
+		SignTxBase64: encodeTransactionToBase64(t, signedDepositTx),
+	})
+	require.NotNil(t, depositSubmitResp)
+	require.NotEmpty(t, depositSubmitResp.TxHash)
+
+	t.Logf("Deposit 交易已提交，交易哈希: %s", depositSubmitResp.TxHash)
+
+	// 8. 等待 MQ 推送
+	var (
+		mqMessage *client.VaultInvest
+		ok        bool
+	)
+	select {
+	case mqMessageInterface := <-mqMessageInterfaceCh:
+		// 类型断言
+		mqMessage, ok = mqMessageInterface.(*client.VaultInvest)
+		require.True(t, ok, "MQ 消息类型断言失败")
+	case <-time.After(70 * time.Second):
+		require.Fail(t, "等待 MQ 消息超时")
+	}
+
+	// 9. 验证 MQ 消息内容
+	test.validateVaultInvestMQMessage(t, mqMessage, depositReq, depositSubmitResp.TxHash)
+
+	t.Logf("✅ Deposit 集成测试通过")
+	t.Logf("   投资金额: %s USDC", depositReq.Amount)
+	t.Logf("   获得 Vault Token 数量: %s", mqMessage.VaultTokenAmount)
+	t.Logf("   交易哈希: %s", depositSubmitResp.TxHash)
+	return mqMessage
 }

@@ -32,6 +32,7 @@ const (
 	MessageTypeFundVaultLaunch  //fund发行
 
 	MessageTypeFundVaultAddPrice                //fund 价格更新
+	MessageTypeFundVaultApproveRedemption       // fund 用户赎回请求前的approve
 	MessageTypeFundVaultRedemptionRequest       //fund 融资成功后用户赎回请求
 	MessageTypeFundVaultRedemptionRequestCancel //fund 融资成功后用户取消赎回请求
 	MessageTypeFundVaultChangeEpoch             //fund 更新赎回周期
