@@ -509,60 +509,63 @@ func TestFundVaultRedeem(t *testing.T) {
 	}
 
 	testCases := []struct {
-		name      string
-		vaultType client.CommonVaultType
-		sender    Signer
-		receiver  Signer
-		amount    string
+		name              string
+		vaultType         client.CommonVaultType
+		sender            Signer
+		receiver          Signer
+		amount            string
+		redeemShareAmount string
 	}{
-		//{
-		//	name:     "RBF模式下，单链支付，用户1质押给自己",
-		//	sender:   users[0],
-		//	receiver: users[0],
-		//	amount:   parseUsd(1000), // 1000 USDC
-		//},
-		//{
-		//	name:     "RBF模式下，多链支付,用户1(多链账户)质押给用户2",
-		//	sender:   users[0],
-		//	receiver: users[1],
-		//	amount:   parseUsd(1000), // 1000 USDC
-		//},
 		{
-			name:      "Fund模式下，单链支付，用户1质押给自己",
-			sender:    users[0],
-			receiver:  users[0],
-			amount:    parseUsd(1005), // 1000 USDC
-			vaultType: client.VaultTypeFund,
+			name:              "Fund模式下，单链支付->融资成功后赎回->取消赎回->再次赎回->更改epoch->结束epoch->用户claim",
+			sender:            users[0],
+			receiver:          users[0],
+			amount:            parseUsd(1006), // 1000 USDC
+			vaultType:         client.VaultTypeFund,
+			redeemShareAmount: parseUsd(100),
 		},
-		//{
-		//	name:      "Fund模式下，多链支付,用户1(多链账户)质押给用户2",
-		//	sender:    users[0],
-		//	receiver:  users[1],
-		//	amount:    parseUsd(1000), // 1000 USDC
-		//	vaultType: client.VaultTypeFund,
-		//},
 	}
 
 	for _, tc := range testCases {
 		t.Logf("开始执行测试用例: %s", tc.name)
 		// 1. 创建 Fund Vault
 		var vaultMsg *client.VaultLaunch
-		vaultMsg = createVault(t, test, 1*time.Minute, withVaultType(client.VaultTypeFund))
+		vaultMsg = createVault(t, test, 30*time.Second, withVaultType(client.VaultTypeFund))
 		vaultAddr := vaultMsg.VaultAddress
 		//投资
 		deposit(t, test, vaultMsg.VaultAddress, tc.amount, tc.sender, tc.sender)
+		//融资满后解锁代币
+		unPauseToken(t, test, vaultMsg.VaultAddress)
+		t.Logf("等待fund到达redeem时间。。。")
+		time.Sleep(30 * time.Second)
+		//添加价格
+		priceResp := fundVaultAddPrice(t, test, vaultAddr, parseUsd(10), adminSigner)
+		//查询价格
+		queryFundVaultPrice(t, test, vaultAddr, priceResp.LatestRoundId)
 		//赎回
-		fundVaultRedemptionRequest(t, test, vaultAddr, tc.amount, tc.sender)
+		fundVaultRedemptionRequest(t, test, vaultAddr, tc.redeemShareAmount, tc.sender)
 		//取消赎回
 		fundVaultCancelRedemptionRequest(t, test, vaultAddr, tc.sender)
 		//再次赎回
-		fundVaultRedemptionRequest(t, test, vaultAddr, tc.amount, tc.sender)
+		redeemRequestResp := fundVaultRedemptionRequest(t, test, vaultAddr, tc.redeemShareAmount, tc.sender)
+		//查询赎回周期的信息
+		queryEpochData(t, test, vaultAddr, redeemRequestResp.EpochId)
+		//查询当前周期ID
+		queryCurrentEpochId(t, test, vaultAddr)
 		//更改epoch
 		fundVaultChangeEpoch(t, test, vaultAddr, adminSigner)
+		//查询当前周期ID
+		queryCurrentEpochId(t, test, vaultAddr)
 		//结束epoch
-		fundVaultFinishEpoch(t, test, vaultAddr, parseUsd(1000), "0", adminSigner)
+		fundVaultFinishEpoch(t, test, vaultAddr, parseUsd(1000), redeemRequestResp.EpochId, adminSigner)
+		//查询上个周期中用户待领取的赎回金额
+		queryUserPendingClaim(t, test, vaultAddr, redeemRequestResp.EpochId, tc.sender.Address)
 		//claim赎回金额
-		fundVaultClaimRedemption(t, test, vaultAddr, "0", adminSigner)
+		fundVaultClaimRedemption(t, test, vaultAddr, redeemRequestResp.EpochId, tc.sender)
+		//查询赎回周期的信息
+		queryEpochData(t, test, vaultAddr, redeemRequestResp.EpochId)
+		//查询用户本周期的赎回信息
+		queryUserRedemptionInfo(t, test, vaultAddr, redeemRequestResp.EpochId, tc.sender.Address)
 	}
 }
 
@@ -666,7 +669,13 @@ func createVault(t *testing.T, test *VaultLaunchIntegrationTest, fundingDuration
 	t.Logf("交易提交成功，TxHash: %s", submitResp.TxHash)
 
 	// 5. 等待 MQ 推送
-	mqMessageInterface := test.waitForMQMessage(t, submitResp.TxHash, client.MessageTypeVaultLaunch)
+	var mqMessageInterface interface{}
+	if vaultType == client.VaultTypeFund {
+		mqMessageInterface = test.waitForMQMessage(t, submitResp.TxHash, client.MessageTypeFundVaultLaunch)
+	} else {
+		mqMessageInterface = test.waitForMQMessage(t, submitResp.TxHash, client.MessageTypeVaultLaunch)
+	}
+
 	require.NotNil(t, mqMessageInterface)
 
 	// 类型断言
@@ -1472,6 +1481,17 @@ func fundVaultFinishEpoch(t *testing.T, test *VaultLaunchIntegrationTest, vaultA
 	require.NotEmpty(t, approveSubmitResp.TxHash)
 
 	t.Logf("Approve 交易已提交，交易哈希: %s", approveSubmitResp.TxHash)
+	epochIdInt, _ := new(big.Int).SetString(epochId, 10)
+	assetAmount, _ := new(big.Int).SetString(amount, 10)
+
+	privateKey, err := crypto.HexToECDSA(adminPrivateKey)
+	require.NoError(t, err)
+
+	signature, err := generateDrdsFinishEpochSign(vaultAddress, epochIdInt, assetAmount, privateKey)
+	require.NoError(t, err)
+
+	// 签名结果hex编码
+	hexSign := hexutil.Encode(signature)
 
 	// 2. 准备 redemptionRequest 请求
 	redeemReq := &FundVaultFinishEpoch{
@@ -1480,7 +1500,7 @@ func fundVaultFinishEpoch(t *testing.T, test *VaultLaunchIntegrationTest, vaultA
 		VaultAddress:   vaultAddress,
 		EpochId:        epochId,
 		AssetAmount:    amount,
-		Signature:      "", //todo
+		Signature:      hexSign,
 	}
 
 	// 5. 调用 /api/v2/fund/prepare_finish_epoch 接口
@@ -1582,4 +1602,129 @@ func fundVaultClaimRedemption(t *testing.T, test *VaultLaunchIntegrationTest, va
 	t.Logf("   EpochId: %s", mqMessage.EpochId)
 	t.Logf("   交易哈希: %s", redeemSubmitResp.TxHash)
 	return mqMessage
+}
+
+func fundVaultAddPrice(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress, price string, sender Signer) *client.FundAddPrice {
+	t.Logf("开始执行 fundVaultAddPrice 测试，Vault 地址: %s", vaultAddress)
+	// 2. 准备 redemptionRequest 请求
+	redeemReq := &FundVaultAddPriceRequest{
+		ChainId:      chainId,
+		PriceFeeder:  sender.Address,
+		VaultAddress: vaultAddress,
+		Price:        price,
+	}
+
+	// 5. 调用 /api/v2/fund/prepare_add_fund_price 接口
+	redemptionRequestResp := test.callPrepareFundVaultAddPrice(t, redeemReq)
+	require.NotNil(t, redemptionRequestResp)
+	require.NotEmpty(t, redemptionRequestResp.TxMsgBase64)
+
+	redemptionRequestTx := &types.Transaction{}
+	depositData, err := base64.StdEncoding.DecodeString(redemptionRequestResp.TxMsgBase64)
+	require.NoError(t, err)
+	err = redemptionRequestTx.UnmarshalBinary(depositData)
+	require.NoError(t, err)
+
+	// user签名
+	signedRedeemTx, err := signTransaction(t, redeemReq.ChainId, sender.PrivateKey, redemptionRequestTx)
+	require.NoError(t, err)
+
+	// 7. 调用 /api/v1/common/submit_tx 接口提交 redemptionRequest 交易
+	redeemSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      client.CommonChainID(redeemReq.ChainId),
+		Sender:       redeemReq.PriceFeeder,
+		TxMsgBase64:  redemptionRequestResp.TxMsgBase64,
+		SignTxBase64: signedRedeemTx,
+	})
+	require.NotNil(t, redeemSubmitResp)
+	require.NotEmpty(t, redeemSubmitResp.TxHash)
+
+	t.Logf("Fund Add Price 交易已提交，交易哈希: %s", redeemSubmitResp.TxHash)
+
+	// 8. 等待 MQ 推送
+	mqMessageInterface := test.waitForMQMessage(t, redeemSubmitResp.TxHash, client.MessageTypeFundVaultAddPrice)
+	require.NotNil(t, mqMessageInterface)
+
+	// 类型断言
+	mqMessage, ok := mqMessageInterface.(*client.FundAddPrice)
+	require.True(t, ok, "MQ 消息类型断言失败")
+
+	// 9. 验证 MQ 消息内容
+	test.validateFundVaultAddPriceMQMessage(t, mqMessage, redeemReq, redeemSubmitResp.TxHash)
+
+	t.Logf("✅ fundVaultAddPrice 集成测试通过")
+	t.Logf("   Price: %s", mqMessage.Price)
+	t.Logf("   LatestRoundId: %s", mqMessage.LatestRoundId)
+	t.Logf("   交易哈希: %s", redeemSubmitResp.TxHash)
+	return mqMessage
+}
+
+func queryFundVaultPrice(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress, roundId string) {
+	t.Logf("开始执行 fundVaultAddPrice 测试，Vault 地址: %s", vaultAddress)
+	// 2. 准备 redemptionRequest 请求
+	redeemReq := &FundVaultPriceQueryRequest{
+		ChainId:      chainId,
+		RoundId:      roundId,
+		VaultAddress: vaultAddress,
+	}
+
+	// 5. 调用 /api/v2/fund/prepare_add_fund_price 接口
+	redemptionRequestResp := test.callQueryFundVaultPrice(t, redeemReq)
+	require.NotNil(t, redemptionRequestResp)
+}
+
+func queryUserPendingClaim(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress, epochId, user string) {
+	t.Logf("开始执行 queryUserPendingClaim 测试，Vault 地址: %s", vaultAddress)
+	// 2. 准备 redemptionRequest 请求
+	redeemReq := &QueryPendingClaimReq{
+		ChainId:  chainId,
+		UserAddr: user,
+		Vault:    vaultAddress,
+		EpochId:  epochId,
+	}
+
+	// 5. 调用 /api/v2/fund/user_pending_claim 接口
+	redemptionRequestResp := test.callQueryUserPendingClaim(t, redeemReq)
+	require.NotNil(t, redemptionRequestResp)
+}
+func queryEpochData(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress, epochId string) {
+	t.Logf("开始执行 queryEpochData 测试，Vault 地址: %s", vaultAddress)
+	// 2. 准备 redemptionRequest 请求
+	redeemReq := &QueryFundEpochDataReq{
+		ChainId: chainId,
+		Vault:   vaultAddress,
+		EpochId: epochId,
+	}
+
+	// 5. 调用 /api/v2/fund/epoch_data 接口
+	redemptionRequestResp := test.callQueryEpochData(t, redeemReq)
+	require.NotNil(t, redemptionRequestResp)
+}
+
+func queryUserRedemptionInfo(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress, epochId, user string) {
+	t.Logf("开始执行 queryUserRedemptionInfo 测试，Vault 地址: %s", vaultAddress)
+	// 2. 准备 redemptionRequest 请求
+	redeemReq := &QueryFundUserRedemptionInfoReq{
+		ChainId:  chainId,
+		Vault:    vaultAddress,
+		EpochId:  epochId,
+		UserAddr: user,
+	}
+
+	// 5. 调用 /api/v2/fund/user_redemption_info 接口
+	redemptionRequestResp := test.callQueryUserRedemptionInfo(t, redeemReq)
+	require.NotNil(t, redemptionRequestResp)
+}
+
+func queryCurrentEpochId(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress string) {
+	t.Logf("开始执行 queryCurrentEpochId 测试，Vault 地址: %s", vaultAddress)
+	// 2. 准备 redemptionRequest 请求
+	redeemReq := &FundVaultCurrentEpochIdRequest{
+		ChainId: chainId,
+		Vault:   vaultAddress,
+	}
+
+	// 5. 调用 /api/v2/fund/current_epoch_id 接口
+	redemptionRequestResp := test.callQueryCurrentEpochId(t, redeemReq)
+	require.NotNil(t, redemptionRequestResp)
 }
