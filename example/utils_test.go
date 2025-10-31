@@ -28,9 +28,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var appId = "root-test" // 与 MQ topic 一致
+var appId = "test_axc" // 与 MQ topic 一致
 var erc20Abi = "[{\"inputs\":[{\"internalType\":\"string\",\"name\":\"name_\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"symbol_\",\"type\":\"string\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"subtractedValue\",\"type\":\"uint256\"}],\"name\":\"decreaseAllowance\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"addedValue\",\"type\":\"uint256\"}],\"name\":\"increaseAllowance\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
-var nsqdAddress = "20.55.48.104:4150"
+var nsqdAddress = "127.0.0.1:4150"
 
 type Signer struct {
 	PrivateKey string `toml:"private_key"`
@@ -39,6 +39,7 @@ type Signer struct {
 
 const (
 	ChainIdBSCTestnet  = "97"
+	ChainIdBSCMainnet  = "56"
 	ChainIdBaseSepolia = "84532"
 )
 
@@ -161,6 +162,8 @@ func NewVaultLaunchIntegrationTest(baseURL string, t *testing.T) *VaultLaunchInt
 		ethURL = "https://base-sepolia.g.alchemy.com/v2/9NAr3qhyUGw766ZqM8HmAqfBrt4FKr0a"
 	case ChainIdBSCTestnet:
 		ethURL = "https://bsc-testnet-rpc.publicnode.com"
+	case ChainIdBSCMainnet:
+		ethURL = "https://bsc-rpc.publicnode.com"
 	default:
 		t.Fatalf("不支持的 chainId: %s", chainId)
 	}
@@ -172,6 +175,487 @@ func NewVaultLaunchIntegrationTest(baseURL string, t *testing.T) *VaultLaunchInt
 		ethClient:  ethClient,
 		ctx:        context.Background(),
 		mq:         m,
+	}
+}
+
+// ValidateTransactionResultsWithMQMessages 验证交易结果（使用预订阅的MQ消息）
+func (vm *ValidationManager) ValidateTransactionResultsWithMQMessages(t *testing.T, results []*SubmitResult, mqMessages []interface{}) *ValidationResult {
+	successCount := uint(0)
+	failedCount := uint(0)
+
+	// 验证交易状态
+	for _, result := range results {
+		if result.TxHash == "" {
+			t.Logf("交易哈希为空")
+			failedCount++
+			continue
+		}
+
+		// 等待交易上链
+		time.Sleep(10 * time.Second)
+		receipt, err := vm.test.ethClient.TransactionReceipt(context.Background(), common.HexToHash(result.TxHash))
+		if err != nil {
+			t.Logf("获取交易收据失败: %v", err)
+			failedCount++
+			continue
+		}
+
+		if receipt.Status != types.ReceiptStatusSuccessful {
+			t.Logf("交易失败: %s", result.TxHash)
+			failedCount++
+		} else {
+			t.Logf("交易成功: %s", result.TxHash)
+			successCount++
+		}
+	}
+
+	// 验证MQ消息
+	for i, msg := range mqMessages {
+		if msg == nil {
+			t.Logf("第%d个MQ消息为空", i+1)
+		} else {
+			t.Logf("收到第%d个MQ消息: %+v", i+1, msg)
+		}
+	}
+
+	return &ValidationResult{
+		SuccessCount: successCount,
+		FailedCount:  failedCount,
+	}
+}
+
+// TransactionManager 交易管理器
+type TransactionManager struct {
+	test    *VaultLaunchIntegrationTest
+	chainId string
+}
+
+// NewTransactionManager 创建交易管理器
+func NewTransactionManager(test *VaultLaunchIntegrationTest, chainId string) *TransactionManager {
+	return &TransactionManager{
+		test:    test,
+		chainId: chainId,
+	}
+}
+
+// MQSubscription MQ订阅信息
+type MQSubscription struct {
+	ChannelID   uint64 // 修改为uint64类型
+	MessageChan chan interface{}
+	TxHash      string
+	MessageType client.MessageType
+}
+
+// PreSubscribeMQ 预订阅MQ消息，在提交交易前调用
+func (tm *TransactionManager) PreSubscribeMQ(t *testing.T, expectedTxHashes []string, messageType client.MessageType) []*MQSubscription {
+	var subscriptions []*MQSubscription
+
+	for _, expectedTxHash := range expectedTxHashes {
+		// 为每个预期的交易哈希创建订阅
+		uniqueChannelName := fmt.Sprintf("pre_sub_%d_%s", time.Now().UnixNano(), expectedTxHash[:8])
+		messageChan := make(chan interface{}, 1)
+
+		// 创建消息处理器
+		handler := func(msg *Message) error {
+			//t.Logf("预订阅收到 MQ 消息: Type=%d (预期 TxHash: %s)", msg.Type, expectedTxHash)
+
+			// 根据消息类型处理
+			switch msg.Type {
+			case uint(client.MessageTypeTokenTransfer):
+				var tokenTransfer client.TokenTransfer
+				if err := msg.DecodeData(&tokenTransfer); err != nil {
+					t.Logf("解析 TokenTransfer 消息失败: %v", err)
+					return err
+				}
+
+				// 检查是否是我们要等待的交易
+				if tokenTransfer.TxHash == expectedTxHash && uint(messageType) == uint(client.MessageTypeTokenTransfer) {
+					t.Logf("预订阅找到匹配的 TokenTransfer 交易消息: %s", expectedTxHash)
+					select {
+					case messageChan <- &tokenTransfer:
+						// 消息已发送到通道
+					default:
+						// 通道已满，忽略
+					}
+				} else {
+					//t.Logf("预订阅 TokenTransfer 消息不匹配: 收到 TxHash=%s, 期望 TxHash=%s", tokenTransfer.TxHash, expectedTxHash)
+				}
+
+			// 可以根据需要添加其他消息类型的处理
+			default:
+				t.Logf("预订阅收到其他类型的消息: %d", msg.Type)
+			}
+
+			return nil
+		}
+
+		// 订阅 MQ 主题
+		channelID, err := tm.test.mq.Subscribe(appId, uniqueChannelName, "222", handler)
+		if err != nil {
+			t.Fatalf("预订阅 MQ 失败: %v", err)
+		}
+
+		subscription := &MQSubscription{
+			ChannelID:   channelID, // channelID已经是uint64类型
+			MessageChan: messageChan,
+			TxHash:      expectedTxHash,
+			MessageType: messageType,
+		}
+		subscriptions = append(subscriptions, subscription)
+
+		//t.Logf("已预订阅 MQ 主题 (channel: %s) 等待交易: %s", uniqueChannelName, expectedTxHash)
+	}
+
+	return subscriptions
+}
+
+// WaitForMQMessages 等待预订阅的MQ消息
+func (tm *TransactionManager) WaitForMQMessages(t *testing.T, subscriptions []*MQSubscription, timeoutSeconds int) []interface{} {
+	var results []interface{}
+	timeout := time.After(time.Duration(timeoutSeconds) * time.Second)
+
+	for i, sub := range subscriptions {
+		t.Logf("等待第%d个预订阅消息: %s", i+1, sub.TxHash)
+
+		select {
+		case msg := <-sub.MessageChan:
+			t.Logf("收到第%d个预订阅 MQ 消息: %+v", i+1, msg)
+			results = append(results, msg)
+		case <-timeout:
+			t.Logf("第%d个预订阅消息等待超时: %s", i+1, sub.TxHash)
+			results = append(results, nil)
+		}
+	}
+
+	return results
+}
+
+// CleanupSubscriptions 清理订阅
+func (tm *TransactionManager) CleanupSubscriptions(subscriptions []*MQSubscription) {
+	for _, sub := range subscriptions {
+		tm.test.mq.Unsubscribe(sub.ChannelID) // sub.ChannelID现在是uint64类型
+	}
+}
+
+// TransactionType 交易类型
+type TransactionType int
+
+const (
+	TokenTransfer TransactionType = iota
+	TokenApprove
+)
+
+// WrapTransaction 包装的交易
+type WrapTransaction struct {
+	TxHash         string
+	TxBase64       string
+	SignedTxBase64 string
+	Type           TransactionType
+	ChangeNonce    bool
+}
+
+// SubmitResult 提交结果
+type SubmitResult struct {
+	TxHash      string
+	TxType      TransactionType
+	ChangeNonce bool
+}
+
+// PrepareTransferTransactions 准备转账交易
+func (tm *TransactionManager) PrepareTransferTransactions(t *testing.T, req1, req2 *client.RequestTransferPrepareReq, changeNonce, aheadTx bool, senderAddr, senderPrivateKey string) []*WrapTransaction {
+	// 准备第一笔交易
+	transferResp1 := tm.test.callPrepareTokenTransfer(t, req1)
+	require.NotNil(t, transferResp1)
+	require.NotEmpty(t, transferResp1.TxMsgBase64)
+
+	tx1 := &types.Transaction{}
+	data1, err := base64.StdEncoding.DecodeString(transferResp1.TxMsgBase64)
+	require.NoError(t, err)
+	err = tx1.UnmarshalBinary(data1)
+	require.NoError(t, err)
+
+	// 准备第二笔交易
+	transferResp2 := tm.test.callPrepareTokenTransfer(t, req2)
+	require.NotNil(t, transferResp2)
+	require.NotEmpty(t, transferResp2.TxMsgBase64)
+
+	tx2 := &types.Transaction{}
+	data2, err := base64.StdEncoding.DecodeString(transferResp2.TxMsgBase64)
+	require.NoError(t, err)
+	err = tx2.UnmarshalBinary(data2)
+	require.NoError(t, err)
+
+	var submitTxs []*WrapTransaction
+
+	if changeNonce {
+		// 如果需要修改nonce，则重新获取最新nonce并构造交易
+		currentNonce := tm.test.getNonce(t, senderAddr)
+		t.Logf("当前账户nonce: %d", currentNonce)
+
+		if aheadTx {
+			// 交易插队场景：在两笔转账交易之间插入一笔approve交易
+			approveReq := &client.RequestApprovePrepareReq{
+				ChainId:     client.RequestChainId(tm.chainId),
+				FromAddr:    senderAddr,
+				TokenAddr:   mockUSDC,
+				SpenderAddr: req1.ToAddr,
+				Amount:      "1000000", // 1 USDT (6 decimals)
+			}
+
+			approveResp := tm.test.callPrepareTokenApprove(t, approveReq)
+			require.NotNil(t, approveResp)
+			require.NotEmpty(t, approveResp.TxMsgBase64)
+
+			approveTx := &types.Transaction{}
+			approveData, err := base64.StdEncoding.DecodeString(approveResp.TxMsgBase64)
+			require.NoError(t, err)
+			err = approveTx.UnmarshalBinary(approveData)
+			require.NoError(t, err)
+
+			// 修改交易nonce
+			approveModified := modifyTransactionNonce(approveTx, currentNonce)
+			tx1Modified := modifyTransactionNonce(tx1, currentNonce+1)
+			tx2Modified := modifyTransactionNonce(tx2, currentNonce+2)
+
+			signedApproveTx, err := signTransaction(t, tm.chainId, senderPrivateKey, approveModified)
+			require.NoError(t, err)
+			signedTx1, err := signTransaction(t, tm.chainId, senderPrivateKey, tx1Modified)
+			require.NoError(t, err)
+			signedTx2, err := signTransaction(t, tm.chainId, senderPrivateKey, tx2Modified)
+			require.NoError(t, err)
+
+			// 编码原始交易为base64
+			approveOriginalData, err := approveTx.MarshalBinary()
+			require.NoError(t, err)
+			approveOriginalBase64 := base64.StdEncoding.EncodeToString(approveOriginalData)
+
+			tx1OriginalData, err := tx1.MarshalBinary()
+			require.NoError(t, err)
+			tx1OriginalBase64 := base64.StdEncoding.EncodeToString(tx1OriginalData)
+
+			tx2OriginalData, err := tx2.MarshalBinary()
+			require.NoError(t, err)
+			tx2OriginalBase64 := base64.StdEncoding.EncodeToString(tx2OriginalData)
+
+			// 编码已签名交易为base64
+			approveData2, err := signedApproveTx.MarshalBinary()
+			require.NoError(t, err)
+			approveBase64 := base64.StdEncoding.EncodeToString(approveData2)
+
+			tx1Data, err := signedTx1.MarshalBinary()
+			require.NoError(t, err)
+			tx1Base64 := base64.StdEncoding.EncodeToString(tx1Data)
+
+			tx2Data, err := signedTx2.MarshalBinary()
+			require.NoError(t, err)
+			tx2Base64 := base64.StdEncoding.EncodeToString(tx2Data)
+
+			// 提交顺序：approve -> tx1 -> tx2
+			submitTxs = []*WrapTransaction{
+				{TxHash: signedApproveTx.Hash().String(), TxBase64: approveOriginalBase64, SignedTxBase64: approveBase64, Type: TokenApprove},
+				{TxHash: signedTx1.Hash().String(), TxBase64: tx1OriginalBase64, SignedTxBase64: tx1Base64, Type: TokenTransfer, ChangeNonce: true},
+				{TxHash: signedTx2.Hash().String(), TxBase64: tx2OriginalBase64, SignedTxBase64: tx2Base64, Type: TokenTransfer, ChangeNonce: true},
+			}
+			t.Logf("交易插队：approve交易nonce=%d，第一笔转账nonce=%d，第二笔转账nonce=%d",
+				currentNonce, currentNonce+1, currentNonce+2)
+		} else {
+			// 正常场景：第一笔交易使用当前nonce，第二笔交易使用nonce+1
+			tx1Modified := modifyTransactionNonce(tx1, currentNonce)
+			tx2Modified := modifyTransactionNonce(tx2, currentNonce+1)
+
+			// 签名修改后的交易
+			signedTx1, err := signTransaction(t, tm.chainId, senderPrivateKey, tx1Modified)
+			require.NoError(t, err)
+			signedTx2, err := signTransaction(t, tm.chainId, senderPrivateKey, tx2Modified)
+			require.NoError(t, err)
+
+			// 编码原始交易为base64
+			tx1ModifiedData, err := tx1Modified.MarshalBinary()
+			require.NoError(t, err)
+			tx1ModifiedBase64 := base64.StdEncoding.EncodeToString(tx1ModifiedData)
+
+			tx2ModifiedData, err := tx2Modified.MarshalBinary()
+			require.NoError(t, err)
+			tx2ModifiedBase64 := base64.StdEncoding.EncodeToString(tx2ModifiedData)
+
+			// 编码已签名交易为base64
+			signedTx1Data, err := signedTx1.MarshalBinary()
+			require.NoError(t, err)
+			signedTx1Base64 := base64.StdEncoding.EncodeToString(signedTx1Data)
+
+			signedTx2Data, err := signedTx2.MarshalBinary()
+			require.NoError(t, err)
+			signedTx2Base64 := base64.StdEncoding.EncodeToString(signedTx2Data)
+
+			submitTxs = []*WrapTransaction{
+				{TxHash: signedTx1.Hash().String(), TxBase64: tx1ModifiedBase64, SignedTxBase64: signedTx1Base64, Type: TokenTransfer, ChangeNonce: true},
+				{TxHash: signedTx2.Hash().String(), TxBase64: tx2ModifiedBase64, SignedTxBase64: signedTx2Base64, Type: TokenTransfer, ChangeNonce: true},
+			}
+			t.Logf("正常顺序：第一笔交易nonce=%d，第二笔交易nonce=%d", currentNonce, currentNonce+1)
+		}
+	} else {
+		// 不修改nonce，两笔交易相同，需要签名
+		signedTx1, err := signTransaction(t, tm.chainId, senderPrivateKey, tx1)
+		require.NoError(t, err)
+		signedTx2, err := signTransaction(t, tm.chainId, senderPrivateKey, tx2)
+		require.NoError(t, err)
+
+		// 编码原始交易为base64
+		tx1OriginalData, err := tx1.MarshalBinary()
+		require.NoError(t, err)
+		tx1OriginalBase64 := base64.StdEncoding.EncodeToString(tx1OriginalData)
+
+		tx2OriginalData, err := tx2.MarshalBinary()
+		require.NoError(t, err)
+		tx2OriginalBase64 := base64.StdEncoding.EncodeToString(tx2OriginalData)
+
+		// 编码已签名交易为base64
+		tx1Data, err := signedTx1.MarshalBinary()
+		require.NoError(t, err)
+		tx1Base64 := base64.StdEncoding.EncodeToString(tx1Data)
+
+		tx2Data, err := signedTx2.MarshalBinary()
+		require.NoError(t, err)
+		tx2Base64 := base64.StdEncoding.EncodeToString(tx2Data)
+
+		submitTxs = []*WrapTransaction{
+			{TxHash: signedTx1.Hash().String(), TxBase64: tx1OriginalBase64, SignedTxBase64: tx1Base64, Type: TokenTransfer, ChangeNonce: false},
+			{TxHash: signedTx2.Hash().String(), TxBase64: tx2OriginalBase64, SignedTxBase64: tx2Base64, Type: TokenTransfer, ChangeNonce: false},
+		}
+		t.Logf("不修改nonce，两笔交易相同")
+	}
+
+	return submitTxs
+}
+
+// SubmitTransactions 提交交易列表
+func (tm *TransactionManager) SubmitTransactions(t *testing.T, transactions []*WrapTransaction, senderAddr, senderPrivateKey string) []*SubmitResult {
+	var submitResults []*SubmitResult
+
+	for i, wTx := range transactions {
+		t.Logf("提交第%d笔交易", i+1)
+
+		// 提交交易
+		submitResp := tm.test.callSubmitTx(t, &client.RequestSubmitReq{
+			ChainId:      client.CommonChainID(tm.chainId),
+			Sender:       senderAddr,
+			TxMsgBase64:  wTx.TxBase64,
+			SignTxBase64: wTx.SignedTxBase64, // 使用相同的已签名交易数据
+		})
+
+		if submitResp != nil && submitResp.TxHash != "" {
+			submitResults = append(submitResults, &SubmitResult{
+				TxHash:      submitResp.TxHash,
+				TxType:      wTx.Type,
+				ChangeNonce: wTx.ChangeNonce,
+			})
+			t.Logf("第%d笔交易提交成功，TxHash: %s", i+1, submitResp.TxHash)
+		} else {
+			t.Logf("第%d笔交易提交失败", i+1)
+		}
+
+		// 等待一段时间再提交下一笔交易
+		time.Sleep(2 * time.Second)
+	}
+
+	return submitResults
+}
+
+// ValidationManager 验证管理器
+type ValidationManager struct {
+	test *VaultLaunchIntegrationTest
+}
+
+// NewValidationManager 创建验证管理器
+func NewValidationManager(test *VaultLaunchIntegrationTest) *ValidationManager {
+	return &ValidationManager{
+		test: test,
+	}
+}
+
+// ValidationResult 验证结果
+type ValidationResult struct {
+	SuccessCount uint
+	FailedCount  uint
+}
+
+// ValidateTransactionResults 验证交易结果
+func (vm *ValidationManager) ValidateTransactionResults(t *testing.T, submitResults []*SubmitResult, transferReq *client.RequestTransferPrepareReq) *ValidationResult {
+	t.Logf("等待MQ消息推送...")
+	successCount := uint(0)
+	failedCount := uint(0)
+
+	// 等待足够的时间让交易被处理
+	time.Sleep(10 * time.Second)
+
+	for i, res := range submitResults {
+		if res.TxHash != "" {
+			txHash := res.TxHash
+			t.Logf("验证第%d笔交易状态，TxHash: %s", i+1, res.TxHash)
+
+			// 检查交易收据来验证交易状态
+			receipt, err := vm.test.ethClient.TransactionReceipt(context.Background(), common.HexToHash(txHash))
+			if err != nil {
+				t.Logf("第%d笔交易收据获取失败: %v", i+1, err)
+				failedCount++
+				continue
+			}
+
+			if receipt.Status == 1 {
+				t.Logf("第%d笔交易成功，Gas Used: %d", i+1, receipt.GasUsed)
+				successCount++
+
+				// 对于转账交易，等待并验证TokenTransfer MQ消息
+				if res.TxType == TokenTransfer {
+					t.Logf("等待第%d笔转账交易的TokenTransfer MQ消息", i+1)
+
+					// 等待TokenTransfer MQ消息
+					mqMessageInterface := vm.test.waitForMQMessage(t, txHash, client.MessageTypeTokenTransfer)
+					tokenTransferMsg, ok := mqMessageInterface.(*client.TokenTransfer)
+					assert.True(t, ok, "转换MQ消息类型失败")
+					if tokenTransferMsg != nil {
+						t.Logf("收到第%d笔交易的TokenTransfer MQ消息", i+1)
+
+						// 验证MQ消息内容
+						vm.test.validateTokenTransferMQMessage(t, tokenTransferMsg, transferReq, txHash, res.ChangeNonce)
+
+						// 对比回执事件和MQ消息的一致性
+						vm.test.compareReceiptWithMQMessage(t, transferReq, txHash, tokenTransferMsg)
+					} else {
+						t.Logf("第%d笔交易未收到TokenTransfer MQ消息", i+1)
+					}
+				}
+			} else {
+				t.Logf("第%d笔交易失败，Status: %d", i+1, receipt.Status)
+				failedCount++
+			}
+
+			// 可以进一步检查事件日志
+			if len(receipt.Logs) > 0 {
+				t.Logf("第%d笔交易产生了%d个事件", i+1, len(receipt.Logs))
+			}
+		} else {
+			failedCount++
+		}
+	}
+
+	return &ValidationResult{
+		SuccessCount: successCount,
+		FailedCount:  failedCount,
+	}
+}
+
+// ValidateTestCase 验证测试用例结果
+func (vm *ValidationManager) ValidateTestCase(t *testing.T, testCaseName string, result *ValidationResult, expectSuccessNum uint, changeNonce, aheadTx bool) {
+	t.Logf("测试用例 '%s' 完成，成功交易数: %d，失败交易数: %d，期望成功数: %d",
+		testCaseName, result.SuccessCount, result.FailedCount, expectSuccessNum)
+
+	// 验证结果是否符合期望
+	if result.SuccessCount == expectSuccessNum {
+		t.Logf("✅ 测试用例 '%s' 验证通过", testCaseName)
+	} else {
+		t.Errorf("❌ 测试用例 '%s' 验证失败，期望成功数: %d，实际成功数: %d",
+			testCaseName, expectSuccessNum, result.SuccessCount)
 	}
 }
 
@@ -277,17 +761,16 @@ func GetEthSignature(digestHash []byte, privateKey *ecdsa.PrivateKey) ([]byte, e
 	return signature, nil
 }
 
-// signTransaction 签名交易
-func signTransaction(t *testing.T, chainId string, privKey string, tx *types.Transaction) (string, error) {
+func signTransaction(t *testing.T, chainId string, privKey string, tx *types.Transaction) (*types.Transaction, error) {
 	// Parse private key
 	privateKey, err := crypto.HexToECDSA(privKey)
 	if err != nil {
-		return "", fmt.Errorf("failed to parse private key: %w", err)
+		return nil, fmt.Errorf("failed to parse private key: %w", err)
 	}
 
 	chainID, ok := new(big.Int).SetString(chainId, 10)
 	if !ok {
-		return "", fmt.Errorf("invalid chain ID: %s", chainId)
+		return nil, fmt.Errorf("invalid chain ID: %s", chainId)
 	}
 	// Create signer
 	signer := types.LatestSignerForChainID(chainID)
@@ -295,12 +778,8 @@ func signTransaction(t *testing.T, chainId string, privKey string, tx *types.Tra
 	// Sign transaction
 	signedTx, err := types.SignTx(tx, signer, privateKey)
 	require.NoError(t, err)
-	signedTxBytes, err := signedTx.MarshalBinary()
-	require.NoError(t, err)
-	// base64
-	txBase64 := base64.StdEncoding.EncodeToString(signedTxBytes)
 
-	return txBase64, nil
+	return signedTx, nil
 }
 
 // 辅助函数：将字符串转换为指针
@@ -608,9 +1087,12 @@ func (test *VaultLaunchIntegrationTest) waitForMQMessage(t *testing.T, txHash st
 	// 创建通道用于接收 MQ 消息
 	messageChan := make(chan interface{}, 1)
 
+	// 为每次调用生成唯一的 channel 名称，避免消息混乱
+	uniqueChannelName := fmt.Sprintf("test_channel_%d_%s", time.Now().UnixNano(), txHash[:8])
+
 	// 创建消息处理器
 	handler := func(msg *Message) error {
-		t.Logf("收到 MQ 消息: Type=%d", msg.Type)
+		t.Logf("收到 MQ 消息: Type=%d (等待 TxHash: %s)", msg.Type, txHash)
 
 		// 根据消息类型处理
 		switch msg.Type {
@@ -631,6 +1113,8 @@ func (test *VaultLaunchIntegrationTest) waitForMQMessage(t *testing.T, txHash st
 				default:
 					// 通道已满，忽略
 				}
+			} else {
+				t.Logf("VaultLaunch 消息不匹配: 收到 TxHash=%s, 期望 TxHash=%s", vaultLaunch.TxHash, txHash)
 			}
 
 		case uint(client.MessageTypeVaultInvest):
@@ -650,6 +1134,8 @@ func (test *VaultLaunchIntegrationTest) waitForMQMessage(t *testing.T, txHash st
 				default:
 					// 通道已满，忽略
 				}
+			} else {
+				t.Logf("VaultInvest 消息不匹配: 收到 TxHash=%s, 期望 TxHash=%s", vaultInvest.TxHash, txHash)
 			}
 
 		case uint(client.MessageTypeVaultDividend):
@@ -669,7 +1155,10 @@ func (test *VaultLaunchIntegrationTest) waitForMQMessage(t *testing.T, txHash st
 				default:
 					// 通道已满，忽略
 				}
+			} else {
+				t.Logf("VaultDividend 消息不匹配: 收到 TxHash=%s, 期望 TxHash=%s", vaultDividend.TxHash, txHash)
 			}
+
 		case uint(client.MessageTypeOffChainDeposit):
 			// 解析 OffChainDeposit 消息
 			var offChainDeposit client.OffChainDeposit
@@ -686,6 +1175,8 @@ func (test *VaultLaunchIntegrationTest) waitForMQMessage(t *testing.T, txHash st
 				default:
 					// 通道已满，忽略
 				}
+			} else {
+				t.Logf("OffChainDeposit 消息不匹配: 收到 TxHash=%s, 期望 TxHash=%s", offChainDeposit.TxHash, txHash)
 			}
 
 		case uint(client.MessageTypeVaultClaim):
@@ -705,6 +1196,8 @@ func (test *VaultLaunchIntegrationTest) waitForMQMessage(t *testing.T, txHash st
 				default:
 					// 通道已满，忽略
 				}
+			} else {
+				t.Logf("VaultClaim 消息不匹配: 收到 TxHash=%s, 期望 TxHash=%s", vaultClaim.TxHash, txHash)
 			}
 
 		case uint(client.MessageTypeVaultRedeem):
@@ -723,7 +1216,10 @@ func (test *VaultLaunchIntegrationTest) waitForMQMessage(t *testing.T, txHash st
 				default:
 					// 通道已满，忽略
 				}
+			} else {
+				t.Logf("VaultRedeem 消息不匹配: 收到 TxHash=%s, 期望 TxHash=%s", vaultRedeem.TxHash, txHash)
 			}
+
 		case uint(client.MessageTypeWithdrawManageFee):
 			// 解析 WithdrawManageFee 消息
 			var withdrawFee client.VaultWithdrawFee
@@ -740,6 +1236,8 @@ func (test *VaultLaunchIntegrationTest) waitForMQMessage(t *testing.T, txHash st
 				default:
 					// 通道已满，忽略
 				}
+			} else {
+				t.Logf("WithdrawManageFee 消息不匹配: 收到 TxHash=%s, 期望 TxHash=%s", withdrawFee.TxHash, txHash)
 			}
 
 		case uint(client.MessageTypeVaultWithdraw):
@@ -758,6 +1256,28 @@ func (test *VaultLaunchIntegrationTest) waitForMQMessage(t *testing.T, txHash st
 				default:
 					// 通道已满，忽略
 				}
+			} else {
+				t.Logf("VaultWithdraw 消息不匹配: 收到 TxHash=%s, 期望 TxHash=%s", vaultWithdraw.TxHash, txHash)
+			}
+
+		case uint(client.MessageTypeTokenTransfer):
+			// 解析 TokenTransfer 消息
+			var tokenTransfer client.TokenTransfer
+			if err := msg.DecodeData(&tokenTransfer); err != nil {
+				t.Logf("解析 TokenTransfer 消息失败: %v", err)
+				return err
+			}
+			// 检查是否是我们要等待的交易
+			if tokenTransfer.TxHash == txHash && uint(messageType) == uint(client.MessageTypeTokenTransfer) {
+				t.Logf("找到匹配的 TokenTransfer 交易消息: %s", txHash)
+				select {
+				case messageChan <- &tokenTransfer:
+					// 消息已发送到通道
+				default:
+					// 通道已满，忽略
+				}
+			} else {
+				t.Logf("TokenTransfer 消息不匹配: 收到 TxHash=%s, 期望 TxHash=%s", tokenTransfer.TxHash, txHash)
 			}
 		case uint(client.MessageTypeFundVaultRedemptionRequest):
 			var redemptionRequest client.FundRedemptionRequest
@@ -863,14 +1383,14 @@ func (test *VaultLaunchIntegrationTest) waitForMQMessage(t *testing.T, txHash st
 		return nil
 	}
 
-	// 订阅 MQ 主题
-	channelID, err := test.mq.Subscribe(appId, "test_channel", "222", handler)
+	// 订阅 MQ 主题，使用唯一的 channel 名称
+	channelID, err := test.mq.Subscribe(appId, uniqueChannelName, "222", handler)
 	if err != nil {
 		t.Fatalf("订阅 MQ 失败: %v", err)
 	}
 	defer test.mq.Unsubscribe(channelID)
 
-	t.Logf("已订阅 MQ 主题 vault_events，等待消息...")
+	t.Logf("已订阅 MQ 主题 vault_events (channel: %s)，等待消息...", uniqueChannelName)
 
 	// 等待消息，设置超时时间
 	timeout := time.After(60 * time.Second)
@@ -1040,86 +1560,6 @@ func (test *VaultLaunchIntegrationTest) validateVaultLaunchMQMessage(t *testing.
 	t.Logf("   Success: %t", mqMessage.Success)
 	t.Logf("   VaultAddress: %s", mqMessage.VaultAddress)
 	t.Logf("   VaultTokenAddress: %s", mqMessage.VaultTokenAddress)
-}
-
-// waitForRealMQMessage 等待真实 MQ 消息
-func (test *VaultLaunchIntegrationTest) waitForRealMQMessage(t *testing.T, txHash string, messageType client.MessageType) *client.VaultLaunch {
-	t.Logf("等待真实 MQ 消息，交易哈希: %s", txHash)
-
-	// 创建通道用于接收 MQ 消息
-	messageChan := make(chan *client.VaultLaunch, 1)
-	errorChan := make(chan error, 1)
-
-	// 创建消息处理器
-	handler := func(msg *Message) error {
-		t.Logf("收到 MQ 消息: Type=%d, Data=%s", msg.Type, string(msg.Data))
-
-		// 根据消息类型处理
-		switch msg.Type {
-		case uint(messageType):
-			// 解析 VaultLaunch 消息
-			var vaultLaunch client.VaultLaunch
-			if err := msg.DecodeData(&vaultLaunch); err != nil {
-				t.Logf("解析 VaultLaunch 消息失败: %v", err)
-				errorChan <- err
-				return err
-			}
-
-			t.Logf("解析的 VaultLaunch 消息: %+v", vaultLaunch)
-
-			// 检查是否是我们要等待的交易
-			if vaultLaunch.TxHash == txHash {
-				t.Logf("找到匹配的交易消息: %s", txHash)
-				select {
-				case messageChan <- &vaultLaunch:
-					t.Logf("消息已发送到通道")
-				default:
-					t.Logf("通道已满，忽略消息")
-				}
-			} else {
-				t.Logf("交易哈希不匹配，期望: %s, 实际: %s", txHash, vaultLaunch.TxHash)
-			}
-		default:
-			t.Logf("收到其他类型的消息: %d", msg.Type)
-		}
-
-		return nil
-	}
-
-	// 订阅 MQ 主题
-	channelID, err := test.mq.Subscribe("vault_events", "test_channel", "222", handler)
-	if err != nil {
-		t.Fatalf("订阅 MQ 失败: %v", err)
-	}
-	defer test.mq.Unsubscribe(channelID)
-
-	t.Logf("已订阅 MQ 主题 vault_events，等待消息...")
-
-	// 等待消息，设置超时时间
-	timeout := time.After(60 * time.Second)
-	select {
-	case msg := <-messageChan:
-		t.Logf("收到 MQ 消息: %+v", msg)
-		return msg
-	case err = <-errorChan:
-		t.Fatalf("MQ 消息处理错误: %v", err)
-	case <-timeout:
-		t.Logf("等待 MQ 消息超时")
-		// 返回模拟消息用于测试
-		return &client.VaultLaunch{
-			BaseData: client.BaseData{
-				CorrelationId: "test-correlation-id",
-				TxHash:        txHash,
-				Ts:            time.Now().Unix(),
-				Sender:        "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-				Success:       true,
-				FailReason:    "",
-			},
-			VaultAddress:      "0x1234567890123456789012345678901234567890",
-			VaultTokenAddress: "0x0987654321098765432109876543210987654321",
-		}
-	}
-	return nil
 }
 
 // callPrepareRedeemApprove 调用 prepare_redeem_approve 接口
@@ -1397,86 +1837,6 @@ func (test *VaultLaunchIntegrationTest) callPrepareClaim(t *testing.T, req *clie
 	return &prepareResp
 }
 
-// waitForClaimMQMessage 等待 VaultClaim MQ 消息
-func (test *VaultLaunchIntegrationTest) waitForClaimMQMessage(t *testing.T, txHash string) *client.VaultClaim {
-	t.Logf("等待 VaultClaim MQ 消息，交易哈希: %s", txHash)
-
-	// 创建通道用于接收 MQ 消息
-	messageChan := make(chan *client.VaultClaim, 1)
-	errorChan := make(chan error, 1)
-
-	// 创建消息处理器
-	handler := func(msg *Message) error {
-		t.Logf("收到 MQ 消息: Type=%d, Data=%s", msg.Type, string(msg.Data))
-
-		// 根据消息类型处理
-		switch msg.Type {
-		case uint(client.MessageTypeVaultClaim):
-			// 解析 VaultClaim 消息
-			var vaultClaim client.VaultClaim
-			if err := msg.DecodeData(&vaultClaim); err != nil {
-				t.Logf("解析 VaultClaim 消息失败: %v", err)
-				errorChan <- err
-				return err
-			}
-
-			t.Logf("解析的 VaultClaim 消息: %+v", vaultClaim)
-
-			// 检查是否是我们要等待的交易
-			if vaultClaim.TxHash == txHash {
-				t.Logf("找到匹配的 VaultClaim 交易消息: %s", txHash)
-				select {
-				case messageChan <- &vaultClaim:
-					t.Logf("消息已发送到通道")
-				default:
-					t.Logf("通道已满，忽略消息")
-				}
-			} else {
-				t.Logf("交易哈希不匹配，期望: %s, 实际: %s", txHash, vaultClaim.TxHash)
-			}
-		default:
-			t.Logf("收到其他类型的消息: %d", msg.Type)
-		}
-
-		return nil
-	}
-
-	// 订阅 MQ 主题
-	channelID, err := test.mq.Subscribe(appId, "test_channel", "222", handler)
-	if err != nil {
-		t.Fatalf("订阅 MQ 失败: %v", err)
-	}
-	defer test.mq.Unsubscribe(channelID)
-
-	t.Logf("已订阅 MQ 主题，等待 VaultClaim 消息...")
-
-	// 等待消息，设置超时时间
-	timeout := time.After(60 * time.Second)
-	select {
-	case msg := <-messageChan:
-		t.Logf("收到 VaultClaim MQ 消息: %+v", msg)
-		return msg
-	case err = <-errorChan:
-		t.Fatalf("MQ 消息处理错误: %v", err)
-	case <-timeout:
-		t.Logf("等待 VaultClaim MQ 消息超时")
-		// 返回模拟消息用于测试
-		return &client.VaultClaim{
-			BaseData: client.BaseData{
-				CorrelationId: "test-correlation-id",
-				TxHash:        txHash,
-				Ts:            time.Now().Unix(),
-				Sender:        "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-				Success:       true,
-				FailReason:    "",
-			},
-			ReceiverAddress:  "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-			AssetTokenAmount: "1000000",
-		}
-	}
-	return nil
-}
-
 // validateVaultClaimMQMessage 验证 VaultClaim MQ 消息
 func (test *VaultLaunchIntegrationTest) validateVaultClaimMQMessage(t *testing.T, mqMessage *client.VaultClaim, req *client.RequestVaultClaimRewardReq, txHash string) {
 	// 验证基础数据
@@ -1581,7 +1941,7 @@ func (test *VaultLaunchIntegrationTest) callPrepareTokenTransfer(t *testing.T, r
 	reqBody, err := json.Marshal(req)
 	require.NoError(t, err)
 
-	t.Logf("调用 /api/v2/transfer/prepare")
+	//t.Logf("调用 /api/v2/transfer/prepare")
 
 	// 创建 HTTP 请求
 	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/transfer/prepare", bytes.NewBuffer(reqBody))
@@ -1749,6 +2109,130 @@ func (test *VaultLaunchIntegrationTest) validateTokenTransferReceipt(t *testing.
 	if value.Cmp(expectedAmount) != 0 {
 		t.Errorf("转账金额不匹配，预期: %s, 实际: %s", expectedAmount.String(), value.String())
 	}
+}
+
+// compareReceiptWithMQMessage 对比交易回执和MQ消息的一致性
+func (test *VaultLaunchIntegrationTest) compareReceiptWithMQMessage(t *testing.T, req *client.RequestTransferPrepareReq, txHash string, mqMessage *client.TokenTransfer) {
+	t.Logf("开始对比交易回执和MQ消息的一致性")
+
+	// 获取交易回执
+	receipt, err := test.ethClient.TransactionReceipt(context.Background(), common.HexToHash(txHash))
+	if err != nil {
+		t.Fatalf("获取交易回执失败: %v", err)
+	}
+
+	// 验证交易状态
+	if receipt.Status != types.ReceiptStatusSuccessful {
+		t.Fatalf("交易执行失败，状态码: %d", receipt.Status)
+	}
+
+	// 解析回执中的Transfer事件
+	contractAddr := common.HexToAddress(*req.TokenAddr)
+	from := common.HexToAddress(req.FromAddr)
+	to := common.HexToAddress(req.ToAddr)
+
+	// 定义Transfer事件的签名
+	transferEventSignature := crypto.Keccak256Hash([]byte("Transfer(address,address,uint256)"))
+
+	// 在回执日志中查找Transfer事件
+	var transferEvent *types.Log
+	for _, log := range receipt.Logs {
+		// 检查日志地址是否为代币合约地址
+		if log.Address == contractAddr {
+			// 检查日志主题是否为Transfer事件签名
+			if len(log.Topics) >= 3 && log.Topics[0] == transferEventSignature {
+				// 检查from和to是否匹配
+				logFrom := common.HexToAddress(log.Topics[1].Hex())
+				logTo := common.HexToAddress(log.Topics[2].Hex())
+
+				if logFrom == from && logTo == to {
+					transferEvent = log
+					break
+				}
+			}
+		}
+	}
+
+	if transferEvent == nil {
+		t.Fatalf("未找到匹配的Transfer事件")
+	}
+
+	// 解析事件数据获取转账金额
+	receiptAmount := new(big.Int).SetBytes(transferEvent.Data)
+
+	// 对比回执事件和MQ消息的数据
+	t.Logf("对比回执事件和MQ消息:")
+	t.Logf("  回执 - From: %s, To: %s, Amount: %s, TokenAddr: %s",
+		from.Hex(), to.Hex(), receiptAmount.String(), contractAddr.Hex())
+	t.Logf("  MQ消息 - Sender: %s, Receiver: %s, Amount: %s, TokenAddr: %s",
+		mqMessage.Sender, mqMessage.ReceiverAddress, mqMessage.TokenAmount, mqMessage.TokenAddress)
+
+	// 验证发送方地址
+	if strings.ToLower(from.Hex()) != strings.ToLower(mqMessage.Sender) {
+		t.Errorf("发送方地址不匹配，回执: %s, MQ消息: %s", from.Hex(), mqMessage.Sender)
+	}
+
+	// 验证接收方地址
+	if strings.ToLower(to.Hex()) != strings.ToLower(mqMessage.ReceiverAddress) {
+		t.Errorf("接收方地址不匹配，回执: %s, MQ消息: %s", to.Hex(), mqMessage.ReceiverAddress)
+	}
+
+	// 验证转账金额
+	mqAmount, ok := new(big.Int).SetString(mqMessage.TokenAmount, 10)
+	if !ok {
+		t.Fatalf("解析MQ消息转账金额失败: %s", mqMessage.TokenAmount)
+	}
+	if receiptAmount.Cmp(mqAmount) != 0 {
+		t.Errorf("转账金额不匹配，回执: %s, MQ消息: %s", receiptAmount.String(), mqAmount.String())
+	}
+
+	// 验证代币地址
+	if strings.ToLower(contractAddr.Hex()) != strings.ToLower(mqMessage.TokenAddress) {
+		t.Errorf("代币地址不匹配，回执: %s, MQ消息: %s", contractAddr.Hex(), mqMessage.TokenAddress)
+	}
+
+	// 验证交易哈希
+	if strings.ToLower(txHash) != strings.ToLower(mqMessage.TxHash) {
+		t.Errorf("交易哈希不匹配，回执: %s, MQ消息: %s", txHash, mqMessage.TxHash)
+	}
+
+	t.Logf("✅ 交易回执和MQ消息对比验证通过")
+}
+
+// validateTokenTransferMQMessage 验证 TokenTransfer MQ 消息
+func (test *VaultLaunchIntegrationTest) validateTokenTransferMQMessage(t *testing.T, mqMessage *client.TokenTransfer,
+	req *client.RequestTransferPrepareReq, txHash string, changed bool) {
+	// 验证基础数据
+	assert.Equal(t, txHash, mqMessage.TxHash)
+	assert.True(t, mqMessage.Success)
+	assert.Empty(t, mqMessage.FailReason)
+	assert.Equal(t, req.FromAddr, mqMessage.Sender)
+	assert.Equal(t, req.ToAddr, mqMessage.ReceiverAddress)
+	if changed {
+		assert.NotEqual(t, mqMessage.CorrelationId, mqMessage.OnChainCorrelationId)
+	} else {
+		assert.Equal(t, mqMessage.CorrelationId, mqMessage.OnChainCorrelationId)
+	}
+
+	// 验证转账金额
+	assert.Equal(t, req.Amount, mqMessage.TokenAmount)
+
+	// 验证代币地址
+	if req.TokenAddr != nil {
+		assert.Equal(t, *req.TokenAddr, mqMessage.TokenAddress)
+	}
+
+	// 验证时间戳
+	assert.Greater(t, mqMessage.Ts, int64(0))
+
+	t.Logf("TokenTransfer MQ 消息验证通过:")
+	t.Logf("   CorrelationId: %s", mqMessage.CorrelationId)
+	t.Logf("   TxHash: %s", mqMessage.TxHash)
+	t.Logf("   Success: %t", mqMessage.Success)
+	t.Logf("   Sender: %s", mqMessage.Sender)
+	t.Logf("   ReceiverAddress: %s", mqMessage.ReceiverAddress)
+	t.Logf("   TokenAmount: %s", mqMessage.TokenAmount)
+	t.Logf("   TokenAddress: %s", mqMessage.TokenAddress)
 }
 
 // validateVaultOffChainInvestMQMessage 验证 VaultOffChainInvest MQ 消息
@@ -1950,6 +2434,154 @@ func (test *VaultLaunchIntegrationTest) validateVaultWithdrawMQMessage(t *testin
 	t.Logf("   Success: %t", mqMessage.Success)
 	t.Logf("   ReceiverAddress: %s", mqMessage.ReceiverAddress)
 	t.Logf("   AssetTokenAmount: %s", mqMessage.AssetTokenAmount)
+}
+
+// getNonce 获取账户的当前nonce
+func (test *VaultLaunchIntegrationTest) getNonce(t *testing.T, address string) uint64 {
+	addr := common.HexToAddress(address)
+	nonce, err := test.ethClient.PendingNonceAt(context.Background(), addr)
+	require.NoError(t, err, "获取nonce失败")
+	t.Logf("账户 %s 当前nonce: %d", address, nonce)
+	return nonce
+}
+
+// modifyTransactionNonce 修改交易的nonce
+func modifyTransactionNonce(tx *types.Transaction, newNonce uint64) *types.Transaction {
+	// 创建新的交易，使用新的nonce
+	newTx := types.NewTransaction(
+		newNonce,
+		*tx.To(),
+		tx.Value(),
+		tx.Gas(),
+		tx.GasPrice(),
+		tx.Data(),
+	)
+	return newTx
+}
+
+// BalanceManager 余额管理器
+type BalanceManager struct {
+	test     *VaultLaunchIntegrationTest
+	chainId  string
+	mockUSDC string
+}
+
+// NewBalanceManager 创建余额管理器
+func NewBalanceManager(test *VaultLaunchIntegrationTest, chainId, mockUSDC string) *BalanceManager {
+	return &BalanceManager{
+		test:     test,
+		chainId:  chainId,
+		mockUSDC: mockUSDC,
+	}
+}
+
+// RecordUserBalance 记录用户余额
+func (bm *BalanceManager) RecordUserBalance(t *testing.T, userAddr string) string {
+	balanceReq := &client.RequestBalanceQueryReq{
+		ChainId:   client.RequestChainId(bm.chainId),
+		UserAddr:  userAddr,
+		TokenAddr: &bm.mockUSDC,
+		TokenType: client.TokenTypeUSDC,
+	}
+	balance := bm.test.callTokenBalance(t, balanceReq)
+	t.Logf("记录用户 %s 的USDC余额: %s", userAddr, balance)
+	return balance
+}
+
+// AdjustUserBalanceForTest 为测试调整用户余额，确保满足 amount < 余额 < 2*amount
+func (bm *BalanceManager) AdjustUserBalanceForTest(t *testing.T, userAddr, adminAddr, adminPrivateKey, userPrivateKey, amount string) string {
+	currentBalance := bm.RecordUserBalance(t, userAddr)
+
+	currentBig, _ := new(big.Int).SetString(currentBalance, 10)
+	amountBig, _ := new(big.Int).SetString(amount, 10)
+	doubleAmountBig := new(big.Int).Mul(amountBig, big.NewInt(2))
+
+	// 检查余额是否满足条件
+	if currentBig.Cmp(amountBig) <= 0 || currentBig.Cmp(doubleAmountBig) >= 0 {
+		// 余额不满足条件，需要调整到合适的范围
+		// 设置目标余额为 1.5 * amount，确保 amount < 目标余额 < 2*amount
+		targetBalance := new(big.Int).Add(amountBig, new(big.Int).Div(amountBig, big.NewInt(2)))
+
+		if currentBig.Cmp(targetBalance) < 0 {
+			// 当前余额不足，需要转入
+			diff := new(big.Int).Sub(targetBalance, currentBig)
+			t.Logf("用户余额不足，需要从admin转入: %s", diff.String())
+			bm.transferTokens(t, adminAddr, userAddr, adminPrivateKey, diff.String())
+		} else if currentBig.Cmp(targetBalance) > 0 {
+			// 当前余额过多，需要转出
+			diff := new(big.Int).Sub(currentBig, targetBalance)
+			t.Logf("用户余额过多，需要转出到admin: %s", diff.String())
+			bm.transferTokens(t, userAddr, adminAddr, userPrivateKey, diff.String())
+		}
+
+		// 重新查询调整后的余额
+		adjustedBalance := bm.RecordUserBalance(t, userAddr)
+		t.Logf("调整后用户的USDC余额: %s", adjustedBalance)
+		return adjustedBalance
+	}
+
+	return currentBalance
+}
+
+// RestoreUserBalance 恢复用户余额到初始状态
+func (bm *BalanceManager) RestoreUserBalance(t *testing.T, userAddr, receiverAddr, receiverPrivateKey, initialBalance string) {
+	currentBalance := bm.RecordUserBalance(t, userAddr)
+
+	// 如果余额有变化，通过receiver转账恢复
+	if currentBalance != initialBalance {
+		// 计算需要恢复的金额
+		initialBig, _ := new(big.Int).SetString(initialBalance, 10)
+		currentBig, _ := new(big.Int).SetString(currentBalance, 10)
+		diff := new(big.Int).Sub(initialBig, currentBig)
+
+		if diff.Sign() > 0 {
+			// 需要从receiver转回给用户
+			t.Logf("恢复用户余额，从 %s 转账 %s 给 %s", receiverAddr, diff.String(), userAddr)
+			bm.transferTokens(t, receiverAddr, userAddr, receiverPrivateKey, diff.String())
+		}
+	}
+}
+
+// transferTokens 内部方法：执行代币转账
+func (bm *BalanceManager) transferTokens(t *testing.T, fromAddr, toAddr, privateKey, amount string) {
+	transferReq := &client.RequestTransferPrepareReq{
+		ChainId:   client.RequestChainId(bm.chainId),
+		FromAddr:  fromAddr,
+		ToAddr:    toAddr,
+		TokenAddr: &bm.mockUSDC,
+		Amount:    amount,
+		TokenType: client.TokenTypeUSDC,
+	}
+
+	transferResp := bm.test.callPrepareTokenTransfer(t, transferReq)
+	if transferResp != nil && transferResp.TxMsgBase64 != "" {
+		tx := &types.Transaction{}
+		data, err := base64.StdEncoding.DecodeString(transferResp.TxMsgBase64)
+		if err == nil {
+			err = tx.UnmarshalBinary(data)
+			if err == nil {
+				signedTx, err := signTransaction(t, bm.chainId, privateKey, tx)
+				if err == nil {
+					// 编码为base64
+					signedTxData, err := signedTx.MarshalBinary()
+					if err == nil {
+						signedTxBase64 := base64.StdEncoding.EncodeToString(signedTxData)
+						submitResp := bm.test.callSubmitTx(t, &client.RequestSubmitReq{
+							ChainId:      client.CommonChainID(transferReq.ChainId),
+							Sender:       transferReq.FromAddr,
+							TxMsgBase64:  transferResp.TxMsgBase64,
+							SignTxBase64: signedTxBase64,
+						})
+						if submitResp != nil && submitResp.TxHash != "" {
+							t.Logf("✅ 转账交易提交成功，TxHash: %s", submitResp.TxHash)
+							// 等待交易确认
+							time.Sleep(5 * time.Second)
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 type FundVaultRedemptionRequestApprove struct {
