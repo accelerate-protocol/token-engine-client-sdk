@@ -1565,12 +1565,19 @@ func fundVaultRedemptionRequest(t *testing.T, test *VaultLaunchIntegrationTest, 
 	signedRedeemTx, err := signTransaction(t, redeemReq.ChainId, sender.PrivateKey, redemptionRequestTx)
 	require.NoError(t, err)
 
+	// 准备一个 channel 用于接收 MQ 消息
+	mqMessageInterfaceCh := make(chan interface{}, 1)
+	go func() {
+		res := test.waitForMQMessage(t, signedRedeemTx.Hash().String(), client.MessageTypeFundVaultRedemptionRequest)
+		mqMessageInterfaceCh <- res
+	}()
+
 	// 7. 调用 /api/v1/common/submit_tx 接口提交 redemptionRequest 交易
 	redeemSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
 		ChainId:      client.CommonChainID(redeemReq.ChainId),
 		Sender:       redeemReq.UserAddr,
 		TxMsgBase64:  redemptionRequestResp.TxMsgBase64,
-		SignTxBase64: signedRedeemTx,
+		SignTxBase64: encodeTransactionToBase64(t, signedRedeemTx),
 	})
 	require.NotNil(t, redeemSubmitResp)
 	require.NotEmpty(t, redeemSubmitResp.TxHash)
@@ -1578,12 +1585,25 @@ func fundVaultRedemptionRequest(t *testing.T, test *VaultLaunchIntegrationTest, 
 	t.Logf("Fund Redeem 交易已提交，交易哈希: %s", redeemSubmitResp.TxHash)
 
 	// 8. 等待 MQ 推送
-	mqMessageInterface := test.waitForMQMessage(t, redeemSubmitResp.TxHash, client.MessageTypeFundVaultRedemptionRequest)
-	require.NotNil(t, mqMessageInterface)
+	//mqMessageInterface := test.waitForMQMessage(t, redeemSubmitResp.TxHash, client.MessageTypeFundVaultRedemptionRequest)
+	//require.NotNil(t, mqMessageInterface)
+	//
+	//// 类型断言
+	//mqMessage, ok := mqMessageInterface.(*client.FundRedemptionRequest)
+	//require.True(t, ok, "MQ 消息类型断言失败")
 
-	// 类型断言
-	mqMessage, ok := mqMessageInterface.(*client.FundRedemptionRequest)
-	require.True(t, ok, "MQ 消息类型断言失败")
+	var (
+		mqMessage *client.FundRedemptionRequest
+		ok        bool
+	)
+	select {
+	case mqMessageInterface := <-mqMessageInterfaceCh:
+		// 类型断言
+		mqMessage, ok = mqMessageInterface.(*client.FundRedemptionRequest)
+		require.True(t, ok, "MQ 消息类型断言失败")
+	case <-time.After(70 * time.Second):
+		require.Fail(t, "等待 MQ 消息超时")
+	}
 
 	// 9. 验证 MQ 消息内容
 	test.validateFundVaultRedemptionRequestMQMessage(t, mqMessage, redeemReq, redeemSubmitResp.TxHash)
@@ -1619,12 +1639,19 @@ func fundVaultCancelRedemptionRequest(t *testing.T, test *VaultLaunchIntegration
 	signedRedeemTx, err := signTransaction(t, redeemReq.ChainId, sender.PrivateKey, redemptionRequestTx)
 	require.NoError(t, err)
 
+	// 准备一个 channel 用于接收 MQ 消息
+	mqMessageInterfaceCh := make(chan interface{}, 1)
+	go func() {
+		res := test.waitForMQMessage(t, signedRedeemTx.Hash().String(), client.MessageTypeFundVaultRedemptionRequestCancel)
+		mqMessageInterfaceCh <- res
+	}()
+
 	// 7. 调用 /api/v1/common/submit_tx 接口提交 redemptionRequest 交易
 	redeemSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
 		ChainId:      client.CommonChainID(redeemReq.ChainId),
 		Sender:       redeemReq.UserAddr,
 		TxMsgBase64:  redemptionRequestResp.TxMsgBase64,
-		SignTxBase64: signedRedeemTx,
+		SignTxBase64: encodeTransactionToBase64(t, signedRedeemTx),
 	})
 	require.NotNil(t, redeemSubmitResp)
 	require.NotEmpty(t, redeemSubmitResp.TxHash)
@@ -1632,12 +1659,26 @@ func fundVaultCancelRedemptionRequest(t *testing.T, test *VaultLaunchIntegration
 	t.Logf("Fund Cancel Redeem 交易已提交，交易哈希: %s", redeemSubmitResp.TxHash)
 
 	// 8. 等待 MQ 推送
-	mqMessageInterface := test.waitForMQMessage(t, redeemSubmitResp.TxHash, client.MessageTypeFundVaultRedemptionRequestCancel)
-	require.NotNil(t, mqMessageInterface)
+	//mqMessageInterface := test.waitForMQMessage(t, redeemSubmitResp.TxHash, client.MessageTypeFundVaultRedemptionRequestCancel)
+	//require.NotNil(t, mqMessageInterface)
+	//
+	//// 类型断言
+	//mqMessage, ok := mqMessageInterface.(*client.FundRedemptionRequestCancel)
+	//require.True(t, ok, "MQ 消息类型断言失败")
 
-	// 类型断言
-	mqMessage, ok := mqMessageInterface.(*client.FundRedemptionRequestCancel)
-	require.True(t, ok, "MQ 消息类型断言失败")
+	// 等待并验证 MQ 消息内容
+	var (
+		mqMessage *client.FundRedemptionRequestCancel
+		ok        bool
+	)
+	select {
+	case mqMessageInterface := <-mqMessageInterfaceCh:
+		// 类型断言
+		mqMessage, ok = mqMessageInterface.(*client.FundRedemptionRequestCancel)
+		require.True(t, ok, "MQ 消息类型断言失败")
+	case <-time.After(70 * time.Second):
+		require.Fail(t, "等待 MQ 消息超时")
+	}
 
 	// 9. 验证 MQ 消息内容
 	test.validateFundVaultRedemptionRequestCancelMQMessage(t, mqMessage, redeemReq, redeemSubmitResp.TxHash)
@@ -1673,12 +1714,19 @@ func fundVaultChangeEpoch(t *testing.T, test *VaultLaunchIntegrationTest, vaultA
 	signedRedeemTx, err := signTransaction(t, redeemReq.ChainId, manager.PrivateKey, redemptionRequestTx)
 	require.NoError(t, err)
 
+	// 准备一个 channel 用于接收 MQ 消息
+	mqMessageInterfaceCh := make(chan interface{}, 1)
+	go func() {
+		res := test.waitForMQMessage(t, signedRedeemTx.Hash().String(), client.MessageTypeFundVaultChangeEpoch)
+		mqMessageInterfaceCh <- res
+	}()
+
 	// 7. 调用 /api/v1/common/submit_tx 接口提交 redemptionRequest 交易
 	redeemSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
 		ChainId:      client.CommonChainID(redeemReq.ChainId),
 		Sender:       redeemReq.ManagerAddress,
 		TxMsgBase64:  redemptionRequestResp.TxMsgBase64,
-		SignTxBase64: signedRedeemTx,
+		SignTxBase64: encodeTransactionToBase64(t, signedRedeemTx),
 	})
 	require.NotNil(t, redeemSubmitResp)
 	require.NotEmpty(t, redeemSubmitResp.TxHash)
@@ -1686,12 +1734,26 @@ func fundVaultChangeEpoch(t *testing.T, test *VaultLaunchIntegrationTest, vaultA
 	t.Logf("Fund Change Epoch 交易已提交，交易哈希: %s", redeemSubmitResp.TxHash)
 
 	// 8. 等待 MQ 推送
-	mqMessageInterface := test.waitForMQMessage(t, redeemSubmitResp.TxHash, client.MessageTypeFundVaultChangeEpoch)
-	require.NotNil(t, mqMessageInterface)
+	//mqMessageInterface := test.waitForMQMessage(t, redeemSubmitResp.TxHash, client.MessageTypeFundVaultChangeEpoch)
+	//require.NotNil(t, mqMessageInterface)
+	//
+	//// 类型断言
+	//mqMessage, ok := mqMessageInterface.(*client.FundChangeEpoch)
+	//require.True(t, ok, "MQ 消息类型断言失败")
 
-	// 类型断言
-	mqMessage, ok := mqMessageInterface.(*client.FundChangeEpoch)
-	require.True(t, ok, "MQ 消息类型断言失败")
+	// 等待并验证 MQ 消息内容
+	var (
+		mqMessage *client.FundChangeEpoch
+		ok        bool
+	)
+	select {
+	case mqMessageInterface := <-mqMessageInterfaceCh:
+		// 类型断言
+		mqMessage, ok = mqMessageInterface.(*client.FundChangeEpoch)
+		require.True(t, ok, "MQ 消息类型断言失败")
+	case <-time.After(70 * time.Second):
+		require.Fail(t, "等待 MQ 消息超时")
+	}
 
 	// 9. 验证 MQ 消息内容
 	test.validateFundVaultChangeEpochMQMessage(t, mqMessage, redeemReq, redeemSubmitResp.TxHash)
@@ -1733,7 +1795,7 @@ func fundVaultFinishEpoch(t *testing.T, test *VaultLaunchIntegrationTest, vaultA
 		ChainId:      client.CommonChainID(approveReq.ChainId),
 		Sender:       approveReq.SettlerAddress,
 		TxMsgBase64:  approveResp.TxMsgBase64,
-		SignTxBase64: signedApproveTx,
+		SignTxBase64: encodeTransactionToBase64(t, signedApproveTx),
 	})
 	require.NotNil(t, approveSubmitResp)
 	require.NotEmpty(t, approveSubmitResp.TxHash)
@@ -1776,12 +1838,19 @@ func fundVaultFinishEpoch(t *testing.T, test *VaultLaunchIntegrationTest, vaultA
 	signedRedeemTx, err := signTransaction(t, redeemReq.ChainId, manager.PrivateKey, redemptionRequestTx)
 	require.NoError(t, err)
 
+	// 准备一个 channel 用于接收 MQ 消息
+	mqMessageInterfaceCh := make(chan interface{}, 1)
+	go func() {
+		res := test.waitForMQMessage(t, signedRedeemTx.Hash().String(), client.MessageTypeFundVaultFinishEpoch)
+		mqMessageInterfaceCh <- res
+	}()
+
 	// 7. 调用 /api/v1/common/submit_tx 接口提交 redemptionRequest 交易
 	redeemSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
 		ChainId:      client.CommonChainID(redeemReq.ChainId),
 		Sender:       redeemReq.SettlerAddress,
 		TxMsgBase64:  redemptionRequestResp.TxMsgBase64,
-		SignTxBase64: signedRedeemTx,
+		SignTxBase64: encodeTransactionToBase64(t, signedRedeemTx),
 	})
 	require.NotNil(t, redeemSubmitResp)
 	require.NotEmpty(t, redeemSubmitResp.TxHash)
@@ -1789,12 +1858,26 @@ func fundVaultFinishEpoch(t *testing.T, test *VaultLaunchIntegrationTest, vaultA
 	t.Logf("Fund Finish Epoch 交易已提交，交易哈希: %s", redeemSubmitResp.TxHash)
 
 	// 8. 等待 MQ 推送
-	mqMessageInterface := test.waitForMQMessage(t, redeemSubmitResp.TxHash, client.MessageTypeFundVaultFinishEpoch)
-	require.NotNil(t, mqMessageInterface)
+	//mqMessageInterface := test.waitForMQMessage(t, redeemSubmitResp.TxHash, client.MessageTypeFundVaultFinishEpoch)
+	//require.NotNil(t, mqMessageInterface)
+	//
+	//// 类型断言
+	//mqMessage, ok := mqMessageInterface.(*client.FundFinishEpoch)
+	//require.True(t, ok, "MQ 消息类型断言失败")
 
-	// 类型断言
-	mqMessage, ok := mqMessageInterface.(*client.FundFinishEpoch)
-	require.True(t, ok, "MQ 消息类型断言失败")
+	// 等待并验证 MQ 消息内容
+	var (
+		mqMessage *client.FundFinishEpoch
+		ok        bool
+	)
+	select {
+	case mqMessageInterface := <-mqMessageInterfaceCh:
+		// 类型断言
+		mqMessage, ok = mqMessageInterface.(*client.FundFinishEpoch)
+		require.True(t, ok, "MQ 消息类型断言失败")
+	case <-time.After(70 * time.Second):
+		require.Fail(t, "等待 MQ 消息超时")
+	}
 
 	// 9. 验证 MQ 消息内容
 	test.validateFundVaultFinishEpochMQMessage(t, mqMessage, redeemReq, redeemSubmitResp.TxHash)
@@ -1832,12 +1915,19 @@ func fundVaultClaimRedemption(t *testing.T, test *VaultLaunchIntegrationTest, va
 	signedRedeemTx, err := signTransaction(t, redeemReq.ChainId, sender.PrivateKey, redemptionRequestTx)
 	require.NoError(t, err)
 
+	// 准备一个 channel 用于接收 MQ 消息
+	mqMessageInterfaceCh := make(chan interface{}, 1)
+	go func() {
+		res := test.waitForMQMessage(t, signedRedeemTx.Hash().String(), client.MessageTypeFundVaultRedemptionClaim)
+		mqMessageInterfaceCh <- res
+	}()
+
 	// 7. 调用 /api/v1/common/submit_tx 接口提交 redemptionRequest 交易
 	redeemSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
 		ChainId:      client.CommonChainID(redeemReq.ChainId),
 		Sender:       redeemReq.UserAddr,
 		TxMsgBase64:  redemptionRequestResp.TxMsgBase64,
-		SignTxBase64: signedRedeemTx,
+		SignTxBase64: encodeTransactionToBase64(t, signedRedeemTx),
 	})
 	require.NotNil(t, redeemSubmitResp)
 	require.NotEmpty(t, redeemSubmitResp.TxHash)
@@ -1845,12 +1935,26 @@ func fundVaultClaimRedemption(t *testing.T, test *VaultLaunchIntegrationTest, va
 	t.Logf("Fund Claim Redemption 交易已提交，交易哈希: %s", redeemSubmitResp.TxHash)
 
 	// 8. 等待 MQ 推送
-	mqMessageInterface := test.waitForMQMessage(t, redeemSubmitResp.TxHash, client.MessageTypeFundVaultRedemptionClaim)
-	require.NotNil(t, mqMessageInterface)
+	//mqMessageInterface := test.waitForMQMessage(t, redeemSubmitResp.TxHash, client.MessageTypeFundVaultRedemptionClaim)
+	//require.NotNil(t, mqMessageInterface)
+	//
+	//// 类型断言
+	//mqMessage, ok := mqMessageInterface.(*client.FundRedemptionClaim)
+	//require.True(t, ok, "MQ 消息类型断言失败")
 
-	// 类型断言
-	mqMessage, ok := mqMessageInterface.(*client.FundRedemptionClaim)
-	require.True(t, ok, "MQ 消息类型断言失败")
+	// 等待并验证 MQ 消息内容
+	var (
+		mqMessage *client.FundRedemptionClaim
+		ok        bool
+	)
+	select {
+	case mqMessageInterface := <-mqMessageInterfaceCh:
+		// 类型断言
+		mqMessage, ok = mqMessageInterface.(*client.FundRedemptionClaim)
+		require.True(t, ok, "MQ 消息类型断言失败")
+	case <-time.After(70 * time.Second):
+		require.Fail(t, "等待 MQ 消息超时")
+	}
 
 	// 9. 验证 MQ 消息内容
 	test.validateFundVaultClaimRedemptionMQMessage(t, mqMessage, redeemReq, redeemSubmitResp.TxHash)
@@ -1886,13 +1990,19 @@ func fundVaultAddPrice(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddr
 	// user签名
 	signedRedeemTx, err := signTransaction(t, redeemReq.ChainId, sender.PrivateKey, redemptionRequestTx)
 	require.NoError(t, err)
+	// 准备一个 channel 用于接收 MQ 消息
+	mqMessageInterfaceCh := make(chan interface{}, 1)
+	go func() {
+		res := test.waitForMQMessage(t, signedRedeemTx.Hash().String(), client.MessageTypeFundVaultAddPrice)
+		mqMessageInterfaceCh <- res
+	}()
 
 	// 7. 调用 /api/v1/common/submit_tx 接口提交 redemptionRequest 交易
 	redeemSubmitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
 		ChainId:      client.CommonChainID(redeemReq.ChainId),
 		Sender:       redeemReq.PriceFeeder,
 		TxMsgBase64:  redemptionRequestResp.TxMsgBase64,
-		SignTxBase64: signedRedeemTx,
+		SignTxBase64: encodeTransactionToBase64(t, signedRedeemTx),
 	})
 	require.NotNil(t, redeemSubmitResp)
 	require.NotEmpty(t, redeemSubmitResp.TxHash)
@@ -1900,12 +2010,26 @@ func fundVaultAddPrice(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddr
 	t.Logf("Fund Add Price 交易已提交，交易哈希: %s", redeemSubmitResp.TxHash)
 
 	// 8. 等待 MQ 推送
-	mqMessageInterface := test.waitForMQMessage(t, redeemSubmitResp.TxHash, client.MessageTypeFundVaultAddPrice)
-	require.NotNil(t, mqMessageInterface)
+	//mqMessageInterface := test.waitForMQMessage(t, redeemSubmitResp.TxHash, client.MessageTypeFundVaultAddPrice)
+	//require.NotNil(t, mqMessageInterface)
+	//
+	//// 类型断言
+	//mqMessage, ok := mqMessageInterface.(*client.FundAddPrice)
+	//require.True(t, ok, "MQ 消息类型断言失败")
 
-	// 类型断言
-	mqMessage, ok := mqMessageInterface.(*client.FundAddPrice)
-	require.True(t, ok, "MQ 消息类型断言失败")
+	// 5. 等待并验证 MQ 消息内容
+	var (
+		mqMessage *client.FundAddPrice
+		ok        bool
+	)
+	select {
+	case mqMessageInterface := <-mqMessageInterfaceCh:
+		// 类型断言
+		mqMessage, ok = mqMessageInterface.(*client.FundAddPrice)
+		require.True(t, ok, "MQ 消息类型断言失败")
+	case <-time.After(70 * time.Second):
+		require.Fail(t, "等待 MQ 消息超时")
+	}
 
 	// 9. 验证 MQ 消息内容
 	test.validateFundVaultAddPriceMQMessage(t, mqMessage, redeemReq, redeemSubmitResp.TxHash)
