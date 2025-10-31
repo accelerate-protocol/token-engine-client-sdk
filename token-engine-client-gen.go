@@ -117,6 +117,11 @@ const (
 	GetApiV2DividendGetOldParamsChainIdN1001 GetApiV2DividendGetOldParamsChainId = "1001"
 )
 
+// Defines values for GetApiV2FundCurrentEpochIdParamsChainId.
+const (
+	GetApiV2FundCurrentEpochIdParamsChainIdN1001 GetApiV2FundCurrentEpochIdParamsChainId = "1001"
+)
+
 // Defines values for GetApiV2FundEpochDataParamsChainId.
 const (
 	GetApiV2FundEpochDataParamsChainIdN1001 GetApiV2FundEpochDataParamsChainId = "1001"
@@ -139,7 +144,7 @@ const (
 
 // Defines values for GetApiV2PrimaryVaultCommonInfoParamsChainId.
 const (
-	N1001 GetApiV2PrimaryVaultCommonInfoParamsChainId = "1001"
+	GetApiV2PrimaryVaultCommonInfoParamsChainIdN1001 GetApiV2PrimaryVaultCommonInfoParamsChainId = "1001"
 )
 
 // BasechainOnChainFundVaultEpochStatus defines model for basechain.OnChainFundVaultEpochStatus.
@@ -442,6 +447,32 @@ type RequestFundRedeemReq struct {
 
 	// UserAddr 用户地址
 	UserAddr string `json:"user_addr"`
+
+	// VaultAddress vault地址
+	VaultAddress string `json:"vault_address"`
+}
+
+// RequestFundVaultApproveFinishEpochReq defines model for request.FundVaultApproveFinishEpochReq.
+type RequestFundVaultApproveFinishEpochReq struct {
+	// AssetAmount 金额
+	AssetAmount string        `json:"asset_amount"`
+	ChainId     CommonChainID `json:"chain_id"`
+
+	// SettlerAddress 结算人地址
+	SettlerAddress string `json:"settler_address"`
+
+	// VaultAddress vault地址
+	VaultAddress string `json:"vault_address"`
+}
+
+// RequestFundVaultApproveRedeemReq defines model for request.FundVaultApproveRedeemReq.
+type RequestFundVaultApproveRedeemReq struct {
+	// Amount share份额(以vault share货币计价) uint64
+	Amount  string        `json:"amount"`
+	ChainId CommonChainID `json:"chain_id"`
+
+	// Investor 投资者地址
+	Investor string `json:"investor"`
 
 	// VaultAddress vault地址
 	VaultAddress string `json:"vault_address"`
@@ -998,6 +1029,11 @@ type ResponseFoundingOverviewResp struct {
 	VaultType         *string `json:"vault_type,omitempty"`
 }
 
+// ResponseFundCurrentEpochIdResp defines model for response.FundCurrentEpochIdResp.
+type ResponseFundCurrentEpochIdResp struct {
+	CurrentEpochId *string `json:"current_epoch_id,omitempty"`
+}
+
 // ResponseFundEpochDataResp defines model for response.FundEpochDataResp.
 type ResponseFundEpochDataResp struct {
 	EpochStatus           *BasechainOnChainFundVaultEpochStatus `json:"epoch_status,omitempty"`
@@ -1356,6 +1392,18 @@ type GetApiV2DividendGetOldParams struct {
 // GetApiV2DividendGetOldParamsChainId defines parameters for GetApiV2DividendGetOld.
 type GetApiV2DividendGetOldParamsChainId string
 
+// GetApiV2FundCurrentEpochIdParams defines parameters for GetApiV2FundCurrentEpochId.
+type GetApiV2FundCurrentEpochIdParams struct {
+	// ChainId 链ID
+	ChainId GetApiV2FundCurrentEpochIdParamsChainId `form:"chain_id" json:"chain_id"`
+
+	// Vault Vault
+	Vault string `form:"vault" json:"vault"`
+}
+
+// GetApiV2FundCurrentEpochIdParamsChainId defines parameters for GetApiV2FundCurrentEpochId.
+type GetApiV2FundCurrentEpochIdParamsChainId string
+
 // GetApiV2FundEpochDataParams defines parameters for GetApiV2FundEpochData.
 type GetApiV2FundEpochDataParams struct {
 	// ChainId 链ID
@@ -1521,8 +1569,14 @@ type PostApiV2FundPrepareClaimRedemptionJSONRequestBody = RequestClaimFundRedeem
 // PostApiV2FundPrepareFinishEpochJSONRequestBody defines body for PostApiV2FundPrepareFinishEpoch for application/json ContentType.
 type PostApiV2FundPrepareFinishEpochJSONRequestBody = RequestFinishFundEpochReq
 
+// PostApiV2FundPrepareFundFinishEpochApproveJSONRequestBody defines body for PostApiV2FundPrepareFundFinishEpochApprove for application/json ContentType.
+type PostApiV2FundPrepareFundFinishEpochApproveJSONRequestBody = RequestFundVaultApproveFinishEpochReq
+
 // PostApiV2FundPrepareFundRedeemJSONRequestBody defines body for PostApiV2FundPrepareFundRedeem for application/json ContentType.
 type PostApiV2FundPrepareFundRedeemJSONRequestBody = RequestFundRedeemReq
+
+// PostApiV2FundPrepareFundRedeemApproveJSONRequestBody defines body for PostApiV2FundPrepareFundRedeemApprove for application/json ContentType.
+type PostApiV2FundPrepareFundRedeemApproveJSONRequestBody = RequestFundVaultApproveRedeemReq
 
 // GetApiV2PrimaryVaultFundingOverviewJSONRequestBody defines body for GetApiV2PrimaryVaultFundingOverview for application/json ContentType.
 type GetApiV2PrimaryVaultFundingOverviewJSONRequestBody = RequestFundingOverviewReq
@@ -1761,6 +1815,9 @@ type ClientInterface interface {
 	// GetApiV2DividendGetOld request
 	GetApiV2DividendGetOld(ctx context.Context, params *GetApiV2DividendGetOldParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetApiV2FundCurrentEpochId request
+	GetApiV2FundCurrentEpochId(ctx context.Context, params *GetApiV2FundCurrentEpochIdParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetApiV2FundEpochData request
 	GetApiV2FundEpochData(ctx context.Context, params *GetApiV2FundEpochDataParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1792,10 +1849,20 @@ type ClientInterface interface {
 
 	PostApiV2FundPrepareFinishEpoch(ctx context.Context, body PostApiV2FundPrepareFinishEpochJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PostApiV2FundPrepareFundFinishEpochApproveWithBody request with any body
+	PostApiV2FundPrepareFundFinishEpochApproveWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2FundPrepareFundFinishEpochApprove(ctx context.Context, body PostApiV2FundPrepareFundFinishEpochApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PostApiV2FundPrepareFundRedeemWithBody request with any body
 	PostApiV2FundPrepareFundRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostApiV2FundPrepareFundRedeem(ctx context.Context, body PostApiV2FundPrepareFundRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV2FundPrepareFundRedeemApproveWithBody request with any body
+	PostApiV2FundPrepareFundRedeemApproveWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2FundPrepareFundRedeemApprove(ctx context.Context, body PostApiV2FundPrepareFundRedeemApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetApiV2FundUserPendingClaim request
 	GetApiV2FundUserPendingClaim(ctx context.Context, params *GetApiV2FundUserPendingClaimParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2342,6 +2409,18 @@ func (c *Client) GetApiV2DividendGetOld(ctx context.Context, params *GetApiV2Div
 	return c.Client.Do(req)
 }
 
+func (c *Client) GetApiV2FundCurrentEpochId(ctx context.Context, params *GetApiV2FundCurrentEpochIdParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetApiV2FundCurrentEpochIdRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) GetApiV2FundEpochData(ctx context.Context, params *GetApiV2FundEpochDataParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetApiV2FundEpochDataRequest(c.Server, params)
 	if err != nil {
@@ -2486,6 +2565,30 @@ func (c *Client) PostApiV2FundPrepareFinishEpoch(ctx context.Context, body PostA
 	return c.Client.Do(req)
 }
 
+func (c *Client) PostApiV2FundPrepareFundFinishEpochApproveWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2FundPrepareFundFinishEpochApproveRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2FundPrepareFundFinishEpochApprove(ctx context.Context, body PostApiV2FundPrepareFundFinishEpochApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2FundPrepareFundFinishEpochApproveRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 func (c *Client) PostApiV2FundPrepareFundRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiV2FundPrepareFundRedeemRequestWithBody(c.Server, contentType, body)
 	if err != nil {
@@ -2500,6 +2603,30 @@ func (c *Client) PostApiV2FundPrepareFundRedeemWithBody(ctx context.Context, con
 
 func (c *Client) PostApiV2FundPrepareFundRedeem(ctx context.Context, body PostApiV2FundPrepareFundRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiV2FundPrepareFundRedeemRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2FundPrepareFundRedeemApproveWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2FundPrepareFundRedeemApproveRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2FundPrepareFundRedeemApprove(ctx context.Context, body PostApiV2FundPrepareFundRedeemApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2FundPrepareFundRedeemApproveRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -4325,6 +4452,63 @@ func NewGetApiV2DividendGetOldRequest(server string, params *GetApiV2DividendGet
 	return req, nil
 }
 
+// NewGetApiV2FundCurrentEpochIdRequest generates requests for GetApiV2FundCurrentEpochId
+func NewGetApiV2FundCurrentEpochIdRequest(server string, params *GetApiV2FundCurrentEpochIdParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/fund/current_epoch_id")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		queryValues := queryURL.Query()
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "chain_id", runtime.ParamLocationQuery, params.ChainId); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "vault", runtime.ParamLocationQuery, params.Vault); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		queryURL.RawQuery = queryValues.Encode()
+	}
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetApiV2FundEpochDataRequest generates requests for GetApiV2FundEpochData
 func NewGetApiV2FundEpochDataRequest(server string, params *GetApiV2FundEpochDataParams) (*http.Request, error) {
 	var err error
@@ -4667,6 +4851,46 @@ func NewPostApiV2FundPrepareFinishEpochRequestWithBody(server string, contentTyp
 	return req, nil
 }
 
+// NewPostApiV2FundPrepareFundFinishEpochApproveRequest calls the generic PostApiV2FundPrepareFundFinishEpochApprove builder with application/json body
+func NewPostApiV2FundPrepareFundFinishEpochApproveRequest(server string, body PostApiV2FundPrepareFundFinishEpochApproveJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2FundPrepareFundFinishEpochApproveRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2FundPrepareFundFinishEpochApproveRequestWithBody generates requests for PostApiV2FundPrepareFundFinishEpochApprove with any type of body
+func NewPostApiV2FundPrepareFundFinishEpochApproveRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/fund/prepare_fund_finish_epoch_approve")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewPostApiV2FundPrepareFundRedeemRequest calls the generic PostApiV2FundPrepareFundRedeem builder with application/json body
 func NewPostApiV2FundPrepareFundRedeemRequest(server string, body PostApiV2FundPrepareFundRedeemJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -4688,6 +4912,46 @@ func NewPostApiV2FundPrepareFundRedeemRequestWithBody(server string, contentType
 	}
 
 	operationPath := fmt.Sprintf("/api/v2/fund/prepare_fund_redeem")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiV2FundPrepareFundRedeemApproveRequest calls the generic PostApiV2FundPrepareFundRedeemApprove builder with application/json body
+func NewPostApiV2FundPrepareFundRedeemApproveRequest(server string, body PostApiV2FundPrepareFundRedeemApproveJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2FundPrepareFundRedeemApproveRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2FundPrepareFundRedeemApproveRequestWithBody generates requests for PostApiV2FundPrepareFundRedeemApprove with any type of body
+func NewPostApiV2FundPrepareFundRedeemApproveRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/fund/prepare_fund_redeem_approve")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6366,6 +6630,9 @@ type ClientWithResponsesInterface interface {
 	// GetApiV2DividendGetOldWithResponse request
 	GetApiV2DividendGetOldWithResponse(ctx context.Context, params *GetApiV2DividendGetOldParams, reqEditors ...RequestEditorFn) (*GetApiV2DividendGetOldResponse, error)
 
+	// GetApiV2FundCurrentEpochIdWithResponse request
+	GetApiV2FundCurrentEpochIdWithResponse(ctx context.Context, params *GetApiV2FundCurrentEpochIdParams, reqEditors ...RequestEditorFn) (*GetApiV2FundCurrentEpochIdResponse, error)
+
 	// GetApiV2FundEpochDataWithResponse request
 	GetApiV2FundEpochDataWithResponse(ctx context.Context, params *GetApiV2FundEpochDataParams, reqEditors ...RequestEditorFn) (*GetApiV2FundEpochDataResponse, error)
 
@@ -6397,10 +6664,20 @@ type ClientWithResponsesInterface interface {
 
 	PostApiV2FundPrepareFinishEpochWithResponse(ctx context.Context, body PostApiV2FundPrepareFinishEpochJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFinishEpochResponse, error)
 
+	// PostApiV2FundPrepareFundFinishEpochApproveWithBodyWithResponse request with any body
+	PostApiV2FundPrepareFundFinishEpochApproveWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundFinishEpochApproveResponse, error)
+
+	PostApiV2FundPrepareFundFinishEpochApproveWithResponse(ctx context.Context, body PostApiV2FundPrepareFundFinishEpochApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundFinishEpochApproveResponse, error)
+
 	// PostApiV2FundPrepareFundRedeemWithBodyWithResponse request with any body
 	PostApiV2FundPrepareFundRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundRedeemResponse, error)
 
 	PostApiV2FundPrepareFundRedeemWithResponse(ctx context.Context, body PostApiV2FundPrepareFundRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundRedeemResponse, error)
+
+	// PostApiV2FundPrepareFundRedeemApproveWithBodyWithResponse request with any body
+	PostApiV2FundPrepareFundRedeemApproveWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundRedeemApproveResponse, error)
+
+	PostApiV2FundPrepareFundRedeemApproveWithResponse(ctx context.Context, body PostApiV2FundPrepareFundRedeemApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundRedeemApproveResponse, error)
 
 	// GetApiV2FundUserPendingClaimWithResponse request
 	GetApiV2FundUserPendingClaimWithResponse(ctx context.Context, params *GetApiV2FundUserPendingClaimParams, reqEditors ...RequestEditorFn) (*GetApiV2FundUserPendingClaimResponse, error)
@@ -7171,6 +7448,37 @@ func (r GetApiV2DividendGetOldResponse) StatusCode() int {
 	return 0
 }
 
+type GetApiV2FundCurrentEpochIdResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                            `json:"code,omitempty"`
+		Data *ResponseFundCurrentEpochIdResp `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r GetApiV2FundCurrentEpochIdResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetApiV2FundCurrentEpochIdResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type GetApiV2FundEpochDataResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7388,6 +7696,37 @@ func (r PostApiV2FundPrepareFinishEpochResponse) StatusCode() int {
 	return 0
 }
 
+type PostApiV2FundPrepareFundFinishEpochApproveResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2FundPrepareFundFinishEpochApproveResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2FundPrepareFundFinishEpochApproveResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
 type PostApiV2FundPrepareFundRedeemResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -7413,6 +7752,37 @@ func (r PostApiV2FundPrepareFundRedeemResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PostApiV2FundPrepareFundRedeemResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiV2FundPrepareFundRedeemApproveResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2FundPrepareFundRedeemApproveResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2FundPrepareFundRedeemApproveResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -8695,6 +9065,15 @@ func (c *ClientWithResponses) GetApiV2DividendGetOldWithResponse(ctx context.Con
 	return ParseGetApiV2DividendGetOldResponse(rsp)
 }
 
+// GetApiV2FundCurrentEpochIdWithResponse request returning *GetApiV2FundCurrentEpochIdResponse
+func (c *ClientWithResponses) GetApiV2FundCurrentEpochIdWithResponse(ctx context.Context, params *GetApiV2FundCurrentEpochIdParams, reqEditors ...RequestEditorFn) (*GetApiV2FundCurrentEpochIdResponse, error) {
+	rsp, err := c.GetApiV2FundCurrentEpochId(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetApiV2FundCurrentEpochIdResponse(rsp)
+}
+
 // GetApiV2FundEpochDataWithResponse request returning *GetApiV2FundEpochDataResponse
 func (c *ClientWithResponses) GetApiV2FundEpochDataWithResponse(ctx context.Context, params *GetApiV2FundEpochDataParams, reqEditors ...RequestEditorFn) (*GetApiV2FundEpochDataResponse, error) {
 	rsp, err := c.GetApiV2FundEpochData(ctx, params, reqEditors...)
@@ -8798,6 +9177,23 @@ func (c *ClientWithResponses) PostApiV2FundPrepareFinishEpochWithResponse(ctx co
 	return ParsePostApiV2FundPrepareFinishEpochResponse(rsp)
 }
 
+// PostApiV2FundPrepareFundFinishEpochApproveWithBodyWithResponse request with arbitrary body returning *PostApiV2FundPrepareFundFinishEpochApproveResponse
+func (c *ClientWithResponses) PostApiV2FundPrepareFundFinishEpochApproveWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundFinishEpochApproveResponse, error) {
+	rsp, err := c.PostApiV2FundPrepareFundFinishEpochApproveWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2FundPrepareFundFinishEpochApproveResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2FundPrepareFundFinishEpochApproveWithResponse(ctx context.Context, body PostApiV2FundPrepareFundFinishEpochApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundFinishEpochApproveResponse, error) {
+	rsp, err := c.PostApiV2FundPrepareFundFinishEpochApprove(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2FundPrepareFundFinishEpochApproveResponse(rsp)
+}
+
 // PostApiV2FundPrepareFundRedeemWithBodyWithResponse request with arbitrary body returning *PostApiV2FundPrepareFundRedeemResponse
 func (c *ClientWithResponses) PostApiV2FundPrepareFundRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundRedeemResponse, error) {
 	rsp, err := c.PostApiV2FundPrepareFundRedeemWithBody(ctx, contentType, body, reqEditors...)
@@ -8813,6 +9209,23 @@ func (c *ClientWithResponses) PostApiV2FundPrepareFundRedeemWithResponse(ctx con
 		return nil, err
 	}
 	return ParsePostApiV2FundPrepareFundRedeemResponse(rsp)
+}
+
+// PostApiV2FundPrepareFundRedeemApproveWithBodyWithResponse request with arbitrary body returning *PostApiV2FundPrepareFundRedeemApproveResponse
+func (c *ClientWithResponses) PostApiV2FundPrepareFundRedeemApproveWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundRedeemApproveResponse, error) {
+	rsp, err := c.PostApiV2FundPrepareFundRedeemApproveWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2FundPrepareFundRedeemApproveResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2FundPrepareFundRedeemApproveWithResponse(ctx context.Context, body PostApiV2FundPrepareFundRedeemApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundRedeemApproveResponse, error) {
+	rsp, err := c.PostApiV2FundPrepareFundRedeemApprove(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2FundPrepareFundRedeemApproveResponse(rsp)
 }
 
 // GetApiV2FundUserPendingClaimWithResponse request returning *GetApiV2FundUserPendingClaimResponse
@@ -10011,6 +10424,41 @@ func ParseGetApiV2DividendGetOldResponse(rsp *http.Response) (*GetApiV2DividendG
 	return response, nil
 }
 
+// ParseGetApiV2FundCurrentEpochIdResponse parses an HTTP response from a GetApiV2FundCurrentEpochIdWithResponse call
+func ParseGetApiV2FundCurrentEpochIdResponse(rsp *http.Response) (*GetApiV2FundCurrentEpochIdResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetApiV2FundCurrentEpochIdResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                            `json:"code,omitempty"`
+			Data *ResponseFundCurrentEpochIdResp `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetApiV2FundEpochDataResponse parses an HTTP response from a GetApiV2FundEpochDataWithResponse call
 func ParseGetApiV2FundEpochDataResponse(rsp *http.Response) (*GetApiV2FundEpochDataResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -10256,6 +10704,41 @@ func ParsePostApiV2FundPrepareFinishEpochResponse(rsp *http.Response) (*PostApiV
 	return response, nil
 }
 
+// ParsePostApiV2FundPrepareFundFinishEpochApproveResponse parses an HTTP response from a PostApiV2FundPrepareFundFinishEpochApproveWithResponse call
+func ParsePostApiV2FundPrepareFundFinishEpochApproveResponse(rsp *http.Response) (*PostApiV2FundPrepareFundFinishEpochApproveResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2FundPrepareFundFinishEpochApproveResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParsePostApiV2FundPrepareFundRedeemResponse parses an HTTP response from a PostApiV2FundPrepareFundRedeemWithResponse call
 func ParsePostApiV2FundPrepareFundRedeemResponse(rsp *http.Response) (*PostApiV2FundPrepareFundRedeemResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -10265,6 +10748,41 @@ func ParsePostApiV2FundPrepareFundRedeemResponse(rsp *http.Response) (*PostApiV2
 	}
 
 	response := &PostApiV2FundPrepareFundRedeemResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV2FundPrepareFundRedeemApproveResponse parses an HTTP response from a PostApiV2FundPrepareFundRedeemApproveWithResponse call
+func ParsePostApiV2FundPrepareFundRedeemApproveResponse(rsp *http.Response) (*PostApiV2FundPrepareFundRedeemApproveResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2FundPrepareFundRedeemApproveResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -11414,162 +11932,165 @@ func ParsePostApiV2TransferSubmitResponse(rsp *http.Response) (*PostApiV2Transfe
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
-	"/98AAAD///Cc3s8yHwEA",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

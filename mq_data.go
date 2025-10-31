@@ -36,6 +36,7 @@ const (
 	MessageTypeFundVaultRedemptionRequest       //fund 融资成功后用户赎回请求
 	MessageTypeFundVaultRedemptionRequestCancel //fund 融资成功后用户取消赎回请求
 	MessageTypeFundVaultChangeEpoch             //fund 更新赎回周期
+	MessageTypeFundVaultApproveFinishEpoch      // fund 结束赎回周期前的approve
 	MessageTypeFundVaultFinishEpoch             //fund 结束赎回周期
 	MessageTypeFundVaultRedemptionClaim         //fund 用户领取赎回金额
 )
