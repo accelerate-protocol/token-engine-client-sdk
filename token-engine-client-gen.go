@@ -24,14 +24,6 @@ const (
 	ApiKeyAuthScopes = "ApiKeyAuth.Scopes"
 )
 
-// Defines values for BasechainOnChainFundVaultEpochStatus.
-const (
-	Active    BasechainOnChainFundVaultEpochStatus = "Active"
-	Liquidate BasechainOnChainFundVaultEpochStatus = "Liquidate"
-	Lock      BasechainOnChainFundVaultEpochStatus = "Lock"
-	NotActive BasechainOnChainFundVaultEpochStatus = "NotActive"
-)
-
 // Defines values for CommonChainID.
 const (
 	SOLANA CommonChainID = "1001"
@@ -117,38 +109,10 @@ const (
 	GetApiV2DividendGetOldParamsChainIdN1001 GetApiV2DividendGetOldParamsChainId = "1001"
 )
 
-// Defines values for GetApiV2FundCurrentEpochIdParamsChainId.
-const (
-	GetApiV2FundCurrentEpochIdParamsChainIdN1001 GetApiV2FundCurrentEpochIdParamsChainId = "1001"
-)
-
-// Defines values for GetApiV2FundEpochDataParamsChainId.
-const (
-	GetApiV2FundEpochDataParamsChainIdN1001 GetApiV2FundEpochDataParamsChainId = "1001"
-)
-
-// Defines values for GetApiV2FundGetRoundPriceParamsChainId.
-const (
-	GetApiV2FundGetRoundPriceParamsChainIdN1001 GetApiV2FundGetRoundPriceParamsChainId = "1001"
-)
-
-// Defines values for GetApiV2FundUserPendingClaimParamsChainId.
-const (
-	GetApiV2FundUserPendingClaimParamsChainIdN1001 GetApiV2FundUserPendingClaimParamsChainId = "1001"
-)
-
-// Defines values for GetApiV2FundUserRedemptionInfoParamsChainId.
-const (
-	GetApiV2FundUserRedemptionInfoParamsChainIdN1001 GetApiV2FundUserRedemptionInfoParamsChainId = "1001"
-)
-
 // Defines values for GetApiV2PrimaryVaultCommonInfoParamsChainId.
 const (
-	GetApiV2PrimaryVaultCommonInfoParamsChainIdN1001 GetApiV2PrimaryVaultCommonInfoParamsChainId = "1001"
+	N1001 GetApiV2PrimaryVaultCommonInfoParamsChainId = "1001"
 )
-
-// BasechainOnChainFundVaultEpochStatus defines model for basechain.OnChainFundVaultEpochStatus.
-type BasechainOnChainFundVaultEpochStatus string
 
 // CommonApiResp API标准响应格式
 type CommonApiResp struct {
@@ -200,16 +164,6 @@ type EntityTokenHolder struct {
 	HolderAddress *string `json:"holder_address,omitempty"`
 }
 
-// RequestAddFundPriceReq defines model for request.AddFundPriceReq.
-type RequestAddFundPriceReq struct {
-	ChainId     CommonChainID `json:"chain_id"`
-	Price       string        `json:"price"`
-	PriceFeeder string        `json:"price_feeder"`
-
-	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
-}
-
 // RequestAddVaultDeployerWhiteListReq defines model for request.AddVaultDeployerWhiteListReq.
 type RequestAddVaultDeployerWhiteListReq struct {
 	ChainId CommonChainID `json:"chain_id"`
@@ -220,6 +174,19 @@ type RequestAddVaultDeployerWhiteListReq struct {
 	// OwnerAddress creation合约owner
 	OwnerAddress string  `json:"owner_address"`
 	VaultId      *string `json:"vault_id,omitempty"`
+}
+
+// RequestAddVaultInvestorWhiteListReq defines model for request.AddVaultInvestorWhiteListReq.
+type RequestAddVaultInvestorWhiteListReq struct {
+	ChainId CommonChainID `json:"chain_id"`
+
+	// InvestorAddress 被添加账户
+	InvestorAddress string `json:"investor_address"`
+
+	// ManagerAddress vault合约的管理员账户地址
+	ManagerAddress string  `json:"manager_address"`
+	VaultAddress   string  `json:"vault_address"`
+	VaultId        *string `json:"vault_id,omitempty"`
 }
 
 // RequestApprovePrepareReq defines model for request.ApprovePrepareReq.
@@ -268,42 +235,8 @@ type RequestBorrowerWithdrawReq struct {
 	Withdrawer string `json:"withdrawer"`
 }
 
-// RequestCancelFundRedeemReq defines model for request.CancelFundRedeemReq.
-type RequestCancelFundRedeemReq struct {
-	ChainId CommonChainID `json:"chain_id"`
-
-	// UserAddr 用户地址
-	UserAddr string `json:"user_addr"`
-
-	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
-}
-
 // RequestChainId defines model for request.ChainId.
 type RequestChainId string
-
-// RequestChangeFundEpochReq defines model for request.ChangeFundEpochReq.
-type RequestChangeFundEpochReq struct {
-	ChainId CommonChainID `json:"chain_id"`
-
-	// ManagerAddress 管理员地址
-	ManagerAddress string `json:"manager_address"`
-
-	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
-}
-
-// RequestClaimFundRedeemReq defines model for request.ClaimFundRedeemReq.
-type RequestClaimFundRedeemReq struct {
-	ChainId CommonChainID `json:"chain_id"`
-
-	// EpochId 链上赎回周期ID
-	EpochId string `json:"epoch_id"`
-
-	// UserAddr 用户地址
-	UserAddr     string `json:"user_addr"`
-	VaultAddress string `json:"vault_address"`
-}
 
 // RequestCreateAuthReq defines model for request.CreateAuthReq.
 type RequestCreateAuthReq struct {
@@ -414,23 +347,6 @@ type RequestFinancingRuleInfo struct {
 	Whitelist *[]string `json:"whitelist,omitempty"`
 }
 
-// RequestFinishFundEpochReq defines model for request.FinishFundEpochReq.
-type RequestFinishFundEpochReq struct {
-	// AssetAmount 金额
-	AssetAmount string        `json:"asset_amount"`
-	ChainId     CommonChainID `json:"chain_id"`
-	EpochId     string        `json:"epoch_id"`
-
-	// SettlerAddress 结算人地址
-	SettlerAddress string `json:"settler_address"`
-
-	// Signature drds签名
-	Signature string `json:"signature"`
-
-	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
-}
-
 // RequestFundExtraData defines model for request.FundExtraData.
 type RequestFundExtraData struct {
 	// MinRedemptionAmount 代币最小赎回数量
@@ -438,44 +354,6 @@ type RequestFundExtraData struct {
 
 	// StartTime 代币锁定的开始时间
 	StartTime *int `json:"start_time,omitempty"`
-}
-
-// RequestFundRedeemReq defines model for request.FundRedeemReq.
-type RequestFundRedeemReq struct {
-	ChainId         CommonChainID `json:"chain_id"`
-	FundTokenAmount string        `json:"fund_token_amount"`
-
-	// UserAddr 用户地址
-	UserAddr string `json:"user_addr"`
-
-	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
-}
-
-// RequestFundVaultApproveFinishEpochReq defines model for request.FundVaultApproveFinishEpochReq.
-type RequestFundVaultApproveFinishEpochReq struct {
-	// AssetAmount 金额
-	AssetAmount string        `json:"asset_amount"`
-	ChainId     CommonChainID `json:"chain_id"`
-
-	// SettlerAddress 结算人地址
-	SettlerAddress string `json:"settler_address"`
-
-	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
-}
-
-// RequestFundVaultApproveRedeemReq defines model for request.FundVaultApproveRedeemReq.
-type RequestFundVaultApproveRedeemReq struct {
-	// Amount share份额(以vault share货币计价) uint64
-	Amount  string        `json:"amount"`
-	ChainId CommonChainID `json:"chain_id"`
-
-	// Investor 投资者地址
-	Investor string `json:"investor"`
-
-	// VaultAddress vault地址
-	VaultAddress string `json:"vault_address"`
 }
 
 // RequestFundingOverviewReq defines model for request.FundingOverviewReq.
@@ -1029,44 +907,6 @@ type ResponseFoundingOverviewResp struct {
 	VaultType         *string `json:"vault_type,omitempty"`
 }
 
-// ResponseFundCurrentEpochIdResp defines model for response.FundCurrentEpochIdResp.
-type ResponseFundCurrentEpochIdResp struct {
-	CurrentEpochId *string `json:"current_epoch_id,omitempty"`
-}
-
-// ResponseFundEpochDataResp defines model for response.FundEpochDataResp.
-type ResponseFundEpochDataResp struct {
-	EpochStatus           *BasechainOnChainFundVaultEpochStatus `json:"epoch_status,omitempty"`
-	TotalClaimedAssets    *string                               `json:"total_claimed_assets,omitempty"`
-	TotalRedemptionAssets *string                               `json:"total_redemption_assets,omitempty"`
-	TotalShares           *string                               `json:"total_shares,omitempty"`
-}
-
-// ResponseFundUserPendingClaimResp defines model for response.FundUserPendingClaimResp.
-type ResponseFundUserPendingClaimResp struct {
-	// AssetAmount U的数量
-	AssetAmount *string `json:"asset_amount,omitempty"`
-}
-
-// ResponseFundUserRedemptionInfoResp defines model for response.FundUserRedemptionInfoResp.
-type ResponseFundUserRedemptionInfoResp struct {
-	ClaimAssets          *string `json:"claim_assets,omitempty"`
-	ClaimShares          *string `json:"claim_shares,omitempty"`
-	LastClaimTimeStamp   *int    `json:"last_claim_time_stamp,omitempty"`
-	LastRequestTimeStamp *int    `json:"last_request_time_stamp,omitempty"`
-	RequestShares        *string `json:"request_shares,omitempty"`
-}
-
-// ResponseFundVaultRoundPriceInfoResp defines model for response.FundVaultRoundPriceInfoResp.
-type ResponseFundVaultRoundPriceInfoResp struct {
-	Decimals *int    `json:"decimals,omitempty"`
-	Price    *string `json:"price,omitempty"`
-	RoundId  *string `json:"round_id,omitempty"`
-
-	// Ts 秒级时间戳
-	Ts *int `json:"ts,omitempty"`
-}
-
 // ResponseGetHolderInfoResp defines model for response.GetHolderInfoResp.
 type ResponseGetHolderInfoResp struct {
 	Holders *[]ResponseHolderInfo `json:"holders,omitempty"`
@@ -1392,82 +1232,6 @@ type GetApiV2DividendGetOldParams struct {
 // GetApiV2DividendGetOldParamsChainId defines parameters for GetApiV2DividendGetOld.
 type GetApiV2DividendGetOldParamsChainId string
 
-// GetApiV2FundCurrentEpochIdParams defines parameters for GetApiV2FundCurrentEpochId.
-type GetApiV2FundCurrentEpochIdParams struct {
-	// ChainId 链ID
-	ChainId GetApiV2FundCurrentEpochIdParamsChainId `form:"chain_id" json:"chain_id"`
-
-	// Vault Vault
-	Vault string `form:"vault" json:"vault"`
-}
-
-// GetApiV2FundCurrentEpochIdParamsChainId defines parameters for GetApiV2FundCurrentEpochId.
-type GetApiV2FundCurrentEpochIdParamsChainId string
-
-// GetApiV2FundEpochDataParams defines parameters for GetApiV2FundEpochData.
-type GetApiV2FundEpochDataParams struct {
-	// ChainId 链ID
-	ChainId GetApiV2FundEpochDataParamsChainId `form:"chain_id" json:"chain_id"`
-
-	// EpochId 链上赎回周期ID
-	EpochId string `form:"epoch_id" json:"epoch_id"`
-
-	// Vault Vault
-	Vault string `form:"vault" json:"vault"`
-}
-
-// GetApiV2FundEpochDataParamsChainId defines parameters for GetApiV2FundEpochData.
-type GetApiV2FundEpochDataParamsChainId string
-
-// GetApiV2FundGetRoundPriceParams defines parameters for GetApiV2FundGetRoundPrice.
-type GetApiV2FundGetRoundPriceParams struct {
-	// ChainId 链ID
-	ChainId GetApiV2FundGetRoundPriceParamsChainId `form:"chain_id" json:"chain_id"`
-	RoundId *string                                `form:"round_id,omitempty" json:"round_id,omitempty"`
-
-	// VaultAddress vault地址
-	VaultAddress string `form:"vault_address" json:"vault_address"`
-}
-
-// GetApiV2FundGetRoundPriceParamsChainId defines parameters for GetApiV2FundGetRoundPrice.
-type GetApiV2FundGetRoundPriceParamsChainId string
-
-// GetApiV2FundUserPendingClaimParams defines parameters for GetApiV2FundUserPendingClaim.
-type GetApiV2FundUserPendingClaimParams struct {
-	// ChainId 链ID
-	ChainId GetApiV2FundUserPendingClaimParamsChainId `form:"chain_id" json:"chain_id"`
-
-	// EpochId 链上赎回周期ID
-	EpochId string `form:"epoch_id" json:"epoch_id"`
-
-	// UserAddr 用户地址
-	UserAddr string `form:"user_addr" json:"user_addr"`
-
-	// Vault Vault
-	Vault string `form:"vault" json:"vault"`
-}
-
-// GetApiV2FundUserPendingClaimParamsChainId defines parameters for GetApiV2FundUserPendingClaim.
-type GetApiV2FundUserPendingClaimParamsChainId string
-
-// GetApiV2FundUserRedemptionInfoParams defines parameters for GetApiV2FundUserRedemptionInfo.
-type GetApiV2FundUserRedemptionInfoParams struct {
-	// ChainId 链ID
-	ChainId GetApiV2FundUserRedemptionInfoParamsChainId `form:"chain_id" json:"chain_id"`
-
-	// EpochId 链上赎回周期ID
-	EpochId string `form:"epoch_id" json:"epoch_id"`
-
-	// UserAddr 用户地址
-	UserAddr string `form:"user_addr" json:"user_addr"`
-
-	// Vault Vault
-	Vault string `form:"vault" json:"vault"`
-}
-
-// GetApiV2FundUserRedemptionInfoParamsChainId defines parameters for GetApiV2FundUserRedemptionInfo.
-type GetApiV2FundUserRedemptionInfoParamsChainId string
-
 // GetApiV2PrimaryVaultCommonInfoParams defines parameters for GetApiV2PrimaryVaultCommonInfo.
 type GetApiV2PrimaryVaultCommonInfoParams struct {
 	ChainId  GetApiV2PrimaryVaultCommonInfoParamsChainId `form:"chain_id" json:"chain_id"`
@@ -1554,30 +1318,6 @@ type PostApiV2BalanceGetJSONRequestBody = RequestBalanceQueryReq
 // PostApiV2DeploySubmitJSONRequestBody defines body for PostApiV2DeploySubmit for application/json ContentType.
 type PostApiV2DeploySubmitJSONRequestBody = RequestDeploySubmitReq
 
-// PostApiV2FundPrepareAddFundPriceJSONRequestBody defines body for PostApiV2FundPrepareAddFundPrice for application/json ContentType.
-type PostApiV2FundPrepareAddFundPriceJSONRequestBody = RequestAddFundPriceReq
-
-// PostApiV2FundPrepareCancelRedeemJSONRequestBody defines body for PostApiV2FundPrepareCancelRedeem for application/json ContentType.
-type PostApiV2FundPrepareCancelRedeemJSONRequestBody = RequestCancelFundRedeemReq
-
-// PostApiV2FundPrepareChangeEpochJSONRequestBody defines body for PostApiV2FundPrepareChangeEpoch for application/json ContentType.
-type PostApiV2FundPrepareChangeEpochJSONRequestBody = RequestChangeFundEpochReq
-
-// PostApiV2FundPrepareClaimRedemptionJSONRequestBody defines body for PostApiV2FundPrepareClaimRedemption for application/json ContentType.
-type PostApiV2FundPrepareClaimRedemptionJSONRequestBody = RequestClaimFundRedeemReq
-
-// PostApiV2FundPrepareFinishEpochJSONRequestBody defines body for PostApiV2FundPrepareFinishEpoch for application/json ContentType.
-type PostApiV2FundPrepareFinishEpochJSONRequestBody = RequestFinishFundEpochReq
-
-// PostApiV2FundPrepareFundFinishEpochApproveJSONRequestBody defines body for PostApiV2FundPrepareFundFinishEpochApprove for application/json ContentType.
-type PostApiV2FundPrepareFundFinishEpochApproveJSONRequestBody = RequestFundVaultApproveFinishEpochReq
-
-// PostApiV2FundPrepareFundRedeemJSONRequestBody defines body for PostApiV2FundPrepareFundRedeem for application/json ContentType.
-type PostApiV2FundPrepareFundRedeemJSONRequestBody = RequestFundRedeemReq
-
-// PostApiV2FundPrepareFundRedeemApproveJSONRequestBody defines body for PostApiV2FundPrepareFundRedeemApprove for application/json ContentType.
-type PostApiV2FundPrepareFundRedeemApproveJSONRequestBody = RequestFundVaultApproveRedeemReq
-
 // GetApiV2PrimaryVaultFundingOverviewJSONRequestBody defines body for GetApiV2PrimaryVaultFundingOverview for application/json ContentType.
 type GetApiV2PrimaryVaultFundingOverviewJSONRequestBody = RequestFundingOverviewReq
 
@@ -1589,6 +1329,9 @@ type PostApiV2PrimaryVaultPrePrepareRedeemJSONRequestBody = RequestVaultRedeemRe
 
 // PostApiV2PrimaryVaultPrepareAddDeployerJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareAddDeployer for application/json ContentType.
 type PostApiV2PrimaryVaultPrepareAddDeployerJSONRequestBody = RequestAddVaultDeployerWhiteListReq
+
+// PostApiV2PrimaryVaultPrepareAddInvestorJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareAddInvestor for application/json ContentType.
+type PostApiV2PrimaryVaultPrepareAddInvestorJSONRequestBody = RequestAddVaultInvestorWhiteListReq
 
 // PostApiV2PrimaryVaultPrepareClaimRewardJSONRequestBody defines body for PostApiV2PrimaryVaultPrepareClaimReward for application/json ContentType.
 type PostApiV2PrimaryVaultPrepareClaimRewardJSONRequestBody = RequestVaultClaimRewardReq
@@ -1815,61 +1558,6 @@ type ClientInterface interface {
 	// GetApiV2DividendGetOld request
 	GetApiV2DividendGetOld(ctx context.Context, params *GetApiV2DividendGetOldParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetApiV2FundCurrentEpochId request
-	GetApiV2FundCurrentEpochId(ctx context.Context, params *GetApiV2FundCurrentEpochIdParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetApiV2FundEpochData request
-	GetApiV2FundEpochData(ctx context.Context, params *GetApiV2FundEpochDataParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetApiV2FundGetRoundPrice request
-	GetApiV2FundGetRoundPrice(ctx context.Context, params *GetApiV2FundGetRoundPriceParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostApiV2FundPrepareAddFundPriceWithBody request with any body
-	PostApiV2FundPrepareAddFundPriceWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostApiV2FundPrepareAddFundPrice(ctx context.Context, body PostApiV2FundPrepareAddFundPriceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostApiV2FundPrepareCancelRedeemWithBody request with any body
-	PostApiV2FundPrepareCancelRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostApiV2FundPrepareCancelRedeem(ctx context.Context, body PostApiV2FundPrepareCancelRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostApiV2FundPrepareChangeEpochWithBody request with any body
-	PostApiV2FundPrepareChangeEpochWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostApiV2FundPrepareChangeEpoch(ctx context.Context, body PostApiV2FundPrepareChangeEpochJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostApiV2FundPrepareClaimRedemptionWithBody request with any body
-	PostApiV2FundPrepareClaimRedemptionWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostApiV2FundPrepareClaimRedemption(ctx context.Context, body PostApiV2FundPrepareClaimRedemptionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostApiV2FundPrepareFinishEpochWithBody request with any body
-	PostApiV2FundPrepareFinishEpochWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostApiV2FundPrepareFinishEpoch(ctx context.Context, body PostApiV2FundPrepareFinishEpochJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostApiV2FundPrepareFundFinishEpochApproveWithBody request with any body
-	PostApiV2FundPrepareFundFinishEpochApproveWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostApiV2FundPrepareFundFinishEpochApprove(ctx context.Context, body PostApiV2FundPrepareFundFinishEpochApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostApiV2FundPrepareFundRedeemWithBody request with any body
-	PostApiV2FundPrepareFundRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostApiV2FundPrepareFundRedeem(ctx context.Context, body PostApiV2FundPrepareFundRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// PostApiV2FundPrepareFundRedeemApproveWithBody request with any body
-	PostApiV2FundPrepareFundRedeemApproveWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	PostApiV2FundPrepareFundRedeemApprove(ctx context.Context, body PostApiV2FundPrepareFundRedeemApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetApiV2FundUserPendingClaim request
-	GetApiV2FundUserPendingClaim(ctx context.Context, params *GetApiV2FundUserPendingClaimParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetApiV2FundUserRedemptionInfo request
-	GetApiV2FundUserRedemptionInfo(ctx context.Context, params *GetApiV2FundUserRedemptionInfoParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// GetApiV2PrimaryVaultCommonInfo request
 	GetApiV2PrimaryVaultCommonInfo(ctx context.Context, params *GetApiV2PrimaryVaultCommonInfoParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1892,6 +1580,11 @@ type ClientInterface interface {
 	PostApiV2PrimaryVaultPrepareAddDeployerWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	PostApiV2PrimaryVaultPrepareAddDeployer(ctx context.Context, body PostApiV2PrimaryVaultPrepareAddDeployerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PostApiV2PrimaryVaultPrepareAddInvestorWithBody request with any body
+	PostApiV2PrimaryVaultPrepareAddInvestorWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	PostApiV2PrimaryVaultPrepareAddInvestor(ctx context.Context, body PostApiV2PrimaryVaultPrepareAddInvestorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PostApiV2PrimaryVaultPrepareClaimRewardWithBody request with any body
 	PostApiV2PrimaryVaultPrepareClaimRewardWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -2409,258 +2102,6 @@ func (c *Client) GetApiV2DividendGetOld(ctx context.Context, params *GetApiV2Div
 	return c.Client.Do(req)
 }
 
-func (c *Client) GetApiV2FundCurrentEpochId(ctx context.Context, params *GetApiV2FundCurrentEpochIdParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiV2FundCurrentEpochIdRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetApiV2FundEpochData(ctx context.Context, params *GetApiV2FundEpochDataParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiV2FundEpochDataRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetApiV2FundGetRoundPrice(ctx context.Context, params *GetApiV2FundGetRoundPriceParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiV2FundGetRoundPriceRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2FundPrepareAddFundPriceWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2FundPrepareAddFundPriceRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2FundPrepareAddFundPrice(ctx context.Context, body PostApiV2FundPrepareAddFundPriceJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2FundPrepareAddFundPriceRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2FundPrepareCancelRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2FundPrepareCancelRedeemRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2FundPrepareCancelRedeem(ctx context.Context, body PostApiV2FundPrepareCancelRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2FundPrepareCancelRedeemRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2FundPrepareChangeEpochWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2FundPrepareChangeEpochRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2FundPrepareChangeEpoch(ctx context.Context, body PostApiV2FundPrepareChangeEpochJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2FundPrepareChangeEpochRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2FundPrepareClaimRedemptionWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2FundPrepareClaimRedemptionRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2FundPrepareClaimRedemption(ctx context.Context, body PostApiV2FundPrepareClaimRedemptionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2FundPrepareClaimRedemptionRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2FundPrepareFinishEpochWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2FundPrepareFinishEpochRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2FundPrepareFinishEpoch(ctx context.Context, body PostApiV2FundPrepareFinishEpochJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2FundPrepareFinishEpochRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2FundPrepareFundFinishEpochApproveWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2FundPrepareFundFinishEpochApproveRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2FundPrepareFundFinishEpochApprove(ctx context.Context, body PostApiV2FundPrepareFundFinishEpochApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2FundPrepareFundFinishEpochApproveRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2FundPrepareFundRedeemWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2FundPrepareFundRedeemRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2FundPrepareFundRedeem(ctx context.Context, body PostApiV2FundPrepareFundRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2FundPrepareFundRedeemRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2FundPrepareFundRedeemApproveWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2FundPrepareFundRedeemApproveRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) PostApiV2FundPrepareFundRedeemApprove(ctx context.Context, body PostApiV2FundPrepareFundRedeemApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewPostApiV2FundPrepareFundRedeemApproveRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetApiV2FundUserPendingClaim(ctx context.Context, params *GetApiV2FundUserPendingClaimParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiV2FundUserPendingClaimRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GetApiV2FundUserRedemptionInfo(ctx context.Context, params *GetApiV2FundUserRedemptionInfoParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetApiV2FundUserRedemptionInfoRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 func (c *Client) GetApiV2PrimaryVaultCommonInfo(ctx context.Context, params *GetApiV2PrimaryVaultCommonInfoParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetApiV2PrimaryVaultCommonInfoRequest(c.Server, params)
 	if err != nil {
@@ -2759,6 +2200,30 @@ func (c *Client) PostApiV2PrimaryVaultPrepareAddDeployerWithBody(ctx context.Con
 
 func (c *Client) PostApiV2PrimaryVaultPrepareAddDeployer(ctx context.Context, body PostApiV2PrimaryVaultPrepareAddDeployerJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPostApiV2PrimaryVaultPrepareAddDeployerRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2PrimaryVaultPrepareAddInvestorWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareAddInvestorRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+func (c *Client) PostApiV2PrimaryVaultPrepareAddInvestor(ctx context.Context, body PostApiV2PrimaryVaultPrepareAddInvestorJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPostApiV2PrimaryVaultPrepareAddInvestorRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -4452,687 +3917,6 @@ func NewGetApiV2DividendGetOldRequest(server string, params *GetApiV2DividendGet
 	return req, nil
 }
 
-// NewGetApiV2FundCurrentEpochIdRequest generates requests for GetApiV2FundCurrentEpochId
-func NewGetApiV2FundCurrentEpochIdRequest(server string, params *GetApiV2FundCurrentEpochIdParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/fund/current_epoch_id")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "chain_id", runtime.ParamLocationQuery, params.ChainId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "vault", runtime.ParamLocationQuery, params.Vault); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetApiV2FundEpochDataRequest generates requests for GetApiV2FundEpochData
-func NewGetApiV2FundEpochDataRequest(server string, params *GetApiV2FundEpochDataParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/fund/epoch_data")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "chain_id", runtime.ParamLocationQuery, params.ChainId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "epoch_id", runtime.ParamLocationQuery, params.EpochId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "vault", runtime.ParamLocationQuery, params.Vault); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetApiV2FundGetRoundPriceRequest generates requests for GetApiV2FundGetRoundPrice
-func NewGetApiV2FundGetRoundPriceRequest(server string, params *GetApiV2FundGetRoundPriceParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/fund/get_round_price")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "chain_id", runtime.ParamLocationQuery, params.ChainId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		if params.RoundId != nil {
-
-			if queryFrag, err := runtime.StyleParamWithLocation("form", true, "round_id", runtime.ParamLocationQuery, *params.RoundId); err != nil {
-				return nil, err
-			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-				return nil, err
-			} else {
-				for k, v := range parsed {
-					for _, v2 := range v {
-						queryValues.Add(k, v2)
-					}
-				}
-			}
-
-		}
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "vault_address", runtime.ParamLocationQuery, params.VaultAddress); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewPostApiV2FundPrepareAddFundPriceRequest calls the generic PostApiV2FundPrepareAddFundPrice builder with application/json body
-func NewPostApiV2FundPrepareAddFundPriceRequest(server string, body PostApiV2FundPrepareAddFundPriceJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostApiV2FundPrepareAddFundPriceRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostApiV2FundPrepareAddFundPriceRequestWithBody generates requests for PostApiV2FundPrepareAddFundPrice with any type of body
-func NewPostApiV2FundPrepareAddFundPriceRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/fund/prepare_add_fund_price")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewPostApiV2FundPrepareCancelRedeemRequest calls the generic PostApiV2FundPrepareCancelRedeem builder with application/json body
-func NewPostApiV2FundPrepareCancelRedeemRequest(server string, body PostApiV2FundPrepareCancelRedeemJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostApiV2FundPrepareCancelRedeemRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostApiV2FundPrepareCancelRedeemRequestWithBody generates requests for PostApiV2FundPrepareCancelRedeem with any type of body
-func NewPostApiV2FundPrepareCancelRedeemRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/fund/prepare_cancel_redeem")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewPostApiV2FundPrepareChangeEpochRequest calls the generic PostApiV2FundPrepareChangeEpoch builder with application/json body
-func NewPostApiV2FundPrepareChangeEpochRequest(server string, body PostApiV2FundPrepareChangeEpochJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostApiV2FundPrepareChangeEpochRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostApiV2FundPrepareChangeEpochRequestWithBody generates requests for PostApiV2FundPrepareChangeEpoch with any type of body
-func NewPostApiV2FundPrepareChangeEpochRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/fund/prepare_change_epoch")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewPostApiV2FundPrepareClaimRedemptionRequest calls the generic PostApiV2FundPrepareClaimRedemption builder with application/json body
-func NewPostApiV2FundPrepareClaimRedemptionRequest(server string, body PostApiV2FundPrepareClaimRedemptionJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostApiV2FundPrepareClaimRedemptionRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostApiV2FundPrepareClaimRedemptionRequestWithBody generates requests for PostApiV2FundPrepareClaimRedemption with any type of body
-func NewPostApiV2FundPrepareClaimRedemptionRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/fund/prepare_claim_redemption")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewPostApiV2FundPrepareFinishEpochRequest calls the generic PostApiV2FundPrepareFinishEpoch builder with application/json body
-func NewPostApiV2FundPrepareFinishEpochRequest(server string, body PostApiV2FundPrepareFinishEpochJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostApiV2FundPrepareFinishEpochRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostApiV2FundPrepareFinishEpochRequestWithBody generates requests for PostApiV2FundPrepareFinishEpoch with any type of body
-func NewPostApiV2FundPrepareFinishEpochRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/fund/prepare_finish_epoch")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewPostApiV2FundPrepareFundFinishEpochApproveRequest calls the generic PostApiV2FundPrepareFundFinishEpochApprove builder with application/json body
-func NewPostApiV2FundPrepareFundFinishEpochApproveRequest(server string, body PostApiV2FundPrepareFundFinishEpochApproveJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostApiV2FundPrepareFundFinishEpochApproveRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostApiV2FundPrepareFundFinishEpochApproveRequestWithBody generates requests for PostApiV2FundPrepareFundFinishEpochApprove with any type of body
-func NewPostApiV2FundPrepareFundFinishEpochApproveRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/fund/prepare_fund_finish_epoch_approve")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewPostApiV2FundPrepareFundRedeemRequest calls the generic PostApiV2FundPrepareFundRedeem builder with application/json body
-func NewPostApiV2FundPrepareFundRedeemRequest(server string, body PostApiV2FundPrepareFundRedeemJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostApiV2FundPrepareFundRedeemRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostApiV2FundPrepareFundRedeemRequestWithBody generates requests for PostApiV2FundPrepareFundRedeem with any type of body
-func NewPostApiV2FundPrepareFundRedeemRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/fund/prepare_fund_redeem")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewPostApiV2FundPrepareFundRedeemApproveRequest calls the generic PostApiV2FundPrepareFundRedeemApprove builder with application/json body
-func NewPostApiV2FundPrepareFundRedeemApproveRequest(server string, body PostApiV2FundPrepareFundRedeemApproveJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewPostApiV2FundPrepareFundRedeemApproveRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewPostApiV2FundPrepareFundRedeemApproveRequestWithBody generates requests for PostApiV2FundPrepareFundRedeemApprove with any type of body
-func NewPostApiV2FundPrepareFundRedeemApproveRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/fund/prepare_fund_redeem_approve")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("POST", queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewGetApiV2FundUserPendingClaimRequest generates requests for GetApiV2FundUserPendingClaim
-func NewGetApiV2FundUserPendingClaimRequest(server string, params *GetApiV2FundUserPendingClaimParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/fund/user_pending_claim")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "chain_id", runtime.ParamLocationQuery, params.ChainId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "epoch_id", runtime.ParamLocationQuery, params.EpochId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "user_addr", runtime.ParamLocationQuery, params.UserAddr); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "vault", runtime.ParamLocationQuery, params.Vault); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetApiV2FundUserRedemptionInfoRequest generates requests for GetApiV2FundUserRedemptionInfo
-func NewGetApiV2FundUserRedemptionInfoRequest(server string, params *GetApiV2FundUserRedemptionInfoParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v2/fund/user_redemption_info")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if params != nil {
-		queryValues := queryURL.Query()
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "chain_id", runtime.ParamLocationQuery, params.ChainId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "epoch_id", runtime.ParamLocationQuery, params.EpochId); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "user_addr", runtime.ParamLocationQuery, params.UserAddr); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "vault", runtime.ParamLocationQuery, params.Vault); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-		queryURL.RawQuery = queryValues.Encode()
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewGetApiV2PrimaryVaultCommonInfoRequest generates requests for GetApiV2PrimaryVaultCommonInfo
 func NewGetApiV2PrimaryVaultCommonInfoRequest(server string, params *GetApiV2PrimaryVaultCommonInfoParams) (*http.Request, error) {
 	var err error
@@ -5363,6 +4147,46 @@ func NewPostApiV2PrimaryVaultPrepareAddDeployerRequestWithBody(server string, co
 	}
 
 	operationPath := fmt.Sprintf("/api/v2/primary/vault/prepare_add_deployer")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPostApiV2PrimaryVaultPrepareAddInvestorRequest calls the generic PostApiV2PrimaryVaultPrepareAddInvestor builder with application/json body
+func NewPostApiV2PrimaryVaultPrepareAddInvestorRequest(server string, body PostApiV2PrimaryVaultPrepareAddInvestorJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPostApiV2PrimaryVaultPrepareAddInvestorRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPostApiV2PrimaryVaultPrepareAddInvestorRequestWithBody generates requests for PostApiV2PrimaryVaultPrepareAddInvestor with any type of body
+func NewPostApiV2PrimaryVaultPrepareAddInvestorRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v2/primary/vault/prepare_add_investor")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -6630,61 +5454,6 @@ type ClientWithResponsesInterface interface {
 	// GetApiV2DividendGetOldWithResponse request
 	GetApiV2DividendGetOldWithResponse(ctx context.Context, params *GetApiV2DividendGetOldParams, reqEditors ...RequestEditorFn) (*GetApiV2DividendGetOldResponse, error)
 
-	// GetApiV2FundCurrentEpochIdWithResponse request
-	GetApiV2FundCurrentEpochIdWithResponse(ctx context.Context, params *GetApiV2FundCurrentEpochIdParams, reqEditors ...RequestEditorFn) (*GetApiV2FundCurrentEpochIdResponse, error)
-
-	// GetApiV2FundEpochDataWithResponse request
-	GetApiV2FundEpochDataWithResponse(ctx context.Context, params *GetApiV2FundEpochDataParams, reqEditors ...RequestEditorFn) (*GetApiV2FundEpochDataResponse, error)
-
-	// GetApiV2FundGetRoundPriceWithResponse request
-	GetApiV2FundGetRoundPriceWithResponse(ctx context.Context, params *GetApiV2FundGetRoundPriceParams, reqEditors ...RequestEditorFn) (*GetApiV2FundGetRoundPriceResponse, error)
-
-	// PostApiV2FundPrepareAddFundPriceWithBodyWithResponse request with any body
-	PostApiV2FundPrepareAddFundPriceWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareAddFundPriceResponse, error)
-
-	PostApiV2FundPrepareAddFundPriceWithResponse(ctx context.Context, body PostApiV2FundPrepareAddFundPriceJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareAddFundPriceResponse, error)
-
-	// PostApiV2FundPrepareCancelRedeemWithBodyWithResponse request with any body
-	PostApiV2FundPrepareCancelRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareCancelRedeemResponse, error)
-
-	PostApiV2FundPrepareCancelRedeemWithResponse(ctx context.Context, body PostApiV2FundPrepareCancelRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareCancelRedeemResponse, error)
-
-	// PostApiV2FundPrepareChangeEpochWithBodyWithResponse request with any body
-	PostApiV2FundPrepareChangeEpochWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareChangeEpochResponse, error)
-
-	PostApiV2FundPrepareChangeEpochWithResponse(ctx context.Context, body PostApiV2FundPrepareChangeEpochJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareChangeEpochResponse, error)
-
-	// PostApiV2FundPrepareClaimRedemptionWithBodyWithResponse request with any body
-	PostApiV2FundPrepareClaimRedemptionWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareClaimRedemptionResponse, error)
-
-	PostApiV2FundPrepareClaimRedemptionWithResponse(ctx context.Context, body PostApiV2FundPrepareClaimRedemptionJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareClaimRedemptionResponse, error)
-
-	// PostApiV2FundPrepareFinishEpochWithBodyWithResponse request with any body
-	PostApiV2FundPrepareFinishEpochWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFinishEpochResponse, error)
-
-	PostApiV2FundPrepareFinishEpochWithResponse(ctx context.Context, body PostApiV2FundPrepareFinishEpochJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFinishEpochResponse, error)
-
-	// PostApiV2FundPrepareFundFinishEpochApproveWithBodyWithResponse request with any body
-	PostApiV2FundPrepareFundFinishEpochApproveWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundFinishEpochApproveResponse, error)
-
-	PostApiV2FundPrepareFundFinishEpochApproveWithResponse(ctx context.Context, body PostApiV2FundPrepareFundFinishEpochApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundFinishEpochApproveResponse, error)
-
-	// PostApiV2FundPrepareFundRedeemWithBodyWithResponse request with any body
-	PostApiV2FundPrepareFundRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundRedeemResponse, error)
-
-	PostApiV2FundPrepareFundRedeemWithResponse(ctx context.Context, body PostApiV2FundPrepareFundRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundRedeemResponse, error)
-
-	// PostApiV2FundPrepareFundRedeemApproveWithBodyWithResponse request with any body
-	PostApiV2FundPrepareFundRedeemApproveWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundRedeemApproveResponse, error)
-
-	PostApiV2FundPrepareFundRedeemApproveWithResponse(ctx context.Context, body PostApiV2FundPrepareFundRedeemApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundRedeemApproveResponse, error)
-
-	// GetApiV2FundUserPendingClaimWithResponse request
-	GetApiV2FundUserPendingClaimWithResponse(ctx context.Context, params *GetApiV2FundUserPendingClaimParams, reqEditors ...RequestEditorFn) (*GetApiV2FundUserPendingClaimResponse, error)
-
-	// GetApiV2FundUserRedemptionInfoWithResponse request
-	GetApiV2FundUserRedemptionInfoWithResponse(ctx context.Context, params *GetApiV2FundUserRedemptionInfoParams, reqEditors ...RequestEditorFn) (*GetApiV2FundUserRedemptionInfoResponse, error)
-
 	// GetApiV2PrimaryVaultCommonInfoWithResponse request
 	GetApiV2PrimaryVaultCommonInfoWithResponse(ctx context.Context, params *GetApiV2PrimaryVaultCommonInfoParams, reqEditors ...RequestEditorFn) (*GetApiV2PrimaryVaultCommonInfoResponse, error)
 
@@ -6707,6 +5476,11 @@ type ClientWithResponsesInterface interface {
 	PostApiV2PrimaryVaultPrepareAddDeployerWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareAddDeployerResponse, error)
 
 	PostApiV2PrimaryVaultPrepareAddDeployerWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareAddDeployerJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareAddDeployerResponse, error)
+
+	// PostApiV2PrimaryVaultPrepareAddInvestorWithBodyWithResponse request with any body
+	PostApiV2PrimaryVaultPrepareAddInvestorWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareAddInvestorResponse, error)
+
+	PostApiV2PrimaryVaultPrepareAddInvestorWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareAddInvestorJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareAddInvestorResponse, error)
 
 	// PostApiV2PrimaryVaultPrepareClaimRewardWithBodyWithResponse request with any body
 	PostApiV2PrimaryVaultPrepareClaimRewardWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareClaimRewardResponse, error)
@@ -7448,409 +6222,6 @@ func (r GetApiV2DividendGetOldResponse) StatusCode() int {
 	return 0
 }
 
-type GetApiV2FundCurrentEpochIdResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                            `json:"code,omitempty"`
-		Data *ResponseFundCurrentEpochIdResp `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r GetApiV2FundCurrentEpochIdResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetApiV2FundCurrentEpochIdResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetApiV2FundEpochDataResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                       `json:"code,omitempty"`
-		Data *ResponseFundEpochDataResp `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r GetApiV2FundEpochDataResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetApiV2FundEpochDataResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetApiV2FundGetRoundPriceResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                                 `json:"code,omitempty"`
-		Data *ResponseFundVaultRoundPriceInfoResp `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r GetApiV2FundGetRoundPriceResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetApiV2FundGetRoundPriceResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostApiV2FundPrepareAddFundPriceResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                     `json:"code,omitempty"`
-		Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r PostApiV2FundPrepareAddFundPriceResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostApiV2FundPrepareAddFundPriceResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostApiV2FundPrepareCancelRedeemResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                     `json:"code,omitempty"`
-		Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r PostApiV2FundPrepareCancelRedeemResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostApiV2FundPrepareCancelRedeemResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostApiV2FundPrepareChangeEpochResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                     `json:"code,omitempty"`
-		Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r PostApiV2FundPrepareChangeEpochResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostApiV2FundPrepareChangeEpochResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostApiV2FundPrepareClaimRedemptionResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                     `json:"code,omitempty"`
-		Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r PostApiV2FundPrepareClaimRedemptionResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostApiV2FundPrepareClaimRedemptionResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostApiV2FundPrepareFinishEpochResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                     `json:"code,omitempty"`
-		Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r PostApiV2FundPrepareFinishEpochResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostApiV2FundPrepareFinishEpochResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostApiV2FundPrepareFundFinishEpochApproveResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                     `json:"code,omitempty"`
-		Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r PostApiV2FundPrepareFundFinishEpochApproveResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostApiV2FundPrepareFundFinishEpochApproveResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostApiV2FundPrepareFundRedeemResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                     `json:"code,omitempty"`
-		Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r PostApiV2FundPrepareFundRedeemResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostApiV2FundPrepareFundRedeemResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type PostApiV2FundPrepareFundRedeemApproveResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                     `json:"code,omitempty"`
-		Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r PostApiV2FundPrepareFundRedeemApproveResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r PostApiV2FundPrepareFundRedeemApproveResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetApiV2FundUserPendingClaimResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                              `json:"code,omitempty"`
-		Data *ResponseFundUserPendingClaimResp `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r GetApiV2FundUserPendingClaimResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetApiV2FundUserPendingClaimResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GetApiV2FundUserRedemptionInfoResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *struct {
-		// Code Code is the response code
-		// @Description 响应状态码
-		Code *int                                `json:"code,omitempty"`
-		Data *ResponseFundUserRedemptionInfoResp `json:"data,omitempty"`
-
-		// Message Message is the response message
-		// @Description 响应消息
-		Message *string `json:"message,omitempty"`
-	}
-}
-
-// Status returns HTTPResponse.Status
-func (r GetApiV2FundUserRedemptionInfoResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetApiV2FundUserRedemptionInfoResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
 type GetApiV2PrimaryVaultCommonInfoResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -8000,6 +6371,37 @@ func (r PostApiV2PrimaryVaultPrepareAddDeployerResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r PostApiV2PrimaryVaultPrepareAddDeployerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+type PostApiV2PrimaryVaultPrepareAddInvestorResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *struct {
+		// Code Code is the response code
+		// @Description 响应状态码
+		Code *int                     `json:"code,omitempty"`
+		Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+		// Message Message is the response message
+		// @Description 响应消息
+		Message *string `json:"message,omitempty"`
+	}
+}
+
+// Status returns HTTPResponse.Status
+func (r PostApiV2PrimaryVaultPrepareAddInvestorResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PostApiV2PrimaryVaultPrepareAddInvestorResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -9065,187 +7467,6 @@ func (c *ClientWithResponses) GetApiV2DividendGetOldWithResponse(ctx context.Con
 	return ParseGetApiV2DividendGetOldResponse(rsp)
 }
 
-// GetApiV2FundCurrentEpochIdWithResponse request returning *GetApiV2FundCurrentEpochIdResponse
-func (c *ClientWithResponses) GetApiV2FundCurrentEpochIdWithResponse(ctx context.Context, params *GetApiV2FundCurrentEpochIdParams, reqEditors ...RequestEditorFn) (*GetApiV2FundCurrentEpochIdResponse, error) {
-	rsp, err := c.GetApiV2FundCurrentEpochId(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetApiV2FundCurrentEpochIdResponse(rsp)
-}
-
-// GetApiV2FundEpochDataWithResponse request returning *GetApiV2FundEpochDataResponse
-func (c *ClientWithResponses) GetApiV2FundEpochDataWithResponse(ctx context.Context, params *GetApiV2FundEpochDataParams, reqEditors ...RequestEditorFn) (*GetApiV2FundEpochDataResponse, error) {
-	rsp, err := c.GetApiV2FundEpochData(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetApiV2FundEpochDataResponse(rsp)
-}
-
-// GetApiV2FundGetRoundPriceWithResponse request returning *GetApiV2FundGetRoundPriceResponse
-func (c *ClientWithResponses) GetApiV2FundGetRoundPriceWithResponse(ctx context.Context, params *GetApiV2FundGetRoundPriceParams, reqEditors ...RequestEditorFn) (*GetApiV2FundGetRoundPriceResponse, error) {
-	rsp, err := c.GetApiV2FundGetRoundPrice(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetApiV2FundGetRoundPriceResponse(rsp)
-}
-
-// PostApiV2FundPrepareAddFundPriceWithBodyWithResponse request with arbitrary body returning *PostApiV2FundPrepareAddFundPriceResponse
-func (c *ClientWithResponses) PostApiV2FundPrepareAddFundPriceWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareAddFundPriceResponse, error) {
-	rsp, err := c.PostApiV2FundPrepareAddFundPriceWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2FundPrepareAddFundPriceResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostApiV2FundPrepareAddFundPriceWithResponse(ctx context.Context, body PostApiV2FundPrepareAddFundPriceJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareAddFundPriceResponse, error) {
-	rsp, err := c.PostApiV2FundPrepareAddFundPrice(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2FundPrepareAddFundPriceResponse(rsp)
-}
-
-// PostApiV2FundPrepareCancelRedeemWithBodyWithResponse request with arbitrary body returning *PostApiV2FundPrepareCancelRedeemResponse
-func (c *ClientWithResponses) PostApiV2FundPrepareCancelRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareCancelRedeemResponse, error) {
-	rsp, err := c.PostApiV2FundPrepareCancelRedeemWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2FundPrepareCancelRedeemResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostApiV2FundPrepareCancelRedeemWithResponse(ctx context.Context, body PostApiV2FundPrepareCancelRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareCancelRedeemResponse, error) {
-	rsp, err := c.PostApiV2FundPrepareCancelRedeem(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2FundPrepareCancelRedeemResponse(rsp)
-}
-
-// PostApiV2FundPrepareChangeEpochWithBodyWithResponse request with arbitrary body returning *PostApiV2FundPrepareChangeEpochResponse
-func (c *ClientWithResponses) PostApiV2FundPrepareChangeEpochWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareChangeEpochResponse, error) {
-	rsp, err := c.PostApiV2FundPrepareChangeEpochWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2FundPrepareChangeEpochResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostApiV2FundPrepareChangeEpochWithResponse(ctx context.Context, body PostApiV2FundPrepareChangeEpochJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareChangeEpochResponse, error) {
-	rsp, err := c.PostApiV2FundPrepareChangeEpoch(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2FundPrepareChangeEpochResponse(rsp)
-}
-
-// PostApiV2FundPrepareClaimRedemptionWithBodyWithResponse request with arbitrary body returning *PostApiV2FundPrepareClaimRedemptionResponse
-func (c *ClientWithResponses) PostApiV2FundPrepareClaimRedemptionWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareClaimRedemptionResponse, error) {
-	rsp, err := c.PostApiV2FundPrepareClaimRedemptionWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2FundPrepareClaimRedemptionResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostApiV2FundPrepareClaimRedemptionWithResponse(ctx context.Context, body PostApiV2FundPrepareClaimRedemptionJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareClaimRedemptionResponse, error) {
-	rsp, err := c.PostApiV2FundPrepareClaimRedemption(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2FundPrepareClaimRedemptionResponse(rsp)
-}
-
-// PostApiV2FundPrepareFinishEpochWithBodyWithResponse request with arbitrary body returning *PostApiV2FundPrepareFinishEpochResponse
-func (c *ClientWithResponses) PostApiV2FundPrepareFinishEpochWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFinishEpochResponse, error) {
-	rsp, err := c.PostApiV2FundPrepareFinishEpochWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2FundPrepareFinishEpochResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostApiV2FundPrepareFinishEpochWithResponse(ctx context.Context, body PostApiV2FundPrepareFinishEpochJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFinishEpochResponse, error) {
-	rsp, err := c.PostApiV2FundPrepareFinishEpoch(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2FundPrepareFinishEpochResponse(rsp)
-}
-
-// PostApiV2FundPrepareFundFinishEpochApproveWithBodyWithResponse request with arbitrary body returning *PostApiV2FundPrepareFundFinishEpochApproveResponse
-func (c *ClientWithResponses) PostApiV2FundPrepareFundFinishEpochApproveWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundFinishEpochApproveResponse, error) {
-	rsp, err := c.PostApiV2FundPrepareFundFinishEpochApproveWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2FundPrepareFundFinishEpochApproveResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostApiV2FundPrepareFundFinishEpochApproveWithResponse(ctx context.Context, body PostApiV2FundPrepareFundFinishEpochApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundFinishEpochApproveResponse, error) {
-	rsp, err := c.PostApiV2FundPrepareFundFinishEpochApprove(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2FundPrepareFundFinishEpochApproveResponse(rsp)
-}
-
-// PostApiV2FundPrepareFundRedeemWithBodyWithResponse request with arbitrary body returning *PostApiV2FundPrepareFundRedeemResponse
-func (c *ClientWithResponses) PostApiV2FundPrepareFundRedeemWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundRedeemResponse, error) {
-	rsp, err := c.PostApiV2FundPrepareFundRedeemWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2FundPrepareFundRedeemResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostApiV2FundPrepareFundRedeemWithResponse(ctx context.Context, body PostApiV2FundPrepareFundRedeemJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundRedeemResponse, error) {
-	rsp, err := c.PostApiV2FundPrepareFundRedeem(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2FundPrepareFundRedeemResponse(rsp)
-}
-
-// PostApiV2FundPrepareFundRedeemApproveWithBodyWithResponse request with arbitrary body returning *PostApiV2FundPrepareFundRedeemApproveResponse
-func (c *ClientWithResponses) PostApiV2FundPrepareFundRedeemApproveWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundRedeemApproveResponse, error) {
-	rsp, err := c.PostApiV2FundPrepareFundRedeemApproveWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2FundPrepareFundRedeemApproveResponse(rsp)
-}
-
-func (c *ClientWithResponses) PostApiV2FundPrepareFundRedeemApproveWithResponse(ctx context.Context, body PostApiV2FundPrepareFundRedeemApproveJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2FundPrepareFundRedeemApproveResponse, error) {
-	rsp, err := c.PostApiV2FundPrepareFundRedeemApprove(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParsePostApiV2FundPrepareFundRedeemApproveResponse(rsp)
-}
-
-// GetApiV2FundUserPendingClaimWithResponse request returning *GetApiV2FundUserPendingClaimResponse
-func (c *ClientWithResponses) GetApiV2FundUserPendingClaimWithResponse(ctx context.Context, params *GetApiV2FundUserPendingClaimParams, reqEditors ...RequestEditorFn) (*GetApiV2FundUserPendingClaimResponse, error) {
-	rsp, err := c.GetApiV2FundUserPendingClaim(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetApiV2FundUserPendingClaimResponse(rsp)
-}
-
-// GetApiV2FundUserRedemptionInfoWithResponse request returning *GetApiV2FundUserRedemptionInfoResponse
-func (c *ClientWithResponses) GetApiV2FundUserRedemptionInfoWithResponse(ctx context.Context, params *GetApiV2FundUserRedemptionInfoParams, reqEditors ...RequestEditorFn) (*GetApiV2FundUserRedemptionInfoResponse, error) {
-	rsp, err := c.GetApiV2FundUserRedemptionInfo(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetApiV2FundUserRedemptionInfoResponse(rsp)
-}
-
 // GetApiV2PrimaryVaultCommonInfoWithResponse request returning *GetApiV2PrimaryVaultCommonInfoResponse
 func (c *ClientWithResponses) GetApiV2PrimaryVaultCommonInfoWithResponse(ctx context.Context, params *GetApiV2PrimaryVaultCommonInfoParams, reqEditors ...RequestEditorFn) (*GetApiV2PrimaryVaultCommonInfoResponse, error) {
 	rsp, err := c.GetApiV2PrimaryVaultCommonInfo(ctx, params, reqEditors...)
@@ -9321,6 +7542,23 @@ func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareAddDeployerWithRespons
 		return nil, err
 	}
 	return ParsePostApiV2PrimaryVaultPrepareAddDeployerResponse(rsp)
+}
+
+// PostApiV2PrimaryVaultPrepareAddInvestorWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareAddInvestorResponse
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareAddInvestorWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareAddInvestorResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareAddInvestorWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrepareAddInvestorResponse(rsp)
+}
+
+func (c *ClientWithResponses) PostApiV2PrimaryVaultPrepareAddInvestorWithResponse(ctx context.Context, body PostApiV2PrimaryVaultPrepareAddInvestorJSONRequestBody, reqEditors ...RequestEditorFn) (*PostApiV2PrimaryVaultPrepareAddInvestorResponse, error) {
+	rsp, err := c.PostApiV2PrimaryVaultPrepareAddInvestor(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePostApiV2PrimaryVaultPrepareAddInvestorResponse(rsp)
 }
 
 // PostApiV2PrimaryVaultPrepareClaimRewardWithBodyWithResponse request with arbitrary body returning *PostApiV2PrimaryVaultPrepareClaimRewardResponse
@@ -10424,461 +8662,6 @@ func ParseGetApiV2DividendGetOldResponse(rsp *http.Response) (*GetApiV2DividendG
 	return response, nil
 }
 
-// ParseGetApiV2FundCurrentEpochIdResponse parses an HTTP response from a GetApiV2FundCurrentEpochIdWithResponse call
-func ParseGetApiV2FundCurrentEpochIdResponse(rsp *http.Response) (*GetApiV2FundCurrentEpochIdResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetApiV2FundCurrentEpochIdResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                            `json:"code,omitempty"`
-			Data *ResponseFundCurrentEpochIdResp `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetApiV2FundEpochDataResponse parses an HTTP response from a GetApiV2FundEpochDataWithResponse call
-func ParseGetApiV2FundEpochDataResponse(rsp *http.Response) (*GetApiV2FundEpochDataResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetApiV2FundEpochDataResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                       `json:"code,omitempty"`
-			Data *ResponseFundEpochDataResp `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetApiV2FundGetRoundPriceResponse parses an HTTP response from a GetApiV2FundGetRoundPriceWithResponse call
-func ParseGetApiV2FundGetRoundPriceResponse(rsp *http.Response) (*GetApiV2FundGetRoundPriceResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetApiV2FundGetRoundPriceResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                                 `json:"code,omitempty"`
-			Data *ResponseFundVaultRoundPriceInfoResp `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostApiV2FundPrepareAddFundPriceResponse parses an HTTP response from a PostApiV2FundPrepareAddFundPriceWithResponse call
-func ParsePostApiV2FundPrepareAddFundPriceResponse(rsp *http.Response) (*PostApiV2FundPrepareAddFundPriceResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostApiV2FundPrepareAddFundPriceResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                     `json:"code,omitempty"`
-			Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostApiV2FundPrepareCancelRedeemResponse parses an HTTP response from a PostApiV2FundPrepareCancelRedeemWithResponse call
-func ParsePostApiV2FundPrepareCancelRedeemResponse(rsp *http.Response) (*PostApiV2FundPrepareCancelRedeemResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostApiV2FundPrepareCancelRedeemResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                     `json:"code,omitempty"`
-			Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostApiV2FundPrepareChangeEpochResponse parses an HTTP response from a PostApiV2FundPrepareChangeEpochWithResponse call
-func ParsePostApiV2FundPrepareChangeEpochResponse(rsp *http.Response) (*PostApiV2FundPrepareChangeEpochResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostApiV2FundPrepareChangeEpochResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                     `json:"code,omitempty"`
-			Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostApiV2FundPrepareClaimRedemptionResponse parses an HTTP response from a PostApiV2FundPrepareClaimRedemptionWithResponse call
-func ParsePostApiV2FundPrepareClaimRedemptionResponse(rsp *http.Response) (*PostApiV2FundPrepareClaimRedemptionResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostApiV2FundPrepareClaimRedemptionResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                     `json:"code,omitempty"`
-			Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostApiV2FundPrepareFinishEpochResponse parses an HTTP response from a PostApiV2FundPrepareFinishEpochWithResponse call
-func ParsePostApiV2FundPrepareFinishEpochResponse(rsp *http.Response) (*PostApiV2FundPrepareFinishEpochResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostApiV2FundPrepareFinishEpochResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                     `json:"code,omitempty"`
-			Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostApiV2FundPrepareFundFinishEpochApproveResponse parses an HTTP response from a PostApiV2FundPrepareFundFinishEpochApproveWithResponse call
-func ParsePostApiV2FundPrepareFundFinishEpochApproveResponse(rsp *http.Response) (*PostApiV2FundPrepareFundFinishEpochApproveResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostApiV2FundPrepareFundFinishEpochApproveResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                     `json:"code,omitempty"`
-			Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostApiV2FundPrepareFundRedeemResponse parses an HTTP response from a PostApiV2FundPrepareFundRedeemWithResponse call
-func ParsePostApiV2FundPrepareFundRedeemResponse(rsp *http.Response) (*PostApiV2FundPrepareFundRedeemResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostApiV2FundPrepareFundRedeemResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                     `json:"code,omitempty"`
-			Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParsePostApiV2FundPrepareFundRedeemApproveResponse parses an HTTP response from a PostApiV2FundPrepareFundRedeemApproveWithResponse call
-func ParsePostApiV2FundPrepareFundRedeemApproveResponse(rsp *http.Response) (*PostApiV2FundPrepareFundRedeemApproveResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &PostApiV2FundPrepareFundRedeemApproveResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                     `json:"code,omitempty"`
-			Data *EntityPrepareTxResponse `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetApiV2FundUserPendingClaimResponse parses an HTTP response from a GetApiV2FundUserPendingClaimWithResponse call
-func ParseGetApiV2FundUserPendingClaimResponse(rsp *http.Response) (*GetApiV2FundUserPendingClaimResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetApiV2FundUserPendingClaimResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                              `json:"code,omitempty"`
-			Data *ResponseFundUserPendingClaimResp `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetApiV2FundUserRedemptionInfoResponse parses an HTTP response from a GetApiV2FundUserRedemptionInfoWithResponse call
-func ParseGetApiV2FundUserRedemptionInfoResponse(rsp *http.Response) (*GetApiV2FundUserRedemptionInfoResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetApiV2FundUserRedemptionInfoResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest struct {
-			// Code Code is the response code
-			// @Description 响应状态码
-			Code *int                                `json:"code,omitempty"`
-			Data *ResponseFundUserRedemptionInfoResp `json:"data,omitempty"`
-
-			// Message Message is the response message
-			// @Description 响应消息
-			Message *string `json:"message,omitempty"`
-		}
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParseGetApiV2PrimaryVaultCommonInfoResponse parses an HTTP response from a GetApiV2PrimaryVaultCommonInfoWithResponse call
 func ParseGetApiV2PrimaryVaultCommonInfoResponse(rsp *http.Response) (*GetApiV2PrimaryVaultCommonInfoResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -11028,6 +8811,41 @@ func ParsePostApiV2PrimaryVaultPrepareAddDeployerResponse(rsp *http.Response) (*
 	}
 
 	response := &PostApiV2PrimaryVaultPrepareAddDeployerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			// Code Code is the response code
+			// @Description 响应状态码
+			Code *int                     `json:"code,omitempty"`
+			Data *EntityPrepareTxResponse `json:"data,omitempty"`
+
+			// Message Message is the response message
+			// @Description 响应消息
+			Message *string `json:"message,omitempty"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePostApiV2PrimaryVaultPrepareAddInvestorResponse parses an HTTP response from a PostApiV2PrimaryVaultPrepareAddInvestorWithResponse call
+func ParsePostApiV2PrimaryVaultPrepareAddInvestorResponse(rsp *http.Response) (*PostApiV2PrimaryVaultPrepareAddInvestorResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PostApiV2PrimaryVaultPrepareAddInvestorResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}
@@ -11932,165 +9750,146 @@ func ParsePostApiV2TransferSubmitResponse(rsp *http.Response) (*PostApiV2Transfe
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

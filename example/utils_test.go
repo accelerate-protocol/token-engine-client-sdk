@@ -3322,3 +3322,42 @@ func (test *VaultLaunchIntegrationTest) validateFundVaultClaimRedemptionMQMessag
 	t.Logf("   AssetAmount: %s", mqMessage.AssetAmount)
 	t.Logf("   ShareAmount: %s", mqMessage.ShareAmount)
 }
+
+// callPrepareAddDeployer 调用 prepare_add_deployer 接口
+func (test *VaultLaunchIntegrationTest) callPrepareAddInvestor(t *testing.T, req *client.RequestAddVaultDeployerWhiteListReq) *PrepareTxResponse {
+	// 创建请求体
+	reqBody, err := json.Marshal(req)
+	require.NoError(t, err)
+
+	// 创建 HTTP 请求
+	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/primary/vault/prepare_add_deployer", bytes.NewBuffer(reqBody))
+	require.NoError(t, err)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", appId)
+
+	// 执行请求
+	resp, err := test.httpClient.Do(httpReq)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// 解析响应
+	var apiResp APIResponse
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	require.NoError(t, err)
+	assert.Equal(t, 0, apiResp.Code)
+
+	t.Log("收到 prepare_add_deployer 响应")
+
+	// 解析数据
+	respData, err := json.Marshal(apiResp.Data)
+	require.NoError(t, err)
+
+	var prepareResp PrepareTxResponse
+	err = json.Unmarshal(respData, &prepareResp)
+	require.NoError(t, err)
+
+	return &prepareResp
+}
