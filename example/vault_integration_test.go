@@ -2110,3 +2110,62 @@ func queryCurrentEpochId(t *testing.T, test *VaultLaunchIntegrationTest, vaultAd
 	redemptionRequestResp := test.callQueryCurrentEpochId(t, redeemReq)
 	require.NotNil(t, redemptionRequestResp)
 }
+
+// TestVaultIntegration VaultLaunch 集成测试
+func TestVaultAddInvestorWhitelistIntegration(t *testing.T) {
+	// 创建测试实例，连接本地 token-engine 服务
+	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+	t.Logf("开始 VaultLaunch 集成测试")
+	t.Logf("===============阶段一：Launch Vault====================")
+	mqMessage := createVault(t, test, 24*time.Hour)
+	t.Logf("===============阶段二：add User Investor ====================")
+
+	addVaultInvestor(t, test, mqMessage.VaultAddress, "0x318AC2c326700F9245BB2673B0885E4358dc2977")
+	t.Logf("✅ Add User Investor 集成测试通过2")
+
+	t.Logf("===============阶段三：Launch Fund Vault====================")
+	mqMessage = createVault(t, test, 30*time.Second, withVaultType(client.VaultTypeFund))
+
+	t.Logf("===============阶段四：add User Investor ====================")
+
+	addVaultInvestor(t, test, mqMessage.VaultAddress, "0x318AC2c326700F9245BB2673B0885E4358dc2977")
+	t.Logf("✅ Add User Investor 集成测试通过4")
+}
+
+func addVaultInvestor(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress, investorAddress string) {
+	t.Logf("开始执行 addVaultInvestor 测试")
+	// 1. 准备 unPauseToken 请求
+	unPauseReq := &client.RequestAddVaultInvestorWhiteListReq{
+		ChainId:         client.CommonChainID(chainId),
+		InvestorAddress: investorAddress,
+		ManagerAddress:  admin,
+		VaultAddress:    vaultAddress,
+	}
+	// 2. 调用 /api/v2/primary/token/prepare_add_investor 接口
+	unPauseResp := test.callPrepareAddInvestor(t, unPauseReq)
+	require.NotNil(t, unPauseResp)
+	require.NotEmpty(t, unPauseResp.TxMsgBase64)
+	t.Logf("准备交易成功，CorrelationId: %s", unPauseResp.CorrelationId)
+	tx := &types.Transaction{}
+	data, err := base64.StdEncoding.DecodeString(unPauseResp.TxMsgBase64)
+	require.NoError(t, err)
+	err = tx.UnmarshalBinary(data)
+	require.NoError(t, err)
+	// 3. 签名交易
+	signedTx, err := signTransaction(t, string(unPauseReq.ChainId), adminPrivateKey, tx)
+	require.NoError(t, err)
+	t.Logf("交易签名成功，准备提交交易")
+	// 4. 调用 /api/v1/common/submit_tx 接口提交交易
+	submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      unPauseReq.ChainId,
+		Sender:       unPauseReq.ManagerAddress,
+		TxMsgBase64:  unPauseResp.TxMsgBase64,
+		SignTxBase64: encodeTransactionToBase64(t, signedTx),
+	})
+	require.NotNil(t, submitResp)
+	require.NotEmpty(t, submitResp.TxHash)
+	t.Logf("交易提交成功，TxHash: %s", submitResp.TxHash)
+	// 5. 等待并验证 MQ 消息内容
+	//test.validateVaultUnPauseTokenReceipt(t, submitResp.TxHash)
+	t.Logf("✅ UnPauseToken 集成测试通过")
+}

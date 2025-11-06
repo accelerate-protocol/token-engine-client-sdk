@@ -3323,14 +3323,14 @@ func (test *VaultLaunchIntegrationTest) validateFundVaultClaimRedemptionMQMessag
 	t.Logf("   ShareAmount: %s", mqMessage.ShareAmount)
 }
 
-// callPrepareAddDeployer 调用 prepare_add_deployer 接口
-func (test *VaultLaunchIntegrationTest) callPrepareAddInvestor(t *testing.T, req *client.RequestAddVaultDeployerWhiteListReq) *PrepareTxResponse {
+// callPrepareAddInvestor 调用 prepare_add_investor 接口
+func (test *VaultLaunchIntegrationTest) callPrepareAddInvestor(t *testing.T, req *client.RequestAddVaultInvestorWhiteListReq) *PrepareTxResponse {
 	// 创建请求体
 	reqBody, err := json.Marshal(req)
 	require.NoError(t, err)
 
 	// 创建 HTTP 请求
-	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/primary/vault/prepare_add_deployer", bytes.NewBuffer(reqBody))
+	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/primary/vault/prepare_add_investor", bytes.NewBuffer(reqBody))
 	require.NoError(t, err)
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("x-api-key", appId)
@@ -3349,7 +3349,7 @@ func (test *VaultLaunchIntegrationTest) callPrepareAddInvestor(t *testing.T, req
 	require.NoError(t, err)
 	assert.Equal(t, 0, apiResp.Code)
 
-	t.Log("收到 prepare_add_deployer 响应")
+	t.Log("收到 prepare_add_investor 响应")
 
 	// 解析数据
 	respData, err := json.Marshal(apiResp.Data)
