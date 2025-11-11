@@ -4,14 +4,12 @@ import (
 	"encoding/base64"
 	"fmt"
 	"math/big"
-	"os"
 	"testing"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/pelletier/go-toml/v2"
 	"github.com/stretchr/testify/require"
 
 	client "github.com/accelerate-protocol/token-engine-client-sdk"
@@ -25,20 +23,15 @@ var (
 	chainId         string
 	admin           string
 	users           []Signer
-	mockUSDC        string
 )
 
 func init() {
 	// 加载配置文件
-	data, err := os.ReadFile("priv.toml")
+	var err error
+	config, err = loadConfig()
 	if err != nil {
-		panic(fmt.Sprintf("Failed to read priv.toml: %v", err))
+		panic(err)
 	}
-
-	if err := toml.Unmarshal(data, &config); err != nil {
-		panic(fmt.Sprintf("Failed to parse priv.toml: %v", err))
-	}
-
 	// 从配置中初始化变量
 	serverUrl = config.Server.URL
 	adminPrivateKey = config.Admin.PrivateKey
@@ -58,7 +51,7 @@ func encodeTransactionToBase64(t *testing.T, signedTx *types.Transaction) string
 // 添加发行人白名单
 func TestAddVaultDeployerIntegration(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
-	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
 	t.Logf("开始 AddDeployer 集成测试")
 	req := &client.RequestAddVaultDeployerWhiteListReq{
 		ChainId:         client.CommonChainID(chainId),
@@ -100,7 +93,7 @@ func TestAddVaultDeployerIntegration(t *testing.T) {
 // TestVaultIntegration VaultLaunch 集成测试
 func TestVaultSuccessIntegration(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
-	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
 	t.Logf("开始 VaultLaunch 集成测试")
 	t.Logf("===============阶段一：Launch Vault====================")
 	mqMessage := createVault(t, test, 24*time.Hour)
@@ -121,7 +114,7 @@ func TestVaultSuccessIntegration(t *testing.T) {
 // TestVaultDeposit VaultDeposit 集成测试
 func TestVaultDeposit(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
-	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
 
 	testCases := []struct {
 		name      string
@@ -175,7 +168,7 @@ func TestVaultDeposit(t *testing.T) {
 
 func TestVaultRedeem(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
-	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
 
 	testCases := []struct {
 		name   string
@@ -211,7 +204,7 @@ func TestVaultRedeem(t *testing.T) {
 
 func TestVaultOffchainDeposit(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
-	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
 
 	testCases := []struct {
 		name     string
@@ -237,7 +230,7 @@ func TestVaultOffchainDeposit(t *testing.T) {
 
 func TestVaultWithdrawManageFee(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
-	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
 
 	t.Logf("开始执行测试用例: VaultWithdrawManageFee")
 	// 1. 创建 Vault
@@ -254,7 +247,7 @@ func TestVaultWithdrawManageFee(t *testing.T) {
 
 func TestVaultWithdraw(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
-	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
 
 	t.Logf("开始执行测试用例: VaultWithdraw")
 	// 1. 创建 Vault
@@ -270,7 +263,7 @@ func TestVaultWithdraw(t *testing.T) {
 
 func TestUnpauseToken(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
-	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
 	t.Logf("开始 UnpauseToken 集成测试")
 	// 1. 创建 Vault
 	vaultMsg := createVault(t, test, 24*time.Hour)
@@ -284,7 +277,7 @@ func TestUnpauseToken(t *testing.T) {
 
 func TestVaultDividend(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
-	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
 
 	t.Logf("开始执行测试用例: VaultDividend")
 	// 1. 创建 Vault
@@ -301,7 +294,7 @@ func TestVaultDividend(t *testing.T) {
 
 func TestVaultClaim(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
-	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
 
 	testCases := []struct {
 		name   string
@@ -333,7 +326,7 @@ func TestVaultClaim(t *testing.T) {
 }
 
 func TestErc20Approve(t *testing.T) {
-	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
 	// 1. 准备 approve 请求
 	approveReq := &client.RequestApprovePrepareReq{
 		ChainId:     client.RequestChainId(chainId),
@@ -373,7 +366,7 @@ func TestErc20Approve(t *testing.T) {
 }
 
 func TestErc20Transfer(t *testing.T) {
-	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
 	testCases := []struct {
 		name      string
 		sender    Signer
@@ -468,7 +461,7 @@ func TestErc20Transfer(t *testing.T) {
 }
 
 func TestErc20Balance(t *testing.T) {
-	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
 	testCases := []struct {
 		name      string
 		sender    Signer
@@ -521,7 +514,7 @@ func TestErc20Balance(t *testing.T) {
 // TestFundVaultRedeem FundVaultRedeem 集成测试
 func TestFundVaultRedeem(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
-	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
 	adminSigner := Signer{
 		Address:    admin,
 		PrivateKey: adminPrivateKey,
@@ -590,7 +583,7 @@ func TestFundVaultRedeem(t *testing.T) {
 
 func TestEventMatch(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
-	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
 
 	// 创建管理器实例
 	balanceManager := NewBalanceManager(test, chainId, mockUSDC)
@@ -2114,7 +2107,7 @@ func queryCurrentEpochId(t *testing.T, test *VaultLaunchIntegrationTest, vaultAd
 // TestVaultIntegration VaultLaunch 集成测试
 func TestVaultAddInvestorWhitelistIntegration(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
-	test := NewVaultLaunchIntegrationTest(serverUrl, t)
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
 	t.Logf("开始 VaultLaunch 集成测试")
 	t.Logf("===============阶段一：Launch Vault====================")
 	mqMessage := createVault(t, test, 24*time.Hour)

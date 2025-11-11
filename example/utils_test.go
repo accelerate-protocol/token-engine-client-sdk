@@ -8,8 +8,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/google/go-querystring/query"
+	"log"
 	"math/big"
 	"net/http"
+	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -24,24 +26,29 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/nsqio/go-nsq"
+	"github.com/pelletier/go-toml/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-var appId = "test_axc" // 与 MQ topic 一致
-var erc20Abi = "[{\"inputs\":[{\"internalType\":\"string\",\"name\":\"name_\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"symbol_\",\"type\":\"string\"}],\"stateMutability\":\"nonpayable\",\"type\":\"constructor\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Approval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"Transfer\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"}],\"name\":\"allowance\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"approve\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"account\",\"type\":\"address\"}],\"name\":\"balanceOf\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"decimals\",\"outputs\":[{\"internalType\":\"uint8\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"subtractedValue\",\"type\":\"uint256\"}],\"name\":\"decreaseAllowance\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"spender\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"addedValue\",\"type\":\"uint256\"}],\"name\":\"increaseAllowance\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"name\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"symbol\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"totalSupply\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transfer\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"from\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"to\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"transferFrom\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}]"
-var nsqdAddress = "127.0.0.1:4150"
-
-type Signer struct {
-	PrivateKey string `toml:"private_key"`
-	Address    string `toml:"address"`
-}
+var (
+	appId        string
+	erc20Abi     string
+	nsqdAddress  string
+	mockUSDC     string
+	globalConfig Config
+)
 
 const (
 	ChainIdBSCTestnet  = "97"
 	ChainIdBSCMainnet  = "56"
 	ChainIdBaseSepolia = "84532"
 )
+
+type Signer struct {
+	PrivateKey string `toml:"private_key"`
+	Address    string `toml:"address"`
+}
 
 // Config 配置文件结构
 type Config struct {
@@ -56,7 +63,63 @@ type Config struct {
 		ChainID  string `toml:"chain_id"`
 		MockUSDC string `toml:"mock_usdc"`
 		Decimal  uint64 `toml:"decimal"`
+
+		// RPC URLs for different chains
+		RPCUrls struct {
+			BaseSepolia string `toml:"base_sepolia"`
+			BSCTestnet  string `toml:"bsc_testnet"`
+			BSCMainnet  string `toml:"bsc_mainnet"`
+		} `toml:"rpc_urls"`
+
+		// Chain ID constants
+		ChainIds struct {
+			BaseSepolia string `toml:"base_sepolia"`
+			BSCTestnet  string `toml:"bsc_testnet"`
+			BSCMainnet  string `toml:"bsc_mainnet"`
+		} `toml:"chain_ids"`
 	} `toml:"blockchain"`
+
+	// Message Queue configuration
+	MQ struct {
+		NSQDAddress string `toml:"nsqd_address"`
+		AppID       string `toml:"app_id"`
+	} `toml:"mq"`
+
+	// Contracts configuration
+	Contracts struct {
+		ERC20ABI string `toml:"erc20_abi"`
+	} `toml:"contracts"`
+}
+
+// init 初始化全局配置
+func init() {
+	cfg, err := loadConfig()
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+	globalConfig = cfg
+
+	// 初始化全局变量
+	appId = globalConfig.MQ.AppID
+	nsqdAddress = globalConfig.MQ.NSQDAddress
+	erc20Abi = globalConfig.Contracts.ERC20ABI
+	mockUSDC = globalConfig.Blockchain.MockUSDC
+}
+
+// loadConfig 加载配置文件
+func loadConfig() (Config, error) {
+	data, err := os.ReadFile("config.toml")
+	if err != nil {
+		return Config{}, fmt.Errorf("failed to read config file: %w", err)
+	}
+
+	conf := &Config{}
+	err = toml.Unmarshal(data, conf)
+	if err != nil {
+		return Config{}, fmt.Errorf("failed to parse config file: %w", err)
+	}
+
+	return *conf, nil
 }
 
 // MQClient MQ 客户端
@@ -154,16 +217,16 @@ type VaultLaunchIntegrationTest struct {
 }
 
 // NewVaultLaunchIntegrationTest 创建集成测试实例
-func NewVaultLaunchIntegrationTest(baseURL string, t *testing.T) *VaultLaunchIntegrationTest {
+func NewVaultLaunchIntegrationTest(baseURL string, chainId string, t *testing.T) *VaultLaunchIntegrationTest {
 	m := setupTestMQ(t)
 	var ethURL string
 	switch chainId {
 	case ChainIdBaseSepolia:
-		ethURL = "https://base-sepolia.g.alchemy.com/v2/9NAr3qhyUGw766ZqM8HmAqfBrt4FKr0a"
+		ethURL = globalConfig.Blockchain.RPCUrls.BaseSepolia
 	case ChainIdBSCTestnet:
-		ethURL = "https://bsc-testnet-rpc.publicnode.com"
+		ethURL = globalConfig.Blockchain.RPCUrls.BSCTestnet
 	case ChainIdBSCMainnet:
-		ethURL = "https://bsc-rpc.publicnode.com"
+		ethURL = globalConfig.Blockchain.RPCUrls.BSCMainnet
 	default:
 		t.Fatalf("不支持的 chainId: %s", chainId)
 	}
@@ -2461,17 +2524,17 @@ func modifyTransactionNonce(tx *types.Transaction, newNonce uint64) *types.Trans
 
 // BalanceManager 余额管理器
 type BalanceManager struct {
-	test     *VaultLaunchIntegrationTest
-	chainId  string
-	mockUSDC string
+	test      *VaultLaunchIntegrationTest
+	chainId   string
+	tokenAddr string
 }
 
 // NewBalanceManager 创建余额管理器
 func NewBalanceManager(test *VaultLaunchIntegrationTest, chainId, mockUSDC string) *BalanceManager {
 	return &BalanceManager{
-		test:     test,
-		chainId:  chainId,
-		mockUSDC: mockUSDC,
+		test:      test,
+		chainId:   chainId,
+		tokenAddr: mockUSDC,
 	}
 }
 
@@ -2480,7 +2543,7 @@ func (bm *BalanceManager) RecordUserBalance(t *testing.T, userAddr string) strin
 	balanceReq := &client.RequestBalanceQueryReq{
 		ChainId:   client.RequestChainId(bm.chainId),
 		UserAddr:  userAddr,
-		TokenAddr: &bm.mockUSDC,
+		TokenAddr: &bm.tokenAddr,
 		TokenType: client.TokenTypeUSDC,
 	}
 	balance := bm.test.callTokenBalance(t, balanceReq)
@@ -2548,7 +2611,7 @@ func (bm *BalanceManager) transferTokens(t *testing.T, fromAddr, toAddr, private
 		ChainId:   client.RequestChainId(bm.chainId),
 		FromAddr:  fromAddr,
 		ToAddr:    toAddr,
-		TokenAddr: &bm.mockUSDC,
+		TokenAddr: &bm.tokenAddr,
 		Amount:    amount,
 		TokenType: client.TokenTypeUSDC,
 	}
