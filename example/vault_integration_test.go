@@ -581,6 +581,12 @@ func TestFundVaultRedeem(t *testing.T) {
 	}
 }
 
+// 查询epoch data
+func TestFundVaultEpochDataQuery(t *testing.T) {
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
+	queryEpochData(t, test, "0xADA7192bf6726d6BeB75f68AaE9dCF53B0D4b541", "6")
+}
+
 func TestEventMatch(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
 	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
