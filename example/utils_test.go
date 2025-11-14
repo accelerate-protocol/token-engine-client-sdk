@@ -3424,3 +3424,60 @@ func (test *VaultLaunchIntegrationTest) callPrepareAddInvestor(t *testing.T, req
 
 	return &prepareResp
 }
+
+type UserDividendGetReq struct {
+	ChainId   string `form:"chain_id" url:"chain_id"`
+	Vault     string `form:"vault" url:"vault"`
+	UserAddr  string `form:"user_addr" url:"user_addr"`   // 用户地址
+	AssetAddr string `form:"asset_addr" url:"asset_addr"` // 资产地址
+}
+
+type UserDividendGetResp struct {
+	Vault     string `json:"vault"`      // Vault ID
+	UserAddr  string `json:"user_addr"`  // 用户地址
+	AssetAddr string `json:"asset_addr"` // 资产地址
+	Balance   string `json:"balance"`    // 余额,表示用户当前可提取的assert balance，单位为资产的最小单位
+	Decimals  int    `json:"decimals"`   // 精度
+}
+
+func (test *VaultLaunchIntegrationTest) callQueryUserDividendGet(t *testing.T, req *UserDividendGetReq) *UserDividendGetResp {
+	// 创建请求
+	v, err := query.Values(req)
+	require.NoError(t, err)
+
+	// 创建 HTTP 请求
+	httpReq, err := http.NewRequest("GET", test.baseURL+"/api/v2/dividend/get?"+v.Encode(), nil)
+	require.NoError(t, err)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", appId)
+
+	// 执行请求
+	resp, err := test.httpClient.Do(httpReq)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// 解析响应
+	var apiResp APIResponse
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	require.NoError(t, err)
+	assert.Equal(t, 0, apiResp.Code)
+
+	t.Logf("dividend/get 响应: %+v", apiResp)
+
+	// 解析数据
+	respData, err := json.Marshal(apiResp.Data)
+	require.NoError(t, err)
+
+	var prepareResp UserDividendGetResp
+	err = json.Unmarshal(respData, &prepareResp)
+	require.NoError(t, err)
+	t.Logf("UserDividendGet 查询成功:")
+	t.Logf("   Vault: %s", req.Vault)
+	t.Logf("   User: %s", req.UserAddr)
+	t.Logf("   Balance: %s", prepareResp.Balance)
+	t.Logf("   Decimal: %d", prepareResp.Decimals)
+	return &prepareResp
+}

@@ -587,6 +587,12 @@ func TestFundVaultEpochDataQuery(t *testing.T) {
 	queryEpochData(t, test, "0xADA7192bf6726d6BeB75f68AaE9dCF53B0D4b541", "6")
 }
 
+// 查询epoch data
+func TestQueryEvmUserDividendGet(t *testing.T) {
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
+	queryEvmUserDividendGet(t, test, "0xeD8b1512D08700DFeC8888F2c9773D9B08Aba9a5", "0xa1FE4Ed4D662eCa52DEA7b934E429b98AAFF7533", "0x91C936406aaF278fc9772dCB911659390C99755C")
+}
+
 func TestEventMatch(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
 	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
@@ -2167,4 +2173,19 @@ func addVaultInvestor(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddre
 	// 5. 等待并验证 MQ 消息内容
 	//test.validateVaultUnPauseTokenReceipt(t, submitResp.TxHash)
 	t.Logf("✅ UnPauseToken 集成测试通过")
+}
+
+func queryEvmUserDividendGet(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddress, userAddress, assetTokenAddress string) {
+	t.Logf("开始执行 queryCurrentEpochId 测试，Vault 地址: %s", vaultAddress)
+	// 2. 准备 redemptionRequest 请求
+	redeemReq := &UserDividendGetReq{
+		ChainId:   chainId,
+		Vault:     vaultAddress,
+		UserAddr:  userAddress,
+		AssetAddr: assetTokenAddress,
+	}
+
+	// 5. 调用 /api/v2/dividend/get 接口
+	redemptionRequestResp := test.callQueryUserDividendGet(t, redeemReq)
+	require.NotNil(t, redemptionRequestResp)
 }
