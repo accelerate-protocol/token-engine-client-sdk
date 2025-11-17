@@ -593,6 +593,12 @@ func TestQueryEvmUserDividendGet(t *testing.T) {
 	queryEvmUserDividendGet(t, test, "0xeD8b1512D08700DFeC8888F2c9773D9B08Aba9a5", "0xa1FE4Ed4D662eCa52DEA7b934E429b98AAFF7533", "0x91C936406aaF278fc9772dCB911659390C99755C")
 }
 
+// 查询epoch price
+func TestFundVaultEpochPriceQuery(t *testing.T) {
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
+	queryFundVaultPrice(t, test, "0x7231f8246E2544C72fbb529794F977c831C1E4ad", "3")
+}
+
 func TestEventMatch(t *testing.T) {
 	// 创建测试实例，连接本地 token-engine 服务
 	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
