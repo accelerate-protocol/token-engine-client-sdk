@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"math/big"
+	"strconv"
 	"testing"
 	"time"
 
@@ -2193,5 +2194,66 @@ func queryEvmUserDividendGet(t *testing.T, test *VaultLaunchIntegrationTest, vau
 
 	// 5. 调用 /api/v2/dividend/get 接口
 	redemptionRequestResp := test.callQueryUserDividendGet(t, redeemReq)
+	require.NotNil(t, redemptionRequestResp)
+}
+
+func TestCreateSafeWalletIntegration(t *testing.T) {
+	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
+	t.Logf("开始 CreateSafeWallet 集成测试")
+	t.Logf("===============阶段一：CreateSafeWallet====================")
+	hash := createSafeWallet(t, test, strconv.FormatInt(time.Now().UnixNano(), 10), []string{"0xDE3b00bCb9c242BF3E7A6e0A562F34f41af21409"}, 1)
+	t.Logf("===============阶段二：QueryCreateSafeWalletResult====================")
+	queryCreateSafeWalletResult(t, test, chainId, hash)
+}
+
+func createSafeWallet(t *testing.T, test *VaultLaunchIntegrationTest, bizId string, owners []string, threshold uint64) string {
+	t.Logf("开始执行 createSafeWallet 测试")
+	privateKey, err := crypto.HexToECDSA(adminPrivateKey)
+	require.NoError(t, err)
+	adminAddress := crypto.PubkeyToAddress(privateKey.PublicKey)
+	// 1. 准备 unPauseToken 请求
+	createSafeWalletReq := &client.RequestCreateSafeWalletReq{
+		ChainId:   client.CommonChainID(chainId),
+		BizId:     bizId,
+		Owners:    owners,
+		Threshold: int(threshold),
+		TxSender:  adminAddress.String(),
+	}
+	// 2. 调用 /api/v2/primary/token/prepare_add_investor 接口
+	createSafeWalletResp := test.callCreateSafeWallet(t, createSafeWalletReq)
+	require.NotNil(t, createSafeWalletResp)
+	require.NotEmpty(t, createSafeWalletResp.TxMsgBase64)
+	t.Logf("准备交易成功，PredictedAddress: %s", createSafeWalletResp.PredictedAddress)
+	tx := &types.Transaction{}
+	data, err := base64.StdEncoding.DecodeString(createSafeWalletResp.TxMsgBase64)
+	require.NoError(t, err)
+	err = tx.UnmarshalBinary(data)
+	require.NoError(t, err)
+	// 3. 签名交易
+	signedTx, err := signTransaction(t, string(createSafeWalletReq.ChainId), adminPrivateKey, tx)
+	require.NoError(t, err)
+	t.Logf("交易签名成功，准备提交交易")
+	// 4. 调用 /api/v1/common/submit_tx 接口提交交易
+	submitResp := test.callSubmitTx(t, &client.RequestSubmitReq{
+		ChainId:      createSafeWalletReq.ChainId,
+		Sender:       createSafeWalletReq.TxSender,
+		TxMsgBase64:  createSafeWalletResp.TxMsgBase64,
+		SignTxBase64: encodeTransactionToBase64(t, signedTx),
+	})
+	require.NotNil(t, submitResp)
+	require.NotEmpty(t, submitResp.TxHash)
+	t.Logf("createSafeWallet 交易提交成功，TxHash: %s", submitResp.TxHash)
+
+	t.Logf("✅ createSafeWallet 集成测试通过")
+	return submitResp.TxHash
+}
+func queryCreateSafeWalletResult(t *testing.T, test *VaultLaunchIntegrationTest, chainId, hash string) {
+	t.Logf("开始执行 queryCreateSafeWalletResult 测试，hash: %s", hash)
+	req := &CreateSafeWalletResultReq{
+		ChainId: chainId,
+		TxHash:  hash,
+	}
+
+	redemptionRequestResp := test.callQueryCreateSafeWalletResult(t, req)
 	require.NotNil(t, redemptionRequestResp)
 }

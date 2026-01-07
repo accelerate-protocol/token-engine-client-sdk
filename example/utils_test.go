@@ -3481,3 +3481,97 @@ func (test *VaultLaunchIntegrationTest) callQueryUserDividendGet(t *testing.T, r
 	t.Logf("   Decimal: %d", prepareResp.Decimals)
 	return &prepareResp
 }
+
+type CreateSafeWalletResp struct {
+	//待签名数据
+	TxMsgBase64 string `json:"tx_msg_base64"`
+	//预测的Safe钱包地址
+	PredictedAddress string `json:"predicted_address"`
+}
+
+func (test *VaultLaunchIntegrationTest) callCreateSafeWallet(t *testing.T, req *client.RequestCreateSafeWalletReq) *CreateSafeWalletResp {
+	// 创建请求体
+	reqBody, err := json.Marshal(req)
+	require.NoError(t, err)
+
+	// 创建 HTTP 请求
+	httpReq, err := http.NewRequest("POST", test.baseURL+"/api/v2/safe/create_wallet", bytes.NewBuffer(reqBody))
+	require.NoError(t, err)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", appId)
+
+	// 执行请求
+	resp, err := test.httpClient.Do(httpReq)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// 解析响应
+	var apiResp APIResponse
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	require.NoError(t, err)
+	assert.Equal(t, 0, apiResp.Code)
+
+	t.Log("收到 create_wallet 响应")
+
+	// 解析数据
+	respData, err := json.Marshal(apiResp.Data)
+	require.NoError(t, err)
+
+	var prepareResp CreateSafeWalletResp
+	err = json.Unmarshal(respData, &prepareResp)
+	require.NoError(t, err)
+
+	return &prepareResp
+}
+
+type CreateSafeWalletResultReq struct {
+	ChainId string `form:"chain_id" url:"chain_id"`
+	TxHash  string `form:"tx_hash" url:"tx_hash"`
+}
+type CreateSafeWalletResultResp struct {
+	//Safe钱包地址
+	SafeAddress string `json:"safe_address"`
+}
+
+func (test *VaultLaunchIntegrationTest) callQueryCreateSafeWalletResult(t *testing.T, req *CreateSafeWalletResultReq) *CreateSafeWalletResultResp {
+	// 创建请求
+	v, err := query.Values(req)
+	require.NoError(t, err)
+
+	// 创建 HTTP 请求
+	httpReq, err := http.NewRequest("GET", test.baseURL+"/api/v2/safe/get_wallet_result?"+v.Encode(), nil)
+	require.NoError(t, err)
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-api-key", appId)
+
+	// 执行请求
+	resp, err := test.httpClient.Do(httpReq)
+	require.NoError(t, err)
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// 解析响应
+	var apiResp APIResponse
+	err = json.NewDecoder(resp.Body).Decode(&apiResp)
+	require.NoError(t, err)
+	assert.Equal(t, 0, apiResp.Code)
+
+	t.Logf("safe/get_wallet_result 响应: %+v", apiResp)
+
+	// 解析数据
+	respData, err := json.Marshal(apiResp.Data)
+	require.NoError(t, err)
+
+	var prepareResp CreateSafeWalletResultResp
+	err = json.Unmarshal(respData, &prepareResp)
+	require.NoError(t, err)
+	t.Logf("get_wallet_result 查询成功:")
+	t.Logf("   hash: %s", req.TxHash)
+	t.Logf("   safeAddress: %s", prepareResp.SafeAddress)
+	return &prepareResp
+}

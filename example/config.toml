@@ -1,6 +1,6 @@
 [server]
 #url = "https://rwa-test.axc.xyz/token-engine"
-url = "http://10.1.2.131:8082"
+url = "http://localhost:8082"
 
 [admin]
 private_key = "d6e5932e17b33759fecda01ee297911971b8132e9c76d0d806e9ce6efff587e2"
