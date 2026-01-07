@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"math/big"
-	"strconv"
 	"testing"
 	"time"
 
@@ -2201,7 +2200,7 @@ func TestCreateSafeWalletIntegration(t *testing.T) {
 	test := NewVaultLaunchIntegrationTest(serverUrl, chainId, t)
 	t.Logf("开始 CreateSafeWallet 集成测试")
 	t.Logf("===============阶段一：CreateSafeWallet====================")
-	hash := createSafeWallet(t, test, strconv.FormatInt(time.Now().UnixNano(), 10), []string{"0xDE3b00bCb9c242BF3E7A6e0A562F34f41af21409"}, 1)
+	hash := createSafeWallet(t, test, time.Now().String(), []string{"0xa1FE4Ed4D662eCa52DEA7b934E429b98AAFF7533", "0xDE3b00bCb9c242BF3E7A6e0A562F34f41af21407", "0x318AC2c326700F9245BB2673B0885E4358dc2977"}, 2)
 	t.Logf("===============阶段二：QueryCreateSafeWalletResult====================")
 	queryCreateSafeWalletResult(t, test, chainId, hash)
 }
