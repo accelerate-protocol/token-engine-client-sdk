@@ -174,15 +174,15 @@ const (
 
 // Defines values for GetApiV2SafeGetExecResultDataParamsTxBizType.
 const (
-	AddDeployer     GetApiV2SafeGetExecResultDataParamsTxBizType = "add_deployer"
-	AddFundPrice    GetApiV2SafeGetExecResultDataParamsTxBizType = "add_fund_price"
-	ChangeFundEpoch GetApiV2SafeGetExecResultDataParamsTxBizType = "change_fund_epoch"
-	Distribution    GetApiV2SafeGetExecResultDataParamsTxBizType = "distribution"
-	FinishFundEpoch GetApiV2SafeGetExecResultDataParamsTxBizType = "finish_fund_epoch"
-	OffChainMint    GetApiV2SafeGetExecResultDataParamsTxBizType = "off_chain_mint"
-	UnpauseToken    GetApiV2SafeGetExecResultDataParamsTxBizType = "unpause_token"
-	WithdrawFee     GetApiV2SafeGetExecResultDataParamsTxBizType = "withdraw_fee"
-	WithdrawFunds   GetApiV2SafeGetExecResultDataParamsTxBizType = "withdraw_funds"
+	AddDeployer       GetApiV2SafeGetExecResultDataParamsTxBizType = "add_deployer"
+	AddFundPrice      GetApiV2SafeGetExecResultDataParamsTxBizType = "add_fund_price"
+	ChangeFundEpoch   GetApiV2SafeGetExecResultDataParamsTxBizType = "change_fund_epoch"
+	Distribution      GetApiV2SafeGetExecResultDataParamsTxBizType = "distribution"
+	FinishFundEpoch   GetApiV2SafeGetExecResultDataParamsTxBizType = "finish_fund_epoch"
+	OffChainMint      GetApiV2SafeGetExecResultDataParamsTxBizType = "off_chain_mint"
+	UnpauseVaultToken GetApiV2SafeGetExecResultDataParamsTxBizType = "unpause_vault_token"
+	WithdrawFee       GetApiV2SafeGetExecResultDataParamsTxBizType = "withdraw_fee"
+	WithdrawFunds     GetApiV2SafeGetExecResultDataParamsTxBizType = "withdraw_funds"
 )
 
 // Defines values for GetApiV2SafeGetWalletResultParamsChainId.
@@ -14208,23 +14208,23 @@ var swaggerSpec = []string{
 	"L7hB7/MpTCI23mCIWXQ+KmzZet0Y+2QA4QdTYcNAjQ8JP8T1MZX5hHF1KW0TalwfvL0Mr67iosjFe9tw",
 	"5g+rGgV5A6oD7gugnhB+OGmQ6cGVwI5y6ZqPq4jGqdGMSzwNWHB94eOjF3Ww6roxLgMll/arF4MZMSbJ",
 	"nXW48NS4vdgHpvrkHcAEjjZC1fH4CK+MfPDYtK1XWC4Nq6vBgEw4aAa5/dBODF/WTilZQMUn+f7Do4ZR",
-	"fXkx6nj503Zk60e5ihkvJyYVxw/IsuZ0cEQ5KxQAXxhiXJ2Dqk4D47YGoyC/4zfXvWJRrhJjlRFElTUY",
-	"OtR12Oqd0AUUGz8h/BCbyIK4vRCAmbqLM9tcWbuezyrXkNmvs8KXp3ned12lo3+C7nlB5YqsC16c3/Ta",
-	"h8kWJ+58y3X3hKMMPa1lM5jrrD5sZhxSeXEbbk953rV7cVwuCM+7doMqulLeZXqjvI1QY75fKeVHwTJV",
-	"fOz2Wbwy+8wUi5+c/aTFxBVTbK0Fx73gNPTmUMY6EGDRwcYHvx0R3nm5T6LF5WlM0G/JMc0DrU3RkcKo",
-	"XSwN266zQOODT1zjCdvUGNcp3ihPTmnzC9rqLLwyh4kqSDt9iQXJMGOgWkWm0a7qeCijifcsFsqCgsV+",
-	"3RHgL5tgVoZQIPCTeEvczRB3ENli35k6rrRjl41PweOHb7W5NbgzD2dvw/ktvPhF0E4oouWntJUrpckZ",
-	"zBecvV1afU5dldA3sXEFu6KCVOjHVPS9fIRZORXt9mtySlr9o1BQdBCKCWJV44qD0NNsYf/P4tLznv4+",
-	"an19QRyO81khZLvIKRyhlrf9OGrqfwHUCpRCzStsHUCzCCRysqBOINZ7ssLfwQSqDNL9zQV9TNyrKr4X",
-	"2wJLcXnaNQVs8w8HCKjjCm32ZWUpARSFGeCn/bqAaeJZYCkCvNc83MsXdx+U1lbd8xHOX4Uzm4X9u+VH",
-	"9+H8HZi/RVfP5rTsN9hprGfBoEL1LMDH08WFSx+cZ9TW7cbi1D5+8O0mhkcFpAgRYUCqTIgJRnmU3euR",
-	"QRS4ESnu3yjursCFvPbyiQFZh/p+bvyopCU1Usr/DO+9hpdmXID2R+mgzk9jIaqTiI3HeOU7GkZRJ40V",
-	"eXcXXl39gJBq732DoWrHCkm9hcGpyivfsTcydg2uE0KC87lYyESdPhxBNiy4Ueq6jJlMcuEvz/Ff6z+s",
-	"td0c8GYu615Q+KFP5kWFT6BhU3JDGVYOuTa/UNh57Ofjj1VaHMQN1nBgwi28r+clk/sQ8rcNsWHrcBnu",
-	"nDIIEqZmBtWbEcoMAaOApNL+i9Lrp/q+0Dy7YXKHe3ltaV3LT52KfQl/yZ8f7I35oCAFZCMsocHLnYsa",
-	"Zc3DHYOXL8HHl1uByPaTOR4Z1vkcDxp6za5UzHwNMuCCKRS49TuRETi7AfM78P7t8uIB3plVhUCaEmoI",
-	"AG36ioY/3OkPaLfl7ntwbeeQ9uIs3M4TtR0TdmillEfNvUxOTnPdXHt7Wkrw6RFJUbuPdxzv0sn/bwAA",
-	"AP//qCOMOrlaAQA=",
+	"fXkx6nj503Zk60e5ihkvJyYVxw/IsmY6OLCyVg3/gxUQgK8NMS7QQbWngXFng1GW3/Gb63axKFeJtMoI",
+	"osoaEh3wOnj1ruhiio2fEH6ITWRB3F4OwEzgxfltrtxdz2eVy8jsl1rhK9Q877su1NE/Qbe9oKJF1jUv",
+	"zm967cNkixZ3vuW6gcJRjJ7WshnSdVYfNjMaqby4DbenPO/afTkuR4TnXbtZFV0s7zLAUd5G2DHfrxT0",
+	"oyCaKj52+yxemX1misVPzn7SYuKKKbbWsuNedhp6fyhjNQiw9GAThN++CO+/3OfR4vI0Jui38JhGgtbW",
+	"6Ehh1C6Whm3aWaDxwSeu9IQta4xLFW+UJ6e0+QVtdRZemcNEFaSdvsSCZBgzUMUi03RXdVSU0cR7FhFl",
+	"QcFiv+4I8JdNMFtDKBD4Sbwl7maIO4hssQdNHVfasePGp+zxw7fa3BrcmYezt+H8Fl78ImgnFNHyU9rK",
+	"ldLkDOYLzt4urT6nrkrom9i4gh1SQer0Yyr6Xj7CrJ+Kdvs1uSat/lEoKDoIxQSxtnHFTehptrD/Z3Hp",
+	"eU9/H7XKviAOx/msELJd5BqOUIvcfhyV9b8AagVKoeYVthGgWQQSOVlQJxDrPVnh72AC1Qfp/uaCPibu",
+	"VRXfjm2Bpbg87ZoCtvmHwwTUcYU2+7KylACKwgzz035dwDTxLLAUAd5rHu7li7sPSmur7vkI56/Cmc3C",
+	"/t3yo/tw/g7M36KrZ3Na9hvsNNa/YFCh+hfg4+niwqUPzj9q63ZjcWofP/h2E8OjAlKEiDAgVSbEBKNI",
+	"yu71yCAK34gU928Ud1fgQl57+cSArEN9Pzd+VNKSGinlf4b3XsNLMy5A+6N0UOensRDVScTGY7zyHQ2j",
+	"qJPGiry7C6+ufkBItfe+wVC1Y4Wk3sLgVOWV79gbGbsG1wkhwflcL2SiTh+OIBsW3Ch1XcZMJrnwV+j4",
+	"r/Uf1tpuDngzl3UvKPzQJ/OiwifQsCm5oQwrk1ybXyjsPPbz9McqLQ7iBms4MOEW3tfzksl9CPnbhtiw",
+	"dbgMd04ZBAlWM0PrzThlhoBRWFJp/0Xp9VN9X2ie3TC5w728trSu5adOxb6Ev+TPD/bGfFCQArIRnNDg",
+	"5c5FjbLm4Y7By5fg48utcGT7yRyPDOt8jgcNvWZXKmbWBhlwwRQK3PqdyAic3YD5HXj/dnnxAO/MqkIg",
+	"TQk1BIA2fUXDH+70B7Tbcvc9uLZzSHtxFm7nidqOCTu0Usqj5l4mJ6e5bq69PS0l+PSIpKjdxzuOd+nk",
+	"/zcAAP//JyzhXb9aAQA=",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
