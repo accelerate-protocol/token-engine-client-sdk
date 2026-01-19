@@ -13,4 +13,5 @@ const (
 	SafeTxBizType_AddFundPrice        SafeTxBizType = "add_fund_price"         //添加fund价格
 	SafeTxBizType_OffChainMint        SafeTxBizType = "off_chain_mint"         //链下铸币
 	SafeTxBizType_SetOnChainValidator SafeTxBizType = "set_on_chain_validator" //设置链上验证者
+	SafeTxBizType_AddInvestor         SafeTxBizType = "add_investor"           //添加投资人白名单
 )
