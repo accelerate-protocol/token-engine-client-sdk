@@ -39,6 +39,7 @@ const (
 	MessageTypeFundVaultApproveFinishEpoch      // fund 结束赎回周期前的approve
 	MessageTypeFundVaultFinishEpoch             //fund 结束赎回周期
 	MessageTypeFundVaultRedemptionClaim         //fund 用户领取赎回金额
+	MessageTypePerpetualFundVaultLaunch         //永续fund发行
 )
 
 type Message struct {
