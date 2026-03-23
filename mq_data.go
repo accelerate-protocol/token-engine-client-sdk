@@ -256,3 +256,11 @@ type FundRedemptionClaim struct {
 	AssetAmount string `json:"asset_amount"` //获得的U的数量
 	ShareAmount string `json:"share_amount"` //burn的vault token数量
 }
+
+type PerpetualYieldEventInstantRedeemed struct {
+	BaseData
+	Sender         string `json:"sender"`
+	ShareAmount    string `json:"share_amount"`     //burn的vault token数量
+	AmountAfterFee string `json:"amount_after_fee"` //用户实际获得的U的数量
+	Fee            string `json:"fee"`              //手续费的数量
+}
