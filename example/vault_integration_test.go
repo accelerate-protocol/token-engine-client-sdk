@@ -2047,7 +2047,7 @@ func fundVaultAddPrice(t *testing.T, test *VaultLaunchIntegrationTest, vaultAddr
 
 	t.Logf("✅ fundVaultAddPrice 集成测试通过")
 	t.Logf("   Price: %s", mqMessage.Price)
-	t.Logf("   LatestRoundId: %s", mqMessage.LatestRoundId)
+	t.Logf("   RoundId: %s", mqMessage.LatestRoundId)
 	t.Logf("   交易哈希: %s", redeemSubmitResp.TxHash)
 	return mqMessage
 }

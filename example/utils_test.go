@@ -3113,7 +3113,7 @@ func (test *VaultLaunchIntegrationTest) callQueryUserPendingClaim(t *testing.T, 
 	t.Logf("callQueryUserPendingClaim 查询成功:")
 	t.Logf("   EpochId: %s", req.EpochId)
 	t.Logf("   User: %s", req.UserAddr)
-	t.Logf("   AssetAmount: %s", prepareResp.AssetAmount)
+	t.Logf("   Amount: %s", prepareResp.AssetAmount)
 	return &prepareResp
 }
 
@@ -3328,7 +3328,7 @@ func (test *VaultLaunchIntegrationTest) validateFundVaultAddPriceMQMessage(t *te
 	t.Logf("   Success: %t", mqMessage.Success)
 	t.Logf("   Sender: %s", mqMessage.Sender)
 	t.Logf("   Price: %s", mqMessage.Price)
-	t.Logf("   LatestRoundId: %s", mqMessage.LatestRoundId)
+	t.Logf("   RoundId: %s", mqMessage.LatestRoundId)
 }
 
 func (test *VaultLaunchIntegrationTest) validateFundVaultChangeEpochMQMessage(t *testing.T, mqMessage *client.FundChangeEpoch, req *FundVaultChangeEpoch, txHash string) {
@@ -3363,7 +3363,7 @@ func (test *VaultLaunchIntegrationTest) validateFundVaultFinishEpochMQMessage(t 
 	t.Logf("   TxHash: %s", mqMessage.TxHash)
 	t.Logf("   Success: %t", mqMessage.Success)
 	t.Logf("   Sender: %s", mqMessage.Sender)
-	t.Logf("   AssetAmount: %s", mqMessage.AssetAmount)
+	t.Logf("   Amount: %s", mqMessage.AssetAmount)
 }
 
 func (test *VaultLaunchIntegrationTest) validateFundVaultClaimRedemptionMQMessage(t *testing.T, mqMessage *client.FundRedemptionClaim, req *FundVaultClaimRedemptionRequest, txHash string) {
@@ -3382,7 +3382,7 @@ func (test *VaultLaunchIntegrationTest) validateFundVaultClaimRedemptionMQMessag
 	t.Logf("   Success: %t", mqMessage.Success)
 	t.Logf("   Sender: %s", mqMessage.Sender)
 	t.Logf("   EpochId: %s", mqMessage.EpochId)
-	t.Logf("   AssetAmount: %s", mqMessage.AssetAmount)
+	t.Logf("   Amount: %s", mqMessage.AssetAmount)
 	t.Logf("   ShareAmount: %s", mqMessage.ShareAmount)
 }
 
