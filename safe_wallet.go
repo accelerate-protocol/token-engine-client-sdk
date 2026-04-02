@@ -15,4 +15,5 @@ const (
 	SafeTxBizType_SetOnChainValidator SafeTxBizType = "set_on_chain_validator" //设置链上验证者
 	SafeTxBizType_AddInvestor         SafeTxBizType = "add_investor"           //添加投资人白名单
 	SafeTxBizType_AddOffChainValue    SafeTxBizType = "add_off_chain_value"    //添加链下净值 永续合约
+	SafeTxBizType_ERC20Transfer       SafeTxBizType = "erc20_transfer"         //transfer交易结果
 )
