@@ -41,6 +41,8 @@ const (
 	MessageTypeFundVaultRedemptionClaim         //fund 用户领取赎回金额
 	MessageTypePerpetualFundVaultLaunch         //永续fund发行
 	MessageTypePerpetualFundVaultInstantRedeem  //永续vault立即赎回         //永续fund发行
+	MessageTypeStake                            // staking 质押
+	MessageTypeUnstake                          // staking 解除质押
 )
 
 type Message struct {
@@ -127,6 +129,22 @@ type VaultRedeem struct {
 	ReceiverAddress  string `json:"receiver_address"`   //赎回的U的接收人地址(单链时为投资者地址，多链时为支付系统账户地址)
 	VaultTokenAmount string `json:"vault_token_amount"` //burned vault token数量
 	AssetTokenAmount string `json:"asset_token_amount"` //赎回的U的数量
+}
+
+// StakingStake 质押成功后推送的数据
+type StakingStake struct {
+	BaseData
+	UserAddress string `json:"user_address"`
+	Amount      string `json:"amount"`
+	Nonce       string `json:"nonce"`
+}
+
+// StakingUnstake 解除质押成功后推送的数据
+type StakingUnstake struct {
+	BaseData
+	UserAddress string `json:"user_address"`
+	Amount      string `json:"amount"`
+	Nonce       string `json:"nonce"`
 }
 
 // VaultOffChainRedeem 管理员给投资者链下赎回成功后推送的数据
