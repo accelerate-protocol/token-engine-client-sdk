@@ -39,6 +39,7 @@ const (
 const (
 	Base     RequestChainId = "8453"
 	Bsc      RequestChainId = "56"
+	BscTestnet RequestChainId = "97"
 	OffChain RequestChainId = "0"
 	Solana   RequestChainId = "1001"
 	Tron     RequestChainId = "728126428"
